@@ -1,93 +1,285 @@
-# xperso
+# 📊 SocialStats — Social Media Agency Dashboard
 
+Multi-tenant social media analytics dashboard for marketing agencies.
+Automatically syncs data from Facebook, Instagram, YouTube, LinkedIn, and Google My Business.
 
+---
 
-## Getting started
+## 🏗️ Tech Stack
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+| Layer | Technology |
+|-------|-----------|
+| Backend | Django 4.2 + Django REST Framework |
+| Auth | JWT (SimpleJWT) |
+| Task Queue | Celery + Redis |
+| Database | SQLite (dev) / PostgreSQL (prod) |
+| Frontend | React 18 + React Router |
+| Charts | Recharts |
+| PDF Export | jsPDF + html2canvas |
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+---
 
-## Add your files
+## 👤 User Roles
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+| Role | Access |
+|------|--------|
+| **superadmin** | All clients, admin panel, create accounts |
+| **staff** | Assigned clients only |
+| **client** | Their own data only |
+
+---
+
+## 🚀 Quick Start
+
+### 1. Backend Setup
+
+```bash
+cd backend
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Copy and fill in environment variables
+cp .env.example .env
+# Edit .env with your API credentials
+
+# Run database migrations
+python manage.py migrate
+
+# Create superadmin + Celery schedules
+python manage.py setup
+# Default: admin@agency.com / admin123
+
+# Start Django server
+python manage.py runserver
+```
+
+### 2. Frontend Setup
+
+```bash
+cd frontend
+
+# Install Node dependencies
+npm install
+
+# Copy env file
+cp .env.example .env
+
+# Start React dev server
+npm start
+# Opens at http://localhost:3000
+```
+
+### 3. Start Celery (auto-sync)
+
+Open two extra terminal windows:
+
+```bash
+# Terminal 1: Celery worker (processes sync tasks)
+cd backend
+celery -A dashboard worker -l info
+
+# Terminal 2: Celery beat (triggers scheduled syncs)
+cd backend
+celery -A dashboard beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+```
+
+### 4. Install Redis (required for Celery)
+
+```bash
+# macOS
+brew install redis && brew services start redis
+
+# Ubuntu/Debian
+sudo apt install redis-server && sudo systemctl start redis
+
+# Windows — use WSL or Docker:
+docker run -d -p 6379:6379 redis
+```
+
+---
+
+## 🔑 Getting API Credentials
+
+### Meta (Facebook + Instagram)
+1. Go to https://developers.facebook.com → **Create App** → Business type
+2. Add products: **Pages API** + **Instagram Graph API**
+3. Settings → Basic → copy **App ID** + **App Secret**
+4. Facebook Login → Settings → add `http://localhost:8000/api/oauth/facebook/callback/`
+5. Submit app for **App Review** (required for real users)
+
+### Google (YouTube + Google My Business)
+1. Go to https://console.cloud.google.com → New Project
+2. APIs & Services → **Enable APIs**:
+   - YouTube Data API v3
+   - YouTube Analytics API
+   - Business Profile API
+3. Credentials → **Create OAuth 2.0 Client ID** (Web Application type)
+4. Add redirect URI: `http://localhost:8000/api/oauth/google/callback/`
+5. Copy **Client ID** + **Client Secret**
+
+### LinkedIn
+1. Go to https://www.linkedin.com/developers → **Create App**
+2. Associate with your LinkedIn Company Page
+3. Products tab → Request **Marketing Developer Platform** (1-5 business days)
+4. Auth tab → copy **Client ID** + **Client Secret**
+5. Add redirect URI: `http://localhost:8000/api/oauth/linkedin/callback/`
+
+---
+
+## 👥 Adding a New Client
+
+**Option 1 — Via Admin Panel (http://localhost:3000/admin):**
+1. Click **+ Add New Client**
+2. Fill in Company, Name, Email, Password
+3. Click **Create Client**
+4. The client can now log in at http://localhost:3000/login
+
+**Option 2 — Via API:**
+```bash
+POST /api/admin/create-client/
+{
+  "company": "Acme Corp",
+  "name": "John Smith",
+  "email": "john@acmecorp.com",
+  "password": "securepassword123"
+}
+```
+
+---
+
+## 🔌 Connecting Client Accounts
+
+Once the client logs in:
+1. Go to **Connect Accounts** (Settings page)
+2. Click **Connect Facebook** → redirected to Facebook login → approve permissions
+3. Click **Connect Google** → redirected to Google login → approve permissions
+4. Click **Connect LinkedIn** → redirected to LinkedIn login → approve permissions
+5. Data starts syncing automatically
+
+---
+
+## ⏰ Auto-Sync Schedule
+
+| Platform | Frequency |
+|----------|-----------|
+| Facebook | Every 6 hours |
+| Instagram | Every 6 hours |
+| YouTube | Every 12 hours |
+| LinkedIn | Every 12 hours |
+| Google My Business | Every 24 hours |
+
+---
+
+## 📡 API Endpoints
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/cbsshekhawat18/xperso.git
-git branch -M main
-git push -uf origin main
+POST   /api/auth/login/                    Login
+POST   /api/auth/refresh/                  Refresh JWT token
+GET    /api/auth/me/                       Current user info
+
+GET    /api/clients/                       List clients
+GET    /api/clients/{id}/summary/          KPI totals
+GET    /api/clients/{id}/timeseries/       Daily metrics for charts
+GET    /api/clients/{id}/posts/            Per-post metrics
+POST   /api/clients/{id}/trigger_sync/     Manual sync trigger
+GET    /api/clients/{id}/sync_status/      Sync history
+
+GET    /api/oauth/status/{client_id}/      Connection status all platforms
+GET    /api/oauth/facebook/start/{id}/     Start Facebook OAuth
+GET    /api/oauth/google/start/{id}/       Start Google OAuth
+GET    /api/oauth/linkedin/start/{id}/     Start LinkedIn OAuth
+DELETE /api/oauth/disconnect/{id}/{plat}/  Disconnect platform
+
+GET    /api/overview/                      Agency-wide totals (admin)
+GET    /api/synclogs/                      Recent sync activity
+
+POST   /api/admin/create-client/           Create client + login account
 ```
 
-## Integrate with your tools
+---
 
-* [Set up project integrations](https://gitlab.com/cbsshekhawat18/xperso/-/settings/integrations)
+## 🚀 Production Deployment
 
-## Collaborate with your team
+```bash
+# Update .env for production
+DEBUG=False
+ALLOWED_HOSTS=yourdomain.com
+FRONTEND_URL=https://yourdomain.com
+# Use PostgreSQL instead of SQLite
+# Use real Redis server
+# Use real SMTP for email
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+# Build React frontend
+cd frontend && npm run build
 
-## Test and Deploy
+# Run with Gunicorn
+cd backend
+gunicorn dashboard.wsgi:application --bind 0.0.0.0:8000 --workers 4
 
-Use the built-in continuous integration in GitLab.
+# Serve with Nginx (example config included below)
+```
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+### Nginx Config
+```nginx
+server {
+    server_name yourdomain.com;
 
-***
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
 
-# Editing this README
+    location / {
+        root /path/to/frontend/build;
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+---
 
-## Suggestions for a good README
+## 📁 Project Structure
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+```
+social-dashboard/
+├── backend/
+│   ├── dashboard/              Django project config
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   └── celery.py
+│   ├── social_stats/           Main app
+│   │   ├── models.py           Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog
+│   │   ├── views.py            REST API views (role-based access)
+│   │   ├── oauth_views.py      OAuth flows for all 5 platforms
+│   │   ├── tasks.py            Celery sync tasks
+│   │   ├── serializers.py
+│   │   ├── urls.py
+│   │   └── admin.py
+│   ├── requirements.txt
+│   └── .env.example
+└── frontend/
+    └── src/
+        ├── App.js              Routes + auth protection
+        ├── pages/
+        │   ├── LoginPage.jsx
+        │   ├── ClientDashboard.jsx   Client stats view
+        │   ├── AdminOverview.jsx     Agency admin view
+        │   └── SettingsPage.jsx      Connect accounts
+        ├── components/
+        │   ├── layout/Sidebar.jsx
+        │   ├── charts/Charts.jsx
+        │   └── ui/
+        │       ├── StatCard.jsx
+        │       ├── PlatformTabs.jsx
+        │       ├── DateRangePicker.jsx
+        │       └── ConnectedAccounts.jsx
+        ├── hooks/
+        │   ├── useAuth.js
+        │   └── useData.js
+        └── services/
+            ├── api.js
+            ├── platforms.js
+            └── exportPDF.js
+```

@@ -1,0 +1,51 @@
+# ======================
+# Backend (Django)
+# ======================
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+backend/db.sqlite3
+backend/*.sqlite3
+
+# Env files (VERY IMPORTANT)
+backend/.env
+backend/.env.*
+
+# Logs
+backend/*.log
+
+# Static & media
+backend/media/
+backend/staticfiles/
+
+# ======================
+# Frontend (React)
+# ======================
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# ======================
+# Global (applies anywhere)
+# ======================
+.env
+*.env
+*.key
+.venv
+*.venv
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.swp

@@ -5,8 +5,9 @@ import {
   AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis,
 } from 'recharts';
 import { overviewAPI, clientsAPI } from '../services/api';
-import { useClients } from '../hooks/useData';
+import { useClients, useDateRange } from '../hooks/useData';
 import { TrendingUp, TrendingDown, Minus, RefreshCw, Users, Eye, MousePointer, Play, UserPlus } from 'lucide-react';
+import DateRangePicker from '../components/ui/DateRangePicker';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLATFORM_META = {
@@ -25,28 +26,11 @@ const METRIC_META = {
   followers:    { label: 'Followers',    icon: UserPlus,    color: '#059669' },
 };
 
-const DATE_RANGES = [
-  { label: '7d',  days: 7  },
-  { label: '14d', days: 14 },
-  { label: '30d', days: 30 },
-  { label: '90d', days: 90 },
-];
-
 function fmt(n) {
   if (!n && n !== 0) return '—';
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
   if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
   return Number(n).toLocaleString();
-}
-
-function getDateRange(days) {
-  const until = new Date();
-  const since = new Date();
-  since.setDate(since.getDate() - days);
-  return {
-    since: since.toISOString().slice(0, 10),
-    until: until.toISOString().slice(0, 10),
-  };
 }
 
 function pctChange(curr, prev) {
@@ -137,7 +121,7 @@ export default function AnalyticsPage() {
   const { clients } = useClients();
   const [selectedClientId, setSelectedClientId] = useState('all');
   const [selectedPlatform, setSelectedPlatform] = useState('all');
-  const [rangeDays, setRangeDays] = useState(30);
+  const [range, setRange]               = useDateRange(30);
   const [activeMetric, setActiveMetric] = useState('impressions');
 
   // Overview data (all clients, all platforms, date range)
@@ -151,8 +135,14 @@ export default function AnalyticsPage() {
   const [timeseriesLoading, setTimeseriesLoading] = useState(false);
   const [prevSummary, setPrevSummary]   = useState(null);
 
-  const range      = getDateRange(rangeDays);
-  const prevRange  = getDateRange(rangeDays * 2);
+  // Compute previous period of same duration for comparison
+  const daysDiff = Math.max(1, Math.round(
+    (new Date(range.until) - new Date(range.since)) / 86400000
+  ));
+  const prevRange = {
+    since: new Date(new Date(range.since) - daysDiff * 86400000).toISOString().slice(0, 10),
+    until: range.since,
+  };
 
   // ── Fetch overview ──────────────────────────────────────────────────────────
   const fetchOverview = useCallback(() => {
@@ -264,23 +254,7 @@ export default function AnalyticsPage() {
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Date range */}
-          <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 10, padding: 3, gap: 2 }}>
-            {DATE_RANGES.map(r => (
-              <button
-                key={r.days}
-                onClick={() => setRangeDays(r.days)}
-                style={{
-                  padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 700, transition: 'all 0.15s',
-                  background: rangeDays === r.days ? '#fff' : 'transparent',
-                  color:      rangeDays === r.days ? '#0f172a' : '#64748b',
-                  boxShadow:  rangeDays === r.days ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                }}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
+          <DateRangePicker range={range} onChange={setRange} />
 
           {/* Client filter */}
           <select
@@ -393,7 +367,7 @@ export default function AnalyticsPage() {
       ) : (
         <SectionCard
           title="Performance by Platform"
-          subtitle={`Aggregated across all clients — last ${rangeDays} days`}
+          subtitle={`Aggregated across all clients — ${range.since} to ${range.until}`}
           style={{ marginBottom: 24 }}
         >
           {overviewLoading ? (

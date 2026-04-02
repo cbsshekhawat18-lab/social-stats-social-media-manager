@@ -31,7 +31,7 @@ function fmtDate(str) {
 export function ImpressionsChart({ data, platform }) {
   const rows = aggregateByDate(data, platform);
   return (
-    <ChartCard title="Impressions & Reach">
+    <ChartCard title="Impressions & Reach" accent="#6366f1">
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={rows} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -54,7 +54,7 @@ export function ImpressionsChart({ data, platform }) {
 export function EngagementChart({ data, platform }) {
   const rows = aggregateByDate(data, platform);
   return (
-    <ChartCard title="Clicks & Likes">
+    <ChartCard title="Clicks & Likes" accent="#2563eb">
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={rows} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -74,7 +74,7 @@ export function EngagementChart({ data, platform }) {
 export function VideoViewsChart({ data, platform }) {
   const rows = aggregateByDate(data, platform);
   return (
-    <ChartCard title="Video Views">
+    <ChartCard title="Video Views" accent="#ef4444">
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={rows} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -98,7 +98,7 @@ export function PlatformCompareChart({ byPlatform }) {
   }));
 
   return (
-    <ChartCard title="Platform Comparison">
+    <ChartCard title="Platform Comparison" accent="#f59e0b">
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -116,10 +116,13 @@ export function PlatformCompareChart({ byPlatform }) {
 }
 
 // ── Wrapper ──────────────────────────────────────────────────────────────────
-function ChartCard({ title, children }) {
+function ChartCard({ title, accent = '#6366f1', children }) {
   return (
     <div style={styles.card}>
-      <h3 style={styles.title}>{title}</h3>
+      <div style={styles.cardHeader}>
+        <span style={{ ...styles.accentBar, background: accent }} />
+        <h3 style={styles.title}>{title}</h3>
+      </div>
       {children}
     </div>
   );
@@ -127,8 +130,29 @@ function ChartCard({ title, children }) {
 
 const styles = {
   card: {
-    background: '#fff', borderRadius: 14, padding: '20px 16px',
-    boxShadow: '0 1px 6px rgba(0,0,0,.07)',
+    background: '#fff',
+    borderRadius: 16,
+    padding: '20px 18px 18px',
+    boxShadow: '0 1px 4px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04)',
+    border: '1px solid #f1f5f9',
   },
-  title: { margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: '#1e293b' },
+  cardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 18,
+  },
+  accentBar: {
+    width: 4,
+    height: 18,
+    borderRadius: 999,
+    flexShrink: 0,
+  },
+  title: {
+    margin: 0,
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#0f172a',
+    letterSpacing: '-0.01em',
+  },
 };

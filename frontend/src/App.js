@@ -23,6 +23,7 @@ import ManagementPage from './pages/ManagementPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import CaptionWriterPage   from './pages/CaptionWriterPage';
 import PostIdeasPage       from './pages/PostIdeasPage';
+import logoStatoxBig from './assets/logo_statox_big.png';
 
 // ── Protected route wrapper ───────────────────────────────────────────────────
 function Protected({ children, roles }) {
@@ -44,7 +45,7 @@ function AdminLayout() {
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar clients={clients} selectedClient={selected} onSelectClient={setSelected} />
-      <main style={{ marginLeft: 264, flex: 1, minHeight: '100vh', background: '#f8fafc' }}>
+      <main style={{ marginLeft: 260, flex: 1, minHeight: '100vh', background: '#f0f4f9' }}>
         <Routes>
           <Route index                     element={<AdminOverview />} />
           <Route path="client/:clientId/*" element={<AdminClientView />} />
@@ -86,7 +87,7 @@ function ClientLayout() {
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <main style={{ marginLeft: 264, flex: 1, minHeight: '100vh', background: '#f8fafc' }}>
+      <main style={{ marginLeft: 260, flex: 1, minHeight: '100vh', background: '#f0f4f9' }}>
         <Routes>
           <Route index           element={<ClientDashboard clientId={user?.client_id} />} />
           <Route path="posts"    element={<MyPostsPage />} />
@@ -115,10 +116,43 @@ function RootRedirect() {
 function Loader() {
   return (
     <div style={{
-      height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#f8fafc', fontSize: 18, color: '#94a3b8',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#0f172a',
+      gap: 20,
     }}>
-      Loading…
+      <img
+        src={logoStatoxBig}
+        alt="STATOX"
+        style={{
+          height: 90,
+          width: 'auto',
+          objectFit: 'contain',
+          animation: 'pulse-dot 1.8s ease-in-out infinite',
+          filter: 'brightness(0) invert(1)',
+        }}
+        onError={e => {
+          e.target.style.display = 'none';
+          e.target.nextSibling.style.display = 'block';
+        }}
+      />
+      {/* Fallback */}
+      <div style={{ display: 'none', color: '#00CCF5', fontSize: 28, fontWeight: 900, letterSpacing: '0.1em' }}>
+        STATOX
+      </div>
+      <div style={{
+        fontSize: 12,
+        color: '#334155',
+        fontWeight: 600,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        marginTop: 4,
+      }}>
+        Loading…
+      </div>
     </div>
   );
 }

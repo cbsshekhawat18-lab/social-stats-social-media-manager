@@ -1,6 +1,6 @@
 export default function PageHeader({ title, subtitle, actions = null, meta = [] }) {
   return (
-    <div style={styles.wrap}>
+    <div style={styles.wrap} className="page-enter">
       <div style={styles.topRow}>
         <div style={styles.copy}>
           <h1 style={styles.title}>{title}</h1>
@@ -25,7 +25,7 @@ export default function PageHeader({ title, subtitle, actions = null, meta = [] 
 
 const styles = {
   wrap: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   topRow: {
     display: 'flex',
@@ -43,13 +43,14 @@ const styles = {
     lineHeight: 1.1,
     fontWeight: 800,
     color: '#0f172a',
-    letterSpacing: '-0.03em',
+    letterSpacing: '-0.035em',
   },
   subtitle: {
-    margin: '6px 0 0',
+    margin: '7px 0 0',
     color: '#64748b',
     fontSize: 14,
-    lineHeight: 1.5,
+    lineHeight: 1.6,
+    fontWeight: 400,
   },
   actions: {
     display: 'flex',
@@ -60,27 +61,28 @@ const styles = {
   metaRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-    gap: 12,
-    marginTop: 16,
+    gap: 10,
+    marginTop: 18,
   },
   metaCard: {
     background: '#fff',
     border: '1px solid #e2e8f0',
-    borderRadius: 14,
-    padding: '12px 14px',
-    boxShadow: '0 1px 6px rgba(15,23,42,.05)',
+    borderRadius: 12,
+    padding: '12px 16px',
+    boxShadow: '0 1px 4px rgba(15,23,42,.04)',
   },
   metaLabel: {
     display: 'block',
-    marginBottom: 6,
-    fontSize: 11,
+    marginBottom: 5,
+    fontSize: 10,
     fontWeight: 700,
     color: '#94a3b8',
     textTransform: 'uppercase',
-    letterSpacing: '.08em',
+    letterSpacing: '.1em',
   },
   metaValue: {
     fontSize: 15,
+    fontWeight: 700,
     color: '#0f172a',
   },
 };

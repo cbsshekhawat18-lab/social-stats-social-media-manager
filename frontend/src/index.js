@@ -169,6 +169,52 @@ style.textContent = `
 
   /* ── Button base reset ────────────────────────────────────────────────── */
   button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     MOBILE RESPONSIVE — app-like layout
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* Bottom nav: hidden on desktop, flex on mobile */
+  .mobile-bottom-nav { display: none !important; }
+  /* Mobile header: hidden on desktop */
+  .mobile-header     { display: none !important; }
+  /* Sidebar overlay backdrop: hidden on desktop */
+  .sidebar-overlay   { display: none !important; }
+
+  @media (max-width: 768px) {
+    /* Show mobile chrome */
+    .mobile-bottom-nav { display: flex !important; }
+    .mobile-header     { display: flex !important; }
+
+    /* Hide the desktop sidebar by default */
+    .desktop-sidebar { transform: translateX(-100%); }
+    /* Show it when the drawer is open */
+    .desktop-sidebar.sidebar-open { transform: translateX(0); }
+    /* Overlay backdrop shows when drawer open */
+    .sidebar-overlay.sidebar-open { display: block !important; }
+
+    /* Content: no left margin, top padding for header, bottom for tab bar */
+    .main-content {
+      margin-left: 0 !important;
+      padding-top: 60px !important;
+      padding-bottom: 72px !important;
+    }
+
+    /* Tighten up page header on small screens */
+    h1 { font-size: 22px !important; }
+
+    /* Make cards / grids stack on narrow screens */
+    .stat-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stat-grid {
+      grid-template-columns: 1fr !important;
+    }
+    h1 { font-size: 20px !important; }
+  }
 `;
 document.head.appendChild(style);
 

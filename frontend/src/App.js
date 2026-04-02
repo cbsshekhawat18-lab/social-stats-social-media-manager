@@ -4,6 +4,8 @@ import { useClients } from './hooks/useData';
 import { useState } from 'react';
 
 import Sidebar           from './components/layout/Sidebar';
+import BottomNav         from './components/layout/BottomNav';
+import MobileHeader      from './components/layout/MobileHeader';
 import LoginPage         from './pages/LoginPage';
 import ClientDashboard   from './pages/ClientDashboard';
 import SettingsPage      from './pages/SettingsPage';
@@ -41,11 +43,22 @@ function Protected({ children, roles }) {
 function AdminLayout() {
   const { clients }              = useClients();
   const [selected, setSelected]  = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div style={{ display: 'flex' }}>
-      <Sidebar clients={clients} selectedClient={selected} onSelectClient={setSelected} />
-      <main style={{ marginLeft: 260, flex: 1, minHeight: '100vh', background: '#f0f4f9' }}>
+      <MobileHeader onMenuOpen={() => setMobileOpen(true)} />
+      <Sidebar
+        clients={clients}
+        selectedClient={selected}
+        onSelectClient={setSelected}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
+      <main
+        className="main-content"
+        style={{ marginLeft: 260, flex: 1, minHeight: '100vh', background: '#f0f4f9' }}
+      >
         <Routes>
           <Route index                     element={<AdminOverview />} />
           <Route path="client/:clientId/*" element={<AdminClientView />} />
@@ -63,6 +76,7 @@ function AdminLayout() {
           <Route path="hashtags"           element={<CaptionWriterPage defaultTab="hashtag" />} />
         </Routes>
       </main>
+      <BottomNav onMenuOpen={() => setMobileOpen(true)} />
     </div>
   );
 }
@@ -84,10 +98,18 @@ function AdminClientView() {
 // ── Client layout with sidebar ────────────────────────────────────────────────
 function ClientLayout() {
   const { user } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <div style={{ display: 'flex' }}>
-      <Sidebar />
-      <main style={{ marginLeft: 260, flex: 1, minHeight: '100vh', background: '#f0f4f9' }}>
+      <MobileHeader onMenuOpen={() => setMobileOpen(true)} />
+      <Sidebar
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
+      <main
+        className="main-content"
+        style={{ marginLeft: 260, flex: 1, minHeight: '100vh', background: '#f0f4f9' }}
+      >
         <Routes>
           <Route index           element={<ClientDashboard clientId={user?.client_id} />} />
           <Route path="posts"    element={<MyPostsPage />} />
@@ -99,6 +121,7 @@ function ClientLayout() {
           <Route path="hashtags"        element={<CaptionWriterPage defaultTab="hashtag" />} />
         </Routes>
       </main>
+      <BottomNav onMenuOpen={() => setMobileOpen(true)} />
     </div>
   );
 }

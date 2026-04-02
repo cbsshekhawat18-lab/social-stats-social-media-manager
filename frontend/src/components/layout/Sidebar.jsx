@@ -99,7 +99,7 @@ function NavItem({ to, icon, label, pathname, end = false, badge, disabled = fal
   );
 }
 
-export default function Sidebar({ clients = [], selectedClient, onSelectClient }) {
+export default function Sidebar({ clients = [], selectedClient, onSelectClient, mobileOpen = false, onMobileClose }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -141,17 +141,34 @@ export default function Sidebar({ clients = [], selectedClient, onSelectClient }
   const handleSelectClient = (client) => {
     onSelectClient && onSelectClient(client);
     navigate(`/admin/client/${client.id}`);
+    onMobileClose && onMobileClose();
+  };
+
+  // Close drawer on nav click (mobile)
+  const handleNavClick = () => {
+    onMobileClose && onMobileClose();
   };
 
   return (
-    <aside style={styles.sidebar}>
+    <>
+      {/* ── Backdrop overlay (mobile only) ─────────────────────────────── */}
+      <div
+        className={`sidebar-overlay${mobileOpen ? ' sidebar-open' : ''}`}
+        onClick={onMobileClose}
+        style={styles.overlay}
+      />
+
+    <aside
+      className={`desktop-sidebar${mobileOpen ? ' sidebar-open' : ''}`}
+      style={styles.sidebar}
+    >
       {/* ── Brand ───────────────────────────────────────────────────────── */}
       <div style={styles.brandCard}>
         <StatoxLogoHorizontal height={36} />
       </div>
 
       {/* ── Navigation body ──────────────────────────────────────────────── */}
-      <div style={styles.body} className="sidebar-scroll">
+      <div style={styles.body} className="sidebar-scroll" onClick={handleNavClick}>
         {isAdmin ? (
           <>
             <SectionTitle>Overview</SectionTitle>
@@ -275,6 +292,7 @@ export default function Sidebar({ clients = [], selectedClient, onSelectClient }
         </button>
       </div>
     </aside>
+    </>
   );
 }
 
@@ -292,12 +310,21 @@ const styles = {
     position: 'fixed',
     left: 0,
     top: 0,
-    zIndex: 100,
+    zIndex: 160,
     display: 'flex',
     flexDirection: 'column',
     background: '#ffffff',
     borderRight: '1px solid #e2e8f0',
     boxShadow: '4px 0 20px rgba(15,23,42,0.06)',
+    transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
+  },
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 155,
+    background: 'rgba(15,23,42,0.45)',
+    backdropFilter: 'blur(2px)',
+    WebkitBackdropFilter: 'blur(2px)',
   },
   brandCard: {
     display: 'flex',

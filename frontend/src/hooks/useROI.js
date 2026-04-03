@@ -1,11 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { roiAPI } from '../services/api';
-import {
-  calculateDemoROI,
-  getDemoROIReports,
-  getDemoROISettings,
-  isDemoClient,
-} from '../services/demoData';
 
 export function useROISettings(clientId) {
   const [settings, setSettings] = useState(null);
@@ -15,11 +9,6 @@ export function useROISettings(clientId) {
 
   const fetchSettings = useCallback(async () => {
     if (!clientId) { setLoading(false); return; }
-    if (isDemoClient(clientId)) {
-      setSettings(getDemoROISettings());
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError('');
     try {
@@ -35,10 +24,6 @@ export function useROISettings(clientId) {
   useEffect(() => { fetchSettings(); }, [fetchSettings]);
 
   const saveSettings = useCallback(async (data) => {
-    if (isDemoClient(clientId)) {
-      setSettings(data);
-      return { success: true };
-    }
     setSaving(true);
     setError('');
     try {
@@ -128,14 +113,6 @@ export function useROICalculator(clientId) {
     const m   = overrideMonth  || monthRef.current;
     const y   = overrideYear   || yearRef.current;
 
-    if (isDemoClient(clientId)) {
-      const result = calculateDemoROI(inp, m, y);
-      setResult(result);
-      setError('');
-      setLoading(false);
-      return result;
-    }
-
     setLoading(true);
     setError('');
     try {
@@ -176,10 +153,6 @@ export function useROICalculator(clientId) {
 
   const saveReport = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setResult(calculateDemoROI(inputsRef.current, monthRef.current, yearRef.current));
-      return { success: true };
-    }
     try {
       const res = await roiAPI.calculate({ client_id: clientId, month: monthRef.current, year: yearRef.current });
       setResult(res.data);
@@ -204,11 +177,6 @@ export function useROIReports(clientId) {
 
   useEffect(() => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setReports(getDemoROIReports());
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     roiAPI.getReports({ client_id: clientId })
       .then(res => setReports(res.data.results || res.data))

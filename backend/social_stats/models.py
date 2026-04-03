@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.db import transaction
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
@@ -112,6 +113,43 @@ class UserProfile(models.Model):
         if self.role == 'staff':
             return self.assigned_clients.filter(id=client_id).exists()
         return False
+
+
+def ensure_client_profile(profile):
+    """
+    Ensure client-role users always have a linked Client record.
+    This supports direct client signups/social logins in the same way as
+    agency-created client accounts.
+    """
+    if not profile or profile.role != 'client':
+        return None
+    if profile.client_id:
+        return profile.client
+
+    user = profile.user
+    email = (user.email or '').strip().lower()
+    if not email:
+        return None
+
+    with transaction.atomic():
+        existing = Client.objects.filter(email__iexact=email).first()
+        if existing:
+            profile.client = existing
+            profile.save(update_fields=['client'])
+            return existing
+
+        full_name = (user.get_full_name() or user.username or email.split('@')[0]).strip()
+        first_name = (user.first_name or '').strip()
+        company = first_name or full_name or email.split('@')[0]
+
+        client = Client.objects.create(
+            name=full_name,
+            company=company,
+            email=email,
+        )
+        profile.client = client
+        profile.save(update_fields=['client'])
+        return client
 
 
 # ── OAuth Credentials per client per platform ─────────────────────────────────

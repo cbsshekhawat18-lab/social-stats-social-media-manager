@@ -7,6 +7,10 @@ export default function ConnectedAccounts({ clientId, status, onRefresh }) {
   const [loading, setLoading] = useState({});
 
   const handleConnect = (platform) => {
+    if (!clientId) {
+      window.alert('Your client workspace is still being prepared. Please refresh the page and try again.');
+      return;
+    }
     const urlMap = {
       facebook:           oauthAPI.facebookUrl(clientId),
       instagram:          oauthAPI.facebookUrl(clientId), // same flow

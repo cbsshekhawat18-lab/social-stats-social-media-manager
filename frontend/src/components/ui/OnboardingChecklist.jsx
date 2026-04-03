@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, Rocket, X } from 'lucide-react';
 import { onboardingAPI } from '../../services/api';
-import { getDemoOnboardingSteps, isDemoClient } from '../../services/demoData';
 
 // ── Confetti ──────────────────────────────────────────────────────────────────
 if (typeof document !== 'undefined' && !document.getElementById('onboarding-styles')) {
@@ -78,13 +77,6 @@ export default function OnboardingChecklist({ clientId }) {
 
   const fetchSteps = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      const data = getDemoOnboardingSteps();
-      setSteps(data);
-      prevDoneRef.current = data.filter(s => s.is_completed).length;
-      setLoading(false);
-      return;
-    }
     try {
       const res = await onboardingAPI.list({ client: clientId });
       const data = res.data.results || res.data;

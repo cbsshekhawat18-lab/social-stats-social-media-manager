@@ -1,14 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { clientsAPI, oauthAPI, overviewAPI, syncLogsAPI, goalsAPI, alertsAPI } from '../services/api';
 import { format, subDays } from 'date-fns';
-import {
-  getDemoClientSummary,
-  getDemoGoalProgress,
-  getDemoOAuthStatus,
-  getDemoPosts,
-  getDemoTimeseries,
-  isDemoClient,
-} from '../services/demoData';
 
 export function useDateRange(defaultDays = 30) {
   const [range, setRange] = useState({
@@ -41,10 +33,6 @@ export function useClientSummary(clientId, range, platform) {
 
   const fetch = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setData(getDemoClientSummary());
-      return;
-    }
     try {
       setLoading(true);
       const params = { ...range };
@@ -65,10 +53,6 @@ export function useTimeseries(clientId, range, platform) {
 
   const fetch = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setData(getDemoTimeseries(range));
-      return;
-    }
     try {
       setLoading(true);
       const params = { ...range };
@@ -89,10 +73,6 @@ export function usePosts(clientId, platform, range) {
 
   const fetch = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setPosts(getDemoPosts(platform, range));
-      return;
-    }
     try {
       setLoading(true);
       const params = { limit: 20, ...range };
@@ -113,10 +93,6 @@ export function useOAuthStatus(clientId) {
 
   const fetch = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setStatus(getDemoOAuthStatus());
-      return;
-    }
     try {
       setLoading(true);
       const res = await oauthAPI.status(clientId);
@@ -170,10 +146,6 @@ export function useGoalProgress(clientId, month, year) {
 
   const fetch = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setProgress(getDemoGoalProgress(month, year));
-      return;
-    }
     try {
       setLoading(true);
       const res = await goalsAPI.progress({ client: clientId, month, year });

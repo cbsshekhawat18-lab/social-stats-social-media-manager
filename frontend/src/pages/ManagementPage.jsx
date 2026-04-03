@@ -309,6 +309,9 @@ const fieldStyles = {
   label: { display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' },
   input: { width: '100%', padding: '9px 12px', border: '1px solid #dbe5f3', borderRadius: 10, fontSize: 13, color: '#1e293b', background: '#fff', outline: 'none', boxSizing: 'border-box' },
   textarea: { width: '100%', padding: '9px 12px', border: '1px solid #dbe5f3', borderRadius: 10, fontSize: 13, color: '#1e293b', background: '#fff', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' },
+  requiredAsterisk: { color: '#ef4444', marginLeft: 2, fontWeight: 800, textTransform: 'none', letterSpacing: 'normal' },
+  inputError: { borderColor: '#ef4444', background: '#fef2f2' },
+  errorText: { marginTop: 6, fontSize: 12, color: '#dc2626', textTransform: 'none', letterSpacing: 'normal' },
 };
 
 // ─── Staff Client Assignments panel ─────────────────────────────────────────
@@ -407,11 +410,36 @@ const assignStyles = {
 
 function CreateStaffModal({ onClose, onCreated }) {
   const [form, setForm]     = useState({ name: '', email: '', password: '' });
+  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
 
+  const handleFieldChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validateForm = () => {
+    const nextErrors = {};
+    if (!form.name.trim()) nextErrors.name = 'Full name is required.';
+    if (!form.email.trim()) nextErrors.email = 'Email is required.';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) nextErrors.email = 'Enter a valid email address.';
+    if (!form.password.trim()) nextErrors.password = 'Password is required.';
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      setError('Please fix the highlighted fields.');
+      return;
+    }
     setSaving(true); setError('');
     try {
       const res = await managementAPI.createStaff(form);
@@ -440,15 +468,15 @@ function CreateStaffModal({ onClose, onCreated }) {
             { key: 'password', label: 'Password',  placeholder: '••••••••',        type: 'password' },
           ].map(f => (
             <div key={f.key} style={{ marginBottom: 14 }}>
-              <label style={fieldStyles.label}>{f.label}</label>
+              <label style={fieldStyles.label}>{f.label} <span style={fieldStyles.requiredAsterisk}>*</span></label>
               <input
                 type={f.type || 'text'}
                 placeholder={f.placeholder}
                 value={form[f.key]}
-                onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                required
-                style={fieldStyles.input}
+                onChange={e => handleFieldChange(f.key, e.target.value)}
+                style={{ ...fieldStyles.input, ...(errors[f.key] ? fieldStyles.inputError : {}) }}
               />
+              {errors[f.key] && <div style={fieldStyles.errorText}>{errors[f.key]}</div>}
             </div>
           ))}
           <button type="submit" disabled={saving} style={{ ...btnStyles.primary, width: '100%', justifyContent: 'center' }}>

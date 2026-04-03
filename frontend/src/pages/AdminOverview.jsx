@@ -37,6 +37,7 @@ function GoalManager() {
     client: '', platform: 'all', metric: 'impressions',
     target_value: '', month: now.getMonth() + 1, year: now.getFullYear(),
   });
+  const [errors, setErrors]   = useState({});
   const [saving, setSaving]   = useState(false);
   const [msg, setMsg]         = useState('');
 
@@ -48,8 +49,31 @@ function GoalManager() {
   };
   const { goals, refetch } = useGoals(goalParams);
 
+  const handleFieldChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validateGoalForm = () => {
+    const nextErrors = {};
+    if (!form.client) nextErrors.client = 'Select a user.';
+    if (!String(form.target_value).trim()) nextErrors.target_value = 'Target value is required.';
+    else if (Number(form.target_value) < 1) nextErrors.target_value = 'Target value must be at least 1.';
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!validateGoalForm()) {
+      setMsg('❌ Please fix the highlighted fields.');
+      return;
+    }
     setSaving(true); setMsg('');
     try {
       await goalsAPI.create({
@@ -62,6 +86,7 @@ function GoalManager() {
       });
       setMsg('✅ Goal saved.');
       setForm(f => ({ ...f, target_value: '' }));
+      setErrors({});
       refetch();
     } catch (err) {
       setMsg('❌ ' + (err.response?.data?.non_field_errors?.[0] || err.response?.data?.error || 'Failed to save goal'));
@@ -89,38 +114,58 @@ function GoalManager() {
       {open && (
         <>
           <form onSubmit={handleCreate} style={styles.goalForm}>
-            <select value={form.client} onChange={e => setForm(f => ({...f, client: e.target.value}))} required style={styles.sel}>
-              <option value="">Select user *</option>
-              {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
-            </select>
+            <div style={styles.goalField}>
+              <label style={styles.goalLabel}>User <span style={styles.requiredAsterisk}>*</span></label>
+              <select value={form.client} onChange={e => handleFieldChange('client', e.target.value)} style={{ ...styles.sel, ...(errors.client ? styles.inputError : {}) }}>
+                <option value="">Select user</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
+              </select>
+              {errors.client && <div style={styles.goalError}>{errors.client}</div>}
+            </div>
 
-            <select value={form.platform} onChange={e => setForm(f => ({...f, platform: e.target.value}))} style={styles.sel}>
-              {PLATFORM_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
+            <div style={styles.goalField}>
+              <label style={styles.goalLabel}>Platform</label>
+              <select value={form.platform} onChange={e => handleFieldChange('platform', e.target.value)} style={styles.sel}>
+                {PLATFORM_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+              </select>
+            </div>
 
-            <select value={form.metric} onChange={e => setForm(f => ({...f, metric: e.target.value}))} style={styles.sel}>
-              {METRICS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-            </select>
+            <div style={styles.goalField}>
+              <label style={styles.goalLabel}>Metric</label>
+              <select value={form.metric} onChange={e => handleFieldChange('metric', e.target.value)} style={styles.sel}>
+                {METRICS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+            </div>
 
-            <input
-              type="number" min="1" placeholder="Target value *"
-              value={form.target_value}
-              onChange={e => setForm(f => ({...f, target_value: e.target.value}))}
-              required style={styles.inp}
-            />
+            <div style={styles.goalField}>
+              <label style={styles.goalLabel}>Target Value <span style={styles.requiredAsterisk}>*</span></label>
+              <input
+                type="number" min="1" placeholder="Enter target"
+                value={form.target_value}
+                onChange={e => handleFieldChange('target_value', e.target.value)}
+                style={{ ...styles.inp, ...(errors.target_value ? styles.inputError : {}) }}
+              />
+              {errors.target_value && <div style={styles.goalError}>{errors.target_value}</div>}
+            </div>
 
-            <select value={form.month} onChange={e => setForm(f => ({...f, month: e.target.value}))} style={styles.sel}>
-              {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
-                <option key={i+1} value={i+1}>{m}</option>
-              ))}
-            </select>
+            <div style={styles.goalField}>
+              <label style={styles.goalLabel}>Month</label>
+              <select value={form.month} onChange={e => handleFieldChange('month', e.target.value)} style={styles.sel}>
+                {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
+                  <option key={i+1} value={i+1}>{m}</option>
+                ))}
+              </select>
+            </div>
 
-            <input
-              type="number" min="2024" max="2030"
-              value={form.year}
-              onChange={e => setForm(f => ({...f, year: e.target.value}))}
-              style={{ ...styles.inp, width: 80 }}
-            />
+            <div style={{ ...styles.goalField, maxWidth: 100 }}>
+              <label style={styles.goalLabel}>Year</label>
+              <input
+                type="number" min="2024" max="2030"
+                value={form.year}
+                onChange={e => handleFieldChange('year', e.target.value)}
+                style={styles.inp}
+              />
+            </div>
 
             <button type="submit" disabled={saving} style={styles.addGoalBtn}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -129,7 +174,7 @@ function GoalManager() {
             </button>
           </form>
 
-          {msg && <div style={{ fontSize: 13, marginBottom: 12 }}>{msg}</div>}
+          {msg && <div style={msg.startsWith('✅') ? styles.inlineSuccess : styles.inlineError}>{msg}</div>}
 
           {goals.length > 0 && (
             <table style={styles.table}>
@@ -787,6 +832,10 @@ const styles = {
     display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center',
     marginTop: 16, marginBottom: 12,
   },
+  goalField: { flex: '1 1 180px', minWidth: 0 },
+  goalLabel: { display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#374151' },
+  requiredAsterisk: { color: '#ef4444', marginLeft: 2, fontWeight: 800 },
+  goalError: { marginTop: 6, fontSize: 12, color: '#dc2626' },
   sel: {
     padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb',
     fontSize: 13, background: '#fff', cursor: 'pointer', outline: 'none',
@@ -795,6 +844,7 @@ const styles = {
     padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb',
     fontSize: 13, outline: 'none', width: 130,
   },
+  inputError: { borderColor: '#ef4444', background: '#fef2f2' },
   addGoalBtn: {
     padding: '8px 16px', borderRadius: 8, border: 'none',
     background: '#00d7ff', color: '#fff', cursor: 'pointer',
@@ -817,6 +867,8 @@ const styles = {
   },
   tr: { borderBottom: '1px solid #f1f5f9' },
   td: { padding: '12px 12px', color: '#374151' },
+  inlineSuccess: { fontSize: 13, marginBottom: 12, padding: '10px 14px', borderRadius: 8, background: '#dcfce7', color: '#16a34a' },
+  inlineError: { fontSize: 13, marginBottom: 12, padding: '10px 14px', borderRadius: 8, background: '#fee2e2', color: '#dc2626' },
 };
 
 const panelWrap   = { background: '#fff', borderRadius: 14, boxShadow: '0 1px 6px rgba(0,0,0,.07)', marginBottom: 24, overflow: 'hidden' };

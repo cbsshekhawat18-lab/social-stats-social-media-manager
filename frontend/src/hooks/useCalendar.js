@@ -1,12 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { calendarAPI } from '../services/api';
-import {
-  getDemoCalendarNotes,
-  getDemoCalendarPosts,
-  getDemoCalendarStats,
-  getDemoUpcomingPosts,
-  isDemoClient,
-} from '../services/demoData';
 
 // ── useCalendarPosts ───────────────────────────────────────────────────────────
 export function useCalendarPosts(clientId, month, year, platform) {
@@ -16,12 +9,6 @@ export function useCalendarPosts(clientId, month, year, platform) {
 
   const fetch = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setPostsByDate(getDemoCalendarPosts(month, year, platform));
-      setError('');
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError('');
     try {
@@ -53,11 +40,6 @@ export function useCalendarStats(clientId, month, year) {
 
   useEffect(() => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setStats(getDemoCalendarStats(month, year));
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     calendarAPI.getStats({ client_id: clientId, month, year })
       .then(res => setStats(res.data))
@@ -76,11 +58,6 @@ export function useUpcomingPosts(clientId) {
 
   const fetch = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setUpcoming(getDemoUpcomingPosts(clientId));
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     try {
       const params = clientId ? { client_id: clientId } : {};
@@ -108,16 +85,6 @@ export function useCreatePost() {
   const [error,    setError]    = useState('');
 
   const create = useCallback(async (data) => {
-    if (isDemoClient(data?.client)) {
-      return {
-        success: true,
-        post: {
-          ...data,
-          id: Date.now(),
-          scheduled_at: data.scheduled_at,
-        },
-      };
-    }
     setCreating(true);
     setError('');
     try {
@@ -135,9 +102,6 @@ export function useCreatePost() {
   }, []);
 
   const update = useCallback(async (id, data) => {
-    if (isDemoClient(data?.client)) {
-      return { success: true, post: { ...data, id } };
-    }
     setCreating(true);
     setError('');
     try {
@@ -155,9 +119,6 @@ export function useCreatePost() {
   }, []);
 
   const remove = useCallback(async (id) => {
-    if (String(id).startsWith('3') || String(id).startsWith('5')) {
-      return { success: true };
-    }
     setCreating(true);
     setError('');
     try {
@@ -173,9 +134,6 @@ export function useCreatePost() {
   }, []);
 
   const reschedule = useCallback(async (id, datetime) => {
-    if (String(id).startsWith('3') || String(id).startsWith('5')) {
-      return { success: true, post: { id, scheduled_at: datetime } };
-    }
     setCreating(true);
     setError('');
     try {
@@ -201,18 +159,6 @@ export function useCalendarNotes(clientId, month, year) {
 
   const fetch = useCallback(async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      const data = getDemoCalendarNotes(month, year);
-      setNotes(data);
-      const byDate = {};
-      data.forEach(note => {
-        if (!byDate[note.date]) byDate[note.date] = [];
-        byDate[note.date].push(note);
-      });
-      setNotesByDate(byDate);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     try {
       const res = await calendarAPI.getNotes({ client_id: clientId, month, year });
@@ -266,16 +212,6 @@ export function useSuggestedTimes(clientId, platform) {
 
   useEffect(() => {
     if (!clientId || !platform) return;
-    if (isDemoClient(clientId)) {
-      setSuggestions([
-        { day_of_week: 1, hour: 9, minute: 30, note: 'Mon 9:30 AM' },
-        { day_of_week: 3, hour: 12, minute: 0, note: 'Wed 12:00 PM' },
-        { day_of_week: 5, hour: 18, minute: 15, note: 'Fri 6:15 PM' },
-      ]);
-      setSource('performance');
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     calendarAPI.suggestTimes({ client_id: clientId, platform })
       .then(res => {

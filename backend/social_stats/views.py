@@ -13,7 +13,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.db.models import F
 from django.utils import timezone
 
-from .models import Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep
+from .models import Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep, ensure_client_profile
 from .serializers import (
     ClientSerializer, PlatformCredentialSerializer,
     DailyMetricSerializer, PostMetricSerializer, SyncLogSerializer, UserSerializer, ClientGoalSerializer,
@@ -29,6 +29,7 @@ class CustomTokenSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         try:
             profile = user.profile
+            ensure_client_profile(profile)
             token['role']      = profile.role
             token['client_id'] = profile.client_id
             token['name']      = user.get_full_name() or user.username
@@ -116,6 +117,8 @@ def me(request):
     try:
         from .permissions import PermissionChecker
         profile = user.profile
+        ensure_client_profile(profile)
+        data = UserSerializer(user).data
         data['permissions'] = PermissionChecker.get_user_permissions(profile)
         data['onboarding_complete'] = profile.client.onboarding_complete if profile.client else False
         if profile.role == 'client' and profile.client:
@@ -340,19 +343,31 @@ class GoalViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         try:
-            role = self.request.user.profile.role
+            profile = self.request.user.profile
+            role = profile.role
         except Exception:
             role = None
-        if role not in ('superadmin', 'staff'):
+            profile = None
+        if role not in ('superadmin', 'staff', 'client'):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied()
-        serializer.save()
+        client = serializer.save()
+        # Link new client to this user's profile if they don't have one yet
+        if role == 'client' and profile and not profile.client:
+            profile.client = client
+            profile.save()
 
     def perform_update(self, serializer):
         try:
-            role = self.request.user.profile.role
+            profile = self.request.user.profile
+            role = profile.role
         except Exception:
             role = None
+            profile = None
+        # Allow client to update their own record
+        if role == 'client' and profile and profile.client_id == serializer.instance.id:
+            serializer.save()
+            return
         if role not in ('superadmin', 'staff'):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied()

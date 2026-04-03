@@ -53,7 +53,7 @@ const GENDERS = [
 ];
 
 export default function ClientOnboardingPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const clientId = user?.client_id;
   const { status: oauthStatus } = useOAuthStatus(clientId);
@@ -363,7 +363,12 @@ export default function ClientOnboardingPage() {
 
       submitData.append('onboarding_complete', 'true');
 
-      await clientsAPI.update(clientId, submitData);
+      if (clientId) {
+        await clientsAPI.update(clientId, submitData);
+      } else {
+        await clientsAPI.create(submitData);
+        await refreshUser();
+      }
       navigate('/dashboard');
     } catch (error) {
       console.error('Onboarding submission failed:', error);
@@ -426,7 +431,7 @@ export default function ClientOnboardingPage() {
                   </div>
 
                   <div style={styles.field}>
-                    <label style={styles.label}>Business Name *</label>
+                    <label style={styles.label}>Business Name <span style={styles.requiredAsterisk}>*</span></label>
                     <input
                       type="text"
                       value={formData.company}
@@ -521,7 +526,7 @@ export default function ClientOnboardingPage() {
                 <div style={styles.panelTitle}>Category & voice</div>
                 <div style={styles.row}>
                   <div style={styles.field}>
-                    <label style={styles.label}>Business Category *</label>
+                    <label style={styles.label}>Business Category <span style={styles.requiredAsterisk}>*</span></label>
                     <select
                       value={formData.business_category}
                       onChange={(e) => handleInputChange('business_category', e.target.value)}
@@ -584,7 +589,7 @@ export default function ClientOnboardingPage() {
               <div style={styles.formPanelAlt}>
                 <div style={styles.panelTitle}>Brand story</div>
                 <div style={styles.field}>
-                  <label style={styles.label}>Brand Description</label>
+                  <label style={styles.label}>Brand Description <span style={styles.requiredAsterisk}>*</span></label>
                   <textarea
                     value={formData.brand_description}
                     onChange={(e) => handleInputChange('brand_description', e.target.value)}
@@ -596,7 +601,7 @@ export default function ClientOnboardingPage() {
                 </div>
 
                 <div style={styles.field}>
-                  <label style={styles.label}>Unique Selling Points (USP)</label>
+                  <label style={styles.label}>Unique Selling Points (USP) <span style={styles.requiredAsterisk}>*</span></label>
                   <textarea
                     value={formData.usp}
                     onChange={(e) => handleInputChange('usp', e.target.value)}
@@ -624,7 +629,7 @@ export default function ClientOnboardingPage() {
               <div style={styles.formPanel}>
                 <div style={styles.panelTitle}>Customer snapshot</div>
                 <div style={styles.field}>
-                  <label style={styles.label}>Target Audience Description</label>
+                  <label style={styles.label}>Target Audience Description <span style={styles.requiredAsterisk}>*</span></label>
                   <textarea
                     value={formData.target_audience}
                     onChange={(e) => handleInputChange('target_audience', e.target.value)}
@@ -657,7 +662,7 @@ export default function ClientOnboardingPage() {
               <div style={styles.formPanelAlt}>
                 <div style={styles.panelTitle}>Where they are</div>
                 <div style={styles.field}>
-                  <label style={styles.label}>Business Location</label>
+                  <label style={styles.label}>Business Location <span style={styles.requiredAsterisk}>*</span></label>
                   <input
                     type="text"
                     value={formData.business_location}
@@ -669,7 +674,7 @@ export default function ClientOnboardingPage() {
                 </div>
 
                 <div style={styles.field}>
-                  <label style={styles.label}>Target Locations</label>
+                  <label style={styles.label}>Target Locations <span style={styles.requiredAsterisk}>*</span></label>
                   <div style={styles.checkboxGrid}>
                     {['Local (Same City)', 'Regional (Same State/Province)', 'National', 'International'].map(loc => (
                       <label
@@ -1212,6 +1217,11 @@ const styles = {
     fontWeight: 700,
     color: '#334155',
     marginBottom: 8,
+  },
+  requiredAsterisk: {
+    color: '#ef4444',
+    marginLeft: 2,
+    fontWeight: 800,
   },
   input: {
     width: '100%',

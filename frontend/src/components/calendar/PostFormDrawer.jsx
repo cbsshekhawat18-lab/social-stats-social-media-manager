@@ -73,6 +73,7 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
   const [scheduledAt, setScheduledAt] = useState('');
   const [notes,       setNotes]       = useState(post?.notes       || '');
   const [saving,      setSaving]      = useState(false);
+  const [errors,      setErrors]      = useState({});
   const [error,       setError]       = useState('');
 
   useEffect(() => {
@@ -117,26 +118,40 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
       }
     }
     setError('');
+    setErrors({});
     setSaving(false);
   }, [isOpen, post, date]);
 
   const charLimit = CHAR_LIMITS[platform] || 2200;
   const hashCount = hashtags.trim().split(/\s+/).filter(t => t.startsWith('#')).length;
 
+  const clearFieldError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validateForm = (finalStatus) => {
+    const nextErrors = {};
+    if (!platform) nextErrors.platform = 'Platform is required.';
+    if (!caption.trim() && !title.trim()) nextErrors.caption = 'Caption is required unless an internal title is provided.';
+    if (finalStatus === 'scheduled' && !scheduledAt) nextErrors.scheduledAt = 'Please select a scheduled date and time.';
+    if (finalStatus === 'scheduled' && scheduledAt && isBefore(new Date(scheduledAt), new Date())) {
+      nextErrors.scheduledAt = 'Past dates cannot be used for scheduling.';
+    }
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   async function handleSave(forcedStatus) {
     setError('');
     const finalStatus = forcedStatus || status;
 
-    if (!caption.trim() && !title.trim()) {
-      setError('Title or caption is required.');
-      return;
-    }
-    if (finalStatus === 'scheduled' && !scheduledAt) {
-      setError('Please select a scheduled date and time.');
-      return;
-    }
-    if (finalStatus === 'scheduled' && scheduledAt && isBefore(new Date(scheduledAt), new Date())) {
-      setError('Past dates cannot be used for scheduling.');
+    if (!validateForm(finalStatus)) {
+      setError('Please fix the highlighted fields before saving.');
       return;
     }
 
@@ -213,7 +228,7 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
         <div style={{ padding: '20px', flex: 1 }}>
           {/* Platform selector */}
           <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Platform</label>
+            <label style={labelStyle}>Platform <span style={requiredAsteriskStyle}>*</span></label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {PLATFORM_LIST.map(key => {
                 const p = PLATFORMS[key];
@@ -227,7 +242,9 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
                       padding: '6px 12px', borderRadius: 8,
                       background: active ? p.color : '#F1F5F9',
                       color:      active ? '#fff'   : '#475569',
-                      border:     active ? `1px solid ${p.color}` : '1px solid #E2E8F0',
+                      border:     errors.platform
+                        ? '1px solid #ef4444'
+                        : (active ? `1px solid ${p.color}` : '1px solid #E2E8F0'),
                       cursor:     'pointer', fontSize: 12, fontWeight: 600,
                       transition: 'all 0.15s',
                     }}
@@ -237,6 +254,7 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
                 );
               })}
             </div>
+            {errors.platform && <div style={fieldErrorStyle}>{errors.platform}</div>}
           </div>
 
           {/* Post Type */}
@@ -259,7 +277,10 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
             <input
               type="text"
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={e => {
+                setTitle(e.target.value);
+                clearFieldError('caption');
+              }}
               placeholder="Agency reference label"
               style={inputStyle}
             />
@@ -267,14 +288,18 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
 
           {/* Caption */}
           <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Caption</label>
+            <label style={labelStyle}>Caption <span style={requiredAsteriskStyle}>*</span></label>
             <textarea
               value={caption}
-              onChange={e => setCaption(e.target.value)}
+              onChange={e => {
+                setCaption(e.target.value);
+                clearFieldError('caption');
+              }}
               placeholder={`Write your ${plat.label} caption…`}
               rows={5}
-              style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
+              style={{ ...inputStyle, ...(errors.caption ? inputErrorStyle : {}), resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
             />
+            {errors.caption && <div style={fieldErrorStyle}>{errors.caption}</div>}
             <CharCounter text={caption} limit={charLimit} />
           </div>
 
@@ -347,14 +372,18 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
           {/* DateTime picker */}
           {status === 'scheduled' && (
             <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Scheduled Date & Time</label>
+              <label style={labelStyle}>Scheduled Date & Time <span style={requiredAsteriskStyle}>*</span></label>
               <input
                 type="datetime-local"
                 value={scheduledAt}
-                onChange={e => setScheduledAt(e.target.value)}
+                onChange={e => {
+                  setScheduledAt(e.target.value);
+                  clearFieldError('scheduledAt');
+                }}
                 min={getMinScheduleValue()}
-                style={inputStyle}
+                style={{ ...inputStyle, ...(errors.scheduledAt ? inputErrorStyle : {}) }}
               />
+              {errors.scheduledAt && <div style={fieldErrorStyle}>{errors.scheduledAt}</div>}
               {clientId && (
                 <SuggestRow clientId={clientId} platform={platform} />
               )}
@@ -428,9 +457,24 @@ const labelStyle = {
   color: '#374151', marginBottom: 6,
 };
 
+const requiredAsteriskStyle = {
+  color: '#ef4444', marginLeft: 2, fontWeight: 800,
+};
+
 const inputStyle = {
   width: '100%', padding: '9px 11px', borderRadius: 8,
   border: '1px solid #D1D5DB', fontSize: 13,
   boxSizing: 'border-box', background: '#fff',
   outline: 'none', color: '#1e293b',
+};
+
+const inputErrorStyle = {
+  borderColor: '#ef4444',
+  background: '#fef2f2',
+};
+
+const fieldErrorStyle = {
+  marginTop: 6,
+  fontSize: 12,
+  color: '#dc2626',
 };

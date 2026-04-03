@@ -424,7 +424,7 @@ export default function SettingsPage({ clientId: propClientId }) {
                     />
                   </div>
                   <div style={fieldStyle}>
-                    <label style={labelStyle}>Business Name *</label>
+                    <label style={labelStyle}>Business Name <span style={{ color: '#ef4444', marginLeft: 2, fontWeight: 800 }}>*</span></label>
                     <input
                       type="text"
                       value={formData.company}

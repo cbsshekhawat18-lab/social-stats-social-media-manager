@@ -50,13 +50,19 @@ function KpiCard({ label, value, icon: Icon, color }) {
 
 function PasswordGate({ token, clientName, period, onUnlock }) {
   const [pw, setPw]   = useState('');
+  const [fieldError, setFieldError] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function submit(e) {
     e.preventDefault();
+    if (!pw.trim()) {
+      setFieldError('Password is required.');
+      return;
+    }
     setBusy(true);
     setErr('');
+    setFieldError('');
     try {
       const res = await publicReportAPI.verify(token, pw);
       onUnlock(res.data);
@@ -83,14 +89,19 @@ function PasswordGate({ token, clientName, period, onUnlock }) {
           This report is password protected.
         </p>
         <form onSubmit={submit}>
+          <label style={pwLabel}>Password <span style={requiredAsterisk}>*</span></label>
           <input
             type="password"
             value={pw}
-            onChange={e => setPw(e.target.value)}
+            onChange={e => {
+              setPw(e.target.value);
+              if (fieldError) setFieldError('');
+            }}
             placeholder="Enter password…"
-            style={pwInput}
+            style={{ ...pwInput, ...(fieldError ? pwInputError : {}) }}
             autoFocus
           />
+          {fieldError && <p style={pwErrorText}>{fieldError}</p>}
           {err && <p style={{ color: '#dc2626', fontSize: 13, margin: '8px 0 0' }}>{err}</p>}
           <button type="submit" disabled={busy} style={pwBtn}>
             {busy ? 'Verifying…' : 'View Report'}
@@ -365,5 +376,9 @@ const centeredMsg = { display: 'flex', alignItems: 'center', justifyContent: 'ce
 const gateWrap = { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#f0f4f9', padding: 24 };
 const gateCard = { background: '#fff', borderRadius: 16, padding: 32, width: '100%', maxWidth: 380, boxShadow: '0 4px 24px rgba(0,0,0,.1)' };
 const lockCircle = { width: 60, height: 60, borderRadius: '50%', background: '#e6fbff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' };
+const pwLabel = { display: 'block', marginBottom: 8, fontSize: 13, fontWeight: 700, color: '#334155' };
+const requiredAsterisk = { color: '#ef4444', marginLeft: 2, fontWeight: 800 };
 const pwInput = { width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 14, outline: 'none', boxSizing: 'border-box' };
+const pwInputError = { borderColor: '#ef4444', background: '#fef2f2' };
+const pwErrorText = { color: '#dc2626', fontSize: 12, margin: '6px 0 8px' };
 const pwBtn   = { width: '100%', marginTop: 16, padding: '11px 0', background: '#00d7ff', color: '#0f172a', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer' };

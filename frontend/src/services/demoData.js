@@ -8,8 +8,8 @@ import {
   subDays,
 } from 'date-fns';
 
-export function isDemoClient(clientId) {
-  return Number(clientId) === 1;
+export function isDemoClient(_clientId) {
+  return false;
 }
 
 export const demoClient = {

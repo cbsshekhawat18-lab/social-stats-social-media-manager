@@ -61,7 +61,7 @@ export default function CompetitorSection({
               <div style={styles.nameField}>
                 <label style={styles.label}>
                   <Building2 size={14} />
-                  Competitor Name
+                  Competitor Name <span style={styles.requiredAsterisk}>*</span>
                 </label>
                 <input
                   type="text"
@@ -264,6 +264,10 @@ const styles = {
     fontWeight: 700,
     color: '#334155',
     marginBottom: 8,
+  },
+  requiredAsterisk: {
+    color: '#ef4444',
+    fontWeight: 800,
   },
   subLabel: {
     display: 'inline-flex',

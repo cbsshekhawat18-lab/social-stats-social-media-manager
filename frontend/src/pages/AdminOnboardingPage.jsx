@@ -3,8 +3,6 @@ import { CheckCircle2, ChevronDown, ChevronUp, Circle, RotateCcw, Rocket } from 
 import PageHeader from '../components/layout/PageHeader';
 import { onboardingAPI } from '../services/api';
 import { useClients } from '../hooks/useData';
-import { getDemoOnboardingSteps, isDemoClient } from '../services/demoData';
-
 function ProgressBar({ value }) {
   return (
     <div style={styles.progressTrack}>
@@ -29,21 +27,9 @@ export default function AdminOnboardingPage() {
         const res = await onboardingAPI.list();
         if (cancelled) return;
         const apiSteps = res.data.results || res.data;
-        const demoSteps = clients
-          .filter((client) => isDemoClient(client.id))
-          .flatMap((client) => getDemoOnboardingSteps().map((step) => ({
-            ...step,
-            client: client.id,
-            client_name: client.company,
-          })));
 
-        const combined = [
-          ...apiSteps.filter((step) => !isDemoClient(step.client)),
-          ...demoSteps,
-        ];
-
-        setSteps(combined);
-        if (!expandedClient && combined[0]?.client) setExpandedClient(combined[0].client);
+        setSteps(apiSteps);
+        if (!expandedClient && apiSteps[0]?.client) setExpandedClient(apiSteps[0].client);
       } catch (error) {
         console.error(error);
       } finally {
@@ -53,7 +39,7 @@ export default function AdminOnboardingPage() {
 
     fetchSteps();
     return () => { cancelled = true; };
-  }, [clients, expandedClient]);
+  }, [expandedClient]);
 
   const grouped = useMemo(() => {
     const map = new Map();
@@ -69,19 +55,6 @@ export default function AdminOnboardingPage() {
   }, [steps, clients]);
 
   async function updateStep(step, nextCompleted) {
-    if (isDemoClient(step.client)) {
-      setSteps((prev) => prev.map((item) => (
-        item.id === step.id
-          ? {
-              ...item,
-              is_completed: nextCompleted,
-              completed_at: nextCompleted ? new Date().toISOString() : null,
-            }
-          : item
-      )));
-      return;
-    }
-
     try {
       setSavingId(step.id);
       const res = await onboardingAPI.update(step.id, { is_completed: nextCompleted });

@@ -33,6 +33,12 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const refreshUser = useCallback(async () => {
+    const me = await authAPI.me();
+    setUser(me.data);
+    return me.data;
+  }, []);
+
   // Check if the current user has a given permission code.
   // Superadmin always returns true. Others check the permissions dict from /me.
   const can = useCallback((code) => {
@@ -42,7 +48,7 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, can }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, can, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

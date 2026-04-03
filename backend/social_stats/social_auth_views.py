@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import UserProfile
+from .models import UserProfile, ensure_client_profile
 
 
 GOOGLE_CLIENT_ID      = settings.GOOGLE_CLIENT_ID
@@ -53,6 +53,7 @@ def _make_jwt(user):
     refresh = RefreshToken.for_user(user)
     try:
         profile = user.profile
+        ensure_client_profile(profile)
         refresh['role']      = profile.role
         refresh['client_id'] = profile.client_id
         refresh['name']      = user.get_full_name() or user.username

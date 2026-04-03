@@ -15,6 +15,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPass] = useState('');
+  const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState('');
@@ -30,9 +31,39 @@ export default function LoginPage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  const validateForm = () => {
+    const nextErrors = {};
+    if (!email.trim()) nextErrors.email = 'Email is required.';
+    else if (!/\S+@\S+\.\S+/.test(email)) nextErrors.email = 'Enter a valid email address.';
+    if (!password.trim()) nextErrors.password = 'Password is required.';
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleEmailChange = (value) => {
+    setEmail(value);
+    setErrors((prev) => {
+      if (!prev.email) return prev;
+      const next = { ...prev };
+      delete next.email;
+      return next;
+    });
+  };
+
+  const handlePasswordChange = (value) => {
+    setPass(value);
+    setErrors((prev) => {
+      if (!prev.password) return prev;
+      const next = { ...prev };
+      delete next.password;
+      return next;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!validateForm()) return;
     setLoading(true);
     try {
       const user = await login(email, password, accepted);
@@ -136,42 +167,42 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} style={styles.form}>
             <div style={styles.field}>
-              <label style={styles.label}>Email</label>
-              <div style={styles.inputWrap(focused === 'email')}>
+              <label style={styles.label}>Email <span style={{ color: '#ef4444', marginLeft: 2, fontWeight: 800 }}>*</span></label>
+              <div style={styles.inputWrap(focused === 'email', !!errors.email)}>
                 <Mail size={16} color={focused === 'email' ? CYAN : '#6B7D85'} strokeWidth={2} style={{ flexShrink: 0 }} />
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => handleEmailChange(e.target.value)}
                   onFocus={() => setFocused('email')}
                   onBlur={() => setFocused('')}
                   placeholder="you@company.com"
-                  required
                   style={styles.input}
                 />
               </div>
+              {errors.email && <div style={styles.fieldError}>{errors.email}</div>}
             </div>
 
             <div style={styles.field}>
               <div style={styles.labelRow}>
-                <label style={styles.label}>Password</label>
+                <label style={styles.label}>Password <span style={{ color: '#ef4444', marginLeft: 2, fontWeight: 800 }}>*</span></label>
                 <button type="button" style={styles.inlineLink}>
                   Forgot Password?
                 </button>
               </div>
-              <div style={styles.inputWrap(focused === 'password')}>
+              <div style={styles.inputWrap(focused === 'password', !!errors.password)}>
                 <Lock size={16} color={focused === 'password' ? CYAN : '#6B7D85'} strokeWidth={2} style={{ flexShrink: 0 }} />
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPass(e.target.value)}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
                   onFocus={() => setFocused('password')}
                   onBlur={() => setFocused('')}
                   placeholder="Enter your password"
-                  required
                   style={styles.input}
                 />
               </div>
+              {errors.password && <div style={styles.fieldError}>{errors.password}</div>}
             </div>
 
             {(error || urlError) && (
@@ -564,16 +595,18 @@ const styles = {
     color: '#334155',
     letterSpacing: '0.03em',
   },
-  inputWrap: (isFocused) => ({
+  inputWrap: (isFocused, hasError = false) => ({
     display: 'flex',
     alignItems: 'center',
     gap: 10,
     height: 52,
     padding: '0 16px',
     borderRadius: 16,
-    border: `1px solid ${isFocused ? CYAN : 'rgba(148,163,184,0.26)'}`,
+    border: `1px solid ${hasError ? '#ef4444' : (isFocused ? CYAN : 'rgba(148,163,184,0.26)')}`,
     background: isFocused ? 'rgba(255, 255, 255, 0.98)' : 'rgba(248, 250, 252, 0.96)',
-    boxShadow: isFocused ? `0 0 0 3px ${CYAN_SOFT}, 0 0 18px rgba(31, 182, 207, 0.12)` : 'none',
+    boxShadow: hasError
+      ? '0 0 0 3px rgba(239, 68, 68, 0.12)'
+      : (isFocused ? `0 0 0 3px ${CYAN_SOFT}, 0 0 18px rgba(31, 182, 207, 0.12)` : 'none'),
     transition: 'all 0.18s ease',
   }),
   input: {
@@ -584,6 +617,11 @@ const styles = {
     color: '#0f172a',
     fontSize: 15,
     fontFamily: 'inherit',
+  },
+  fieldError: {
+    marginTop: 6,
+    fontSize: 12,
+    color: '#dc2626',
   },
   errorBox: {
     display: 'flex',

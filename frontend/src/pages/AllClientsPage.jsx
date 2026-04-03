@@ -10,6 +10,7 @@ export default function AllClientsPage({ onSelectClient }) {
   const { clients, refetch }   = useClients();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm]        = useState({ company:'', name:'', email:'', password:'' });
+  const [errors, setErrors]    = useState({});
   const [creating, setCreating]= useState(false);
   const [createMsg, setCreateMsg] = useState('');
   const [search, setSearch]    = useState('');
@@ -19,13 +20,39 @@ export default function AllClientsPage({ onSelectClient }) {
     return !q || c.company?.toLowerCase().includes(q) || c.name?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q);
   });
 
+  const handleFieldChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validateCreateForm = () => {
+    const nextErrors = {};
+    if (!form.company.trim()) nextErrors.company = 'Company name is required.';
+    if (!form.name.trim()) nextErrors.name = 'Contact name is required.';
+    if (!form.email.trim()) nextErrors.email = 'Email is required.';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) nextErrors.email = 'Enter a valid email address.';
+    if (!form.password.trim()) nextErrors.password = 'Password is required.';
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!validateCreateForm()) {
+      setCreateMsg('❌ Please fix the highlighted fields.');
+      return;
+    }
     setCreating(true); setCreateMsg('');
     try {
       await adminAPI.createClient(form);
       setCreateMsg('✅ User created! They can now log in.');
       setForm({ company:'', name:'', email:'', password:'' });
+      setErrors({});
       refetch();
     } catch (err) {
       setCreateMsg('❌ ' + (err.response?.data?.error || 'Error creating user'));
@@ -48,23 +75,53 @@ export default function AllClientsPage({ onSelectClient }) {
         <div style={styles.createBox}>
           <h3 style={styles.createTitle}>Create User Account</h3>
           <form onSubmit={handleCreate} style={styles.createForm}>
-            <input placeholder="Company name *" value={form.company}
-              onChange={e => setForm(f => ({...f, company: e.target.value}))}
-              required style={styles.formInput} />
-            <input placeholder="Contact name *" value={form.name}
-              onChange={e => setForm(f => ({...f, name: e.target.value}))}
-              required style={styles.formInput} />
-            <input placeholder="Email (login) *" type="email" value={form.email}
-              onChange={e => setForm(f => ({...f, email: e.target.value}))}
-              required style={styles.formInput} />
-            <input placeholder="Password *" type="password" value={form.password}
-              onChange={e => setForm(f => ({...f, password: e.target.value}))}
-              required style={styles.formInput} />
+            <div style={styles.field}>
+              <label style={styles.label}>Company Name <span style={styles.requiredAsterisk}>*</span></label>
+              <input
+                placeholder="Acme Corp"
+                value={form.company}
+                onChange={e => handleFieldChange('company', e.target.value)}
+                style={{ ...styles.formInput, ...(errors.company ? styles.inputError : {}) }}
+              />
+              {errors.company && <div style={styles.errorText}>{errors.company}</div>}
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Contact Name <span style={styles.requiredAsterisk}>*</span></label>
+              <input
+                placeholder="John Smith"
+                value={form.name}
+                onChange={e => handleFieldChange('name', e.target.value)}
+                style={{ ...styles.formInput, ...(errors.name ? styles.inputError : {}) }}
+              />
+              {errors.name && <div style={styles.errorText}>{errors.name}</div>}
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Email <span style={styles.requiredAsterisk}>*</span></label>
+              <input
+                placeholder="john@acme.com"
+                type="email"
+                value={form.email}
+                onChange={e => handleFieldChange('email', e.target.value)}
+                style={{ ...styles.formInput, ...(errors.email ? styles.inputError : {}) }}
+              />
+              {errors.email && <div style={styles.errorText}>{errors.email}</div>}
+            </div>
+            <div style={styles.field}>
+              <label style={styles.label}>Password <span style={styles.requiredAsterisk}>*</span></label>
+              <input
+                placeholder="Create a password"
+                type="password"
+                value={form.password}
+                onChange={e => handleFieldChange('password', e.target.value)}
+                style={{ ...styles.formInput, ...(errors.password ? styles.inputError : {}) }}
+              />
+              {errors.password && <div style={styles.errorText}>{errors.password}</div>}
+            </div>
             <button type="submit" disabled={creating} style={styles.createBtn}>
               {creating ? 'Creating…' : 'Create User'}
             </button>
           </form>
-          {createMsg && <div style={styles.createMsg}>{createMsg}</div>}
+          {createMsg && <div style={createMsg.startsWith('✅') ? styles.successMsg : styles.errorMsg}>{createMsg}</div>}
         </div>
       )}
 
@@ -148,16 +205,22 @@ const styles = {
     padding: 24, marginBottom: 24,
   },
   createTitle: { margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#0369a1' },
-  createForm:  { display: 'flex', flexWrap: 'wrap', gap: 10 },
+  createForm:  { display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-start' },
+  field: { flex: '1 1 220px', minWidth: 0 },
+  label: { display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600, color: '#374151' },
+  requiredAsterisk: { color: '#ef4444', marginLeft: 2, fontWeight: 800 },
   formInput: {
     flex: '1 1 180px', padding: '10px 14px', borderRadius: 8,
-    border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none',
+    border: '1.5px solid #e5e7eb', fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box',
   },
+  inputError: { borderColor: '#ef4444', background: '#fef2f2' },
+  errorText: { marginTop: 6, fontSize: 12, color: '#dc2626' },
   createBtn: {
     padding: '10px 24px', borderRadius: 8, border: 'none',
-    background: '#0369a1', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+    background: '#0369a1', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13, alignSelf: 'flex-start',
   },
-  createMsg: { marginTop: 12, fontSize: 14 },
+  successMsg: { marginTop: 12, padding: '10px 14px', borderRadius: 8, background: '#dcfce7', color: '#16a34a', fontSize: 13 },
+  errorMsg: { marginTop: 12, padding: '10px 14px', borderRadius: 8, background: '#fee2e2', color: '#dc2626', fontSize: 13 },
   filterBar: { marginBottom: 16 },
   searchWrapper: {
     position: 'relative', display: 'inline-flex', alignItems: 'center',

@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Sparkles, Copy, Check, RefreshCw, Loader2 } from 'lucide-react';
 import { insightsAPI } from '../../services/api';
-import { getDemoInsight, isDemoClient } from '../../services/demoData';
-
 // Inject keyframe animations once
 if (typeof document !== 'undefined' && !document.getElementById('ai-insight-styles')) {
   const s = document.createElement('style');
@@ -21,10 +19,6 @@ function useInsight(clientId, month, year) {
 
   const fetch = async () => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setInsight(getDemoInsight(month, year));
-      return;
-    }
     try {
       setLoading(true);
       const res = await insightsAPI.list({ client: clientId, month, year });
@@ -79,15 +73,6 @@ export default function AIInsightCard({ clientId, month, year, canGenerate = fal
   const handleGenerate = async () => {
     setGenerating(true);
     setNewText('');
-    if (isDemoClient(clientId)) {
-      const nextInsight = getDemoInsight(month, year);
-      setTimeout(() => {
-        setGenerating(false);
-        setNewText(nextInsight.content);
-        setInsight(nextInsight);
-      }, 900);
-      return;
-    }
     try {
       await insightsAPI.generate({ client: clientId, month, year });
       // Poll until the insight appears (Celery task ~5-15s)

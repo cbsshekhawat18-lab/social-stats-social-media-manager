@@ -7,6 +7,7 @@ import PageHeader from '../components/layout/PageHeader';
 export default function EditClientPage({ clientId, onSelectClient }) {
   const navigate       = useNavigate();
   const [form, setForm]= useState({ company:'', name:'', email:'', phone:'', website:'' });
+  const [errors, setErrors]   = useState({});
   const [saving, setSaving]   = useState(false);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg]         = useState('');
@@ -25,8 +26,39 @@ export default function EditClientPage({ clientId, onSelectClient }) {
     }).catch(() => { setMsg('❌ Failed to load client.'); setLoading(false); });
   }, [clientId]);
 
+  const handleFieldChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validateForm = () => {
+    const nextErrors = {};
+    if (!form.company.trim()) nextErrors.company = 'Company name is required.';
+    if (!form.name.trim()) nextErrors.name = 'Contact name is required.';
+    if (!form.email.trim()) nextErrors.email = 'Email is required.';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) nextErrors.email = 'Enter a valid email address.';
+    if (form.website.trim()) {
+      try {
+        new URL(form.website);
+      } catch {
+        nextErrors.website = 'Use a full website URL like https://example.com';
+      }
+    }
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      setMsg('❌ Please fix the highlighted fields.');
+      return;
+    }
     setSaving(true); setMsg('');
     try {
       const res = await clientsAPI.update(clientId, form);
@@ -54,38 +86,41 @@ export default function EditClientPage({ clientId, onSelectClient }) {
       <div style={styles.card}>
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.row}>
-            <label style={styles.label}>Company Name *</label>
+            <label style={styles.label}>Company Name <span style={styles.requiredAsterisk}>*</span></label>
             <input
               value={form.company}
-              onChange={e => setForm(f => ({...f, company: e.target.value}))}
-              required style={styles.input}
+              onChange={e => handleFieldChange('company', e.target.value)}
+              style={{ ...styles.input, ...(errors.company ? styles.inputError : {}) }}
               placeholder="Acme Corp"
             />
+            {errors.company && <div style={styles.errorText}>{errors.company}</div>}
           </div>
           <div style={styles.row}>
-            <label style={styles.label}>Contact Name *</label>
+            <label style={styles.label}>Contact Name <span style={styles.requiredAsterisk}>*</span></label>
             <input
               value={form.name}
-              onChange={e => setForm(f => ({...f, name: e.target.value}))}
-              required style={styles.input}
+              onChange={e => handleFieldChange('name', e.target.value)}
+              style={{ ...styles.input, ...(errors.name ? styles.inputError : {}) }}
               placeholder="John Smith"
             />
+            {errors.name && <div style={styles.errorText}>{errors.name}</div>}
           </div>
           <div style={styles.row}>
-            <label style={styles.label}>Email *</label>
+            <label style={styles.label}>Email <span style={styles.requiredAsterisk}>*</span></label>
             <input
               type="email"
               value={form.email}
-              onChange={e => setForm(f => ({...f, email: e.target.value}))}
-              required style={styles.input}
+              onChange={e => handleFieldChange('email', e.target.value)}
+              style={{ ...styles.input, ...(errors.email ? styles.inputError : {}) }}
               placeholder="john@acme.com"
             />
+            {errors.email && <div style={styles.errorText}>{errors.email}</div>}
           </div>
           <div style={styles.row}>
             <label style={styles.label}>Phone</label>
             <input
               value={form.phone}
-              onChange={e => setForm(f => ({...f, phone: e.target.value}))}
+              onChange={e => handleFieldChange('phone', e.target.value)}
               style={styles.input}
               placeholder="+1 555 000 0000"
             />
@@ -94,10 +129,11 @@ export default function EditClientPage({ clientId, onSelectClient }) {
             <label style={styles.label}>Website</label>
             <input
               value={form.website}
-              onChange={e => setForm(f => ({...f, website: e.target.value}))}
-              style={styles.input}
+              onChange={e => handleFieldChange('website', e.target.value)}
+              style={{ ...styles.input, ...(errors.website ? styles.inputError : {}) }}
               placeholder="https://acme.com"
             />
+            {errors.website && <div style={styles.errorText}>{errors.website}</div>}
           </div>
 
           {msg && <div style={msg.startsWith('✅') ? styles.success : styles.error}>{msg}</div>}
@@ -131,10 +167,13 @@ const styles = {
   form:    { display: 'flex', flexDirection: 'column', gap: 20 },
   row:     { display: 'flex', flexDirection: 'column', gap: 6 },
   label:   { fontSize: 13, fontWeight: 600, color: '#374151' },
+  requiredAsterisk: { color: '#ef4444', marginLeft: 2, fontWeight: 800 },
   input: {
     padding: '10px 14px', borderRadius: 8, border: '1.5px solid #e5e7eb',
     fontSize: 14, outline: 'none', color: '#0f172a',
   },
+  inputError: { borderColor: '#ef4444', background: '#fef2f2' },
+  errorText: { marginTop: 6, fontSize: 12, color: '#dc2626' },
   success: { padding: '10px 14px', borderRadius: 8, background: '#dcfce7', color: '#16a34a', fontSize: 13 },
   error:   { padding: '10px 14px', borderRadius: 8, background: '#fee2e2', color: '#dc2626', fontSize: 13 },
   actions: { display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 },

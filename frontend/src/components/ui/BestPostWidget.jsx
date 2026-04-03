@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Trophy, ExternalLink, TrendingUp, TrendingDown, ImageOff, Play } from 'lucide-react';
 import { topPostsAPI } from '../../services/api';
 import { PLATFORMS, fmt } from '../../services/platforms';
-import { getDemoTopPosts, isDemoClient } from '../../services/demoData';
-
 // Inject keyframe once
 if (typeof document !== 'undefined' && !document.getElementById('best-post-styles')) {
   const s = document.createElement('style');
@@ -28,11 +26,6 @@ function useTopPosts(clientId, week) {
 
   useEffect(() => {
     if (!clientId) return;
-    if (isDemoClient(clientId)) {
-      setPosts(getDemoTopPosts());
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     const params = { client: clientId };
     if (week) params.week = week;

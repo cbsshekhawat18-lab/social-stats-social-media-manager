@@ -46,6 +46,14 @@ def _frontend_error(msg):
     return redirect(f'{FRONTEND_URL}/login?error={urllib.parse.quote(msg)}')
 
 
+def _check_client_assigned(user):
+    """Return True if this client user has been assigned to a company."""
+    try:
+        return user.profile.client_id is not None
+    except Exception:
+        return False
+
+
 def _make_jwt(user):
     """Build JWT tokens with the same custom claims as our login view."""
     refresh = RefreshToken.for_user(user)
@@ -176,6 +184,10 @@ def google_social_callback(request):
     if err:
         return _frontend_error(err)
 
+    if not _check_client_assigned(user):
+        access, refresh = _make_jwt(user)
+        return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}&status=pending')
+
     access, refresh = _make_jwt(user)
     return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}')
 
@@ -248,6 +260,10 @@ def facebook_social_callback(request):
     user, err = _find_or_create_client(email, first_name, last_name)
     if err:
         return _frontend_error(err)
+
+    if not _check_client_assigned(user):
+        access, refresh = _make_jwt(user)
+        return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}&status=pending')
 
     access, refresh = _make_jwt(user)
     return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}')

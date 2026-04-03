@@ -126,7 +126,7 @@ export default function AdminOnboardingPage() {
                 >
                   <div style={styles.clientHeaderLeft}>
                     <div style={styles.clientIcon}>
-                      <Rocket size={16} style={{ color: '#6366f1' }} />
+                      <Rocket size={16} style={{ color: '#00d7ff' }} />
                     </div>
                     <div>
                       <div style={styles.clientName}>{group.clientName}</div>
@@ -227,7 +227,7 @@ const styles = {
     width: 38,
     height: 38,
     borderRadius: 12,
-    background: '#eef2ff',
+    background: '#e6fbff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -239,14 +239,14 @@ const styles = {
   percentBadge: {
     padding: '4px 10px',
     borderRadius: 999,
-    background: '#eef2ff',
-    color: '#4f46e5',
+    background: '#e6fbff',
+    color: '#007a9a',
     fontSize: 12,
     fontWeight: 800,
   },
   clientProgressWrap: { padding: '0 20px 18px' },
   progressTrack: { height: 8, borderRadius: 999, background: '#e5e7eb', overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, #6366f1 0%, #2563eb 100%)' },
+  progressFill: { height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, #00d7ff 0%, #00d7ff 100%)' },
   stepList: {
     borderTop: '1px solid #eef2f7',
     padding: '6px 20px 18px',
@@ -278,6 +278,6 @@ const styles = {
     border: '1px solid transparent',
     whiteSpace: 'nowrap',
   },
-  stepActionPrimary: { background: '#eef2ff', color: '#4f46e5', borderColor: '#c7d2fe' },
+  stepActionPrimary: { background: '#e6fbff', color: '#007a9a', borderColor: '#99eeff' },
   stepActionSecondary: { background: '#fff', color: '#475569', borderColor: '#e2e8f0' },
 };

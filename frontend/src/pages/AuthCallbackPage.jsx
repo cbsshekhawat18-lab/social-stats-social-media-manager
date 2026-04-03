@@ -76,7 +76,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%)',
+    background: '#f0f4f9',
   },
   card: {
     background: '#fff',
@@ -90,7 +90,7 @@ const styles = {
     width: 44,
     height: 44,
     border: '4px solid #e2e8f0',
-    borderTopColor: '#2563eb',
+    borderTopColor: '#00d7ff',
     borderRadius: '50%',
     margin: '0 auto 20px',
     animation: 'spin 0.8s linear infinite',

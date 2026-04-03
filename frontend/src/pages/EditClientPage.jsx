@@ -144,6 +144,6 @@ const styles = {
   },
   saveBtn: {
     padding: '10px 24px', borderRadius: 8, border: 'none',
-    background: '#2563eb', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+    background: '#00d7ff', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
   },
 };

@@ -1,12 +1,14 @@
+import { StatoxLogoHorizontal } from '../components/ui/StatoxLogo';
+
 export default function TermsOfServicePage() {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
         {/* Header */}
         <div style={styles.header}>
-          <div style={styles.logoIcon}>📊</div>
-          <h1 style={styles.logoText}>StatoX</h1>
-          <p style={styles.logoSub}>Social Media Analytics Dashboard</p>
+          <div style={styles.logoPlate}>
+            <StatoxLogoHorizontal height={32} />
+          </div>
         </div>
 
         <div style={styles.card}>
@@ -172,15 +174,18 @@ function Section({ title, children }) {
   );
 }
 
+// 3 brand colours: cyan · dark navy · light
+const C = { cyan: '#00d7ff', dark: '#0f172a', light: '#f0f4f9' };  // light theme
+
 const sectionStyles = {
-  heading: { fontSize: 16, fontWeight: 700, color: '#1e293b', marginBottom: 10, marginTop: 0 },
-  body: { color: '#475569', fontSize: 14, lineHeight: 1.7 },
+  heading: { fontSize: 16, fontWeight: 700, color: '#007a9a', marginBottom: 10, marginTop: 0 },
+  body: { color: '#334155', fontSize: 14, lineHeight: 1.7 },
 };
 
 const styles = {
   page: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%)',
+    background: '#f0f4f9',
     padding: '40px 16px',
   },
   container: {
@@ -191,20 +196,28 @@ const styles = {
     textAlign: 'center',
     marginBottom: 32,
   },
-  logoIcon: { fontSize: 40, marginBottom: 6 },
-  logoText: { margin: '0 0 4px', fontSize: 24, fontWeight: 800, color: '#fff' },
-  logoSub: { margin: 0, color: '#94a3b8', fontSize: 13 },
+  logoPlate: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '12px 20px',
+    borderRadius: 18,
+    background: '#fff',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 4px 16px rgba(0,215,255,0.08)',
+  },
   card: {
     background: '#fff',
     borderRadius: 20,
     padding: '48px 48px',
-    boxShadow: '0 25px 60px rgba(0,0,0,.4)',
+    boxShadow: '0 8px 32px rgba(15,23,42,.07)',
+    border: '1px solid #e2e8f0',
   },
   title: { fontSize: 26, fontWeight: 800, color: '#0f172a', marginTop: 0, marginBottom: 6 },
   meta: { fontSize: 12, color: '#94a3b8', marginBottom: 36, marginTop: 0 },
-  p: { margin: '0 0 10px', color: '#475569', fontSize: 14, lineHeight: 1.7 },
-  ul: { margin: '0 0 10px', paddingLeft: 20, color: '#475569', fontSize: 14, lineHeight: 1.9 },
-  link: { color: '#2563eb', textDecoration: 'none' },
+  p: { margin: '0 0 10px', color: '#334155', fontSize: 14, lineHeight: 1.7 },
+  ul: { margin: '0 0 10px', paddingLeft: 20, color: '#334155', fontSize: 14, lineHeight: 1.9 },
+  link: { color: C.cyan, textDecoration: 'none' },
   footer: { textAlign: 'center', color: '#64748b', fontSize: 12, marginTop: 24 },
-  footerLink: { color: '#94a3b8', textDecoration: 'none' },
+  footerLink: { color: C.cyan, textDecoration: 'none' },
 };

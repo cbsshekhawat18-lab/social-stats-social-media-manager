@@ -80,7 +80,7 @@ function GoalManager() {
     <div style={styles.tableWrap}>
       <div style={styles.goalHeader} onClick={() => setOpen(o => !o)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Target size={16} style={{ color: '#6366f1' }} />
+          <Target size={16} style={{ color: '#00d7ff' }} />
           <h3 style={styles.tableTitle}>Set Monthly Goals</h3>
         </div>
         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -173,7 +173,7 @@ const ALERT_ICONS = {
   token_expired:      { icon: AlertCircle,  color: '#dc2626' },
   sync_failed:        { icon: AlertCircle,  color: '#ea580c' },
   reach_drop:         { icon: TrendingDown, color: '#d97706' },
-  viral_post:         { icon: Zap,          color: '#7c3aed' },
+  viral_post:         { icon: Zap,          color: '#00d7ff' },
   goal_at_risk:       { icon: Target,       color: '#c2410c' },
   follower_milestone: { icon: Users,         color: '#16a34a' },
 };
@@ -195,7 +195,7 @@ function AlertsPanel() {
     <div style={styles.tableWrap}>
       <div style={styles.goalHeader} onClick={() => setOpen(o => !o)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Bell size={16} style={{ color: '#6366f1' }} />
+          <Bell size={16} style={{ color: '#00d7ff' }} />
           <h3 style={styles.tableTitle}>Smart Alerts</h3>
           {unreadCount > 0 && (
             <span style={alertBadgeStyle}>{unreadCount} unread</span>
@@ -226,7 +226,7 @@ function AlertsPanel() {
                 return (
                   <div
                     key={alert.id}
-                    style={{ ...alertItemStyle, background: alert.is_read ? '#fff' : '#f0f4ff' }}
+                    style={{ ...alertItemStyle, background: alert.is_read ? '#fff' : '#e6fbff' }}
                     onClick={() => !alert.is_read && markRead(alert.id)}
                   >
                     <div style={{ ...alertIconWrap, background: cfg.color + '20' }}>
@@ -246,7 +246,7 @@ function AlertsPanel() {
                       </div>
                     </div>
                     {!alert.is_read && (
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', flexShrink: 0, marginTop: 4 }} />
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#00d7ff', flexShrink: 0, marginTop: 4 }} />
                     )}
                   </div>
                 );
@@ -272,7 +272,7 @@ const alertIconWrap = {
   display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2,
 };
 const alertClientTag = {
-  fontSize: 11, background: '#ede9fe', color: '#6d28d9',
+  fontSize: 11, background: '#e6fbff', color: '#6d28d9',
   borderRadius: 20, padding: '1px 7px', fontWeight: 600,
 };
 
@@ -381,7 +381,7 @@ function TopPostsPanel() {
                     </td>
                     <td style={styles.td}>
                       {post?.post_url && (
-                        <a href={post.post_url} target="_blank" rel="noreferrer" style={{ color: '#2563eb', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12 }}>
+                        <a href={post.post_url} target="_blank" rel="noreferrer" style={{ color: '#00d7ff', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12 }}>
                           <ExternalLink size={12} /> View
                         </a>
                       )}
@@ -428,10 +428,10 @@ function SharedLinksPanel() {
     <div style={panelWrap}>
       <button onClick={() => setOpen(o => !o)} style={panelToggle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link2 size={16} style={{ color: '#6366f1' }} />
+          <Link2 size={16} style={{ color: '#00d7ff' }} />
           <span>Shared Report Links</span>
           {links.length > 0 && !open && (
-            <span style={{ ...countBadge, background: '#ede9fe', color: '#6366f1' }}>{links.length}</span>
+            <span style={{ ...countBadge, background: '#e6fbff', color: '#00d7ff' }}>{links.length}</span>
           )}
         </div>
         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -464,7 +464,7 @@ function SharedLinksPanel() {
                     </td>
                     <td style={styles.td}>
                       {link.is_password_protected
-                        ? <Lock size={13} style={{ color: '#6366f1' }} />
+                        ? <Lock size={13} style={{ color: '#00d7ff' }} />
                         : <span style={{ color: '#94a3b8' }}>—</span>}
                     </td>
                     <td style={{ ...styles.td, display: 'flex', gap: 8 }}>
@@ -522,7 +522,7 @@ function ROIOverviewPanel() {
     <div style={styles.tableWrap}>
       <div style={styles.goalHeader} onClick={() => setOpen(o => !o)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <TrendingUp size={16} style={{ color: '#2563eb' }} />
+          <TrendingUp size={16} style={{ color: '#00d7ff' }} />
           <h3 style={styles.tableTitle}>ROI Summary — {MONTH_NAMES[month - 1]} {year}</h3>
         </div>
         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -576,7 +576,7 @@ function ROIOverviewPanel() {
                           onClick={() => navigate(`/admin/client/${r.client_id}/roi`)}
                           style={{
                             background: 'none', border: '1px solid #e2e8f0', borderRadius: 6,
-                            padding: '4px 10px', cursor: 'pointer', fontSize: 12, color: '#2563eb',
+                            padding: '4px 10px', cursor: 'pointer', fontSize: 12, color: '#00d7ff',
                             display: 'flex', alignItems: 'center', gap: 4,
                           }}
                         >
@@ -635,8 +635,8 @@ export default function AdminOverview() {
       </div>
 
       <div style={styles.cards}>
-        <StatCard label="Total Users"        value={overview?.total_clients || 0} icon={Users}         color="#6366f1" />
-        <StatCard label="Total Impressions" value={totalImpressions}             icon={Eye}           color="#2563eb" />
+        <StatCard label="Total Users"        value={overview?.total_clients || 0} icon={Users}         color="#00d7ff" />
+        <StatCard label="Total Impressions" value={totalImpressions}             icon={Eye}           color="#00d7ff" />
         <StatCard label="Total Clicks"      value={totalClicks}                  icon={MousePointer2} color="#22c55e" />
         <StatCard label="Total Followers"   value={totalFollowers}               icon={TrendingUp}    color="#f59e0b" />
       </div>
@@ -720,8 +720,8 @@ export default function AdminOverview() {
 const statusColors = {
   success: { background: '#dcfce7', color: '#16a34a' },
   failed:  { background: '#fee2e2', color: '#dc2626' },
-  running: { background: '#dbeafe', color: '#2563eb' },
-  pending: { background: '#f1f5f9', color: '#64748b' },
+  running: { background: '#e6fbff', color: '#00d7ff' },
+  pending: { background: '#f0f4f9', color: '#64748b' },
 };
 
 function statusBadge(status) {
@@ -797,7 +797,7 @@ const styles = {
   },
   addGoalBtn: {
     padding: '8px 16px', borderRadius: 8, border: 'none',
-    background: '#6366f1', color: '#fff', cursor: 'pointer',
+    background: '#00d7ff', color: '#fff', cursor: 'pointer',
     fontWeight: 700, fontSize: 13,
   },
   delBtn: {
@@ -811,7 +811,7 @@ const styles = {
   },
   table:      { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
   th: {
-    textAlign: 'left', padding: '10px 12px', background: '#f8fafc',
+    textAlign: 'left', padding: '10px 12px', background: '#f0f4f9',
     color: '#64748b', fontWeight: 600, fontSize: 12, borderBottom: '1px solid #e5e7eb',
     whiteSpace: 'nowrap',
   },

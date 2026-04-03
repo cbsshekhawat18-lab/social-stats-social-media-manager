@@ -25,7 +25,7 @@ function ErrorMsg({ msg }) {
   );
 }
 
-function Chip({ label, color = '#2563eb', bg = '#eff6ff' }) {
+function Chip({ label, color = '#00d7ff', bg = '#e6fbff' }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 999, background: bg, color, fontSize: 11, fontWeight: 700 }}>
       {label}
@@ -53,7 +53,7 @@ function PermRow({ code, label, description, value, isOverride, onChange }) {
       <div style={permRowStyles.info}>
         <div style={permRowStyles.label}>{label}</div>
         {description && <div style={permRowStyles.desc}>{description}</div>}
-        {isOverride && <Chip label="Custom override" color="#7c3aed" bg="#f3e8ff" />}
+        {isOverride && <Chip label="Custom override" color="#00d7ff" bg="#f3e8ff" />}
       </div>
       <button
         type="button"
@@ -61,7 +61,7 @@ function PermRow({ code, label, description, value, isOverride, onChange }) {
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
       >
         {value
-          ? <ToggleRight size={28} color="#2563eb" />
+          ? <ToggleRight size={28} color="#00d7ff" />
           : <ToggleLeft size={28} color="#94a3b8" />}
       </button>
     </div>
@@ -203,7 +203,7 @@ function PermissionsPanel({ entityId, entityType }) {
 
 const panelStyles = {
   group: { marginBottom: 10, border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden' },
-  groupHeader: { width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#f8fafc', border: 'none', cursor: 'pointer', textAlign: 'left' },
+  groupHeader: { width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#f0f4f9', border: 'none', cursor: 'pointer', textAlign: 'left' },
   groupTitle: { flex: 1, fontSize: 13, fontWeight: 700, color: '#0f172a' },
 };
 
@@ -261,7 +261,7 @@ function PortalConfigPanel({ clientId }) {
               onClick={() => setCfg(prev => ({ ...prev, [t.key]: !prev[t.key] }))}
               style={{ background: 'none', border: 'none', cursor: 'pointer' }}
             >
-              {cfg[t.key] ? <ToggleRight size={28} color="#2563eb" /> : <ToggleLeft size={28} color="#94a3b8" />}
+              {cfg[t.key] ? <ToggleRight size={28} color="#00d7ff" /> : <ToggleLeft size={28} color="#94a3b8" />}
             </button>
           </div>
         ))}
@@ -281,11 +281,11 @@ function PortalConfigPanel({ clientId }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <input
             type="color"
-            value={cfg.custom_accent_color || '#2563eb'}
+            value={cfg.custom_accent_color || '#00d7ff'}
             onChange={e => setCfg(prev => ({ ...prev, custom_accent_color: e.target.value }))}
             style={{ width: 40, height: 36, borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer', padding: 2 }}
           />
-          <span style={{ fontSize: 13, color: '#64748b' }}>{cfg.custom_accent_color || '#2563eb'}</span>
+          <span style={{ fontSize: 13, color: '#64748b' }}>{cfg.custom_accent_color || '#00d7ff'}</span>
         </div>
       </div>
       <div style={{ marginBottom: 20 }}>
@@ -397,10 +397,10 @@ function StaffClientsPanel({ staffId }) {
 }
 
 const assignStyles = {
-  row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 10, background: '#f8fafc', marginBottom: 6 },
+  row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 10, background: '#f0f4f9', marginBottom: 6 },
   name: { fontSize: 13, fontWeight: 600, color: '#1e293b' },
   removeBtn: { display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', border: '1px solid #fca5a5', borderRadius: 8, background: '#fff', color: '#dc2626', fontSize: 12, fontWeight: 600, cursor: 'pointer' },
-  addBtn: { display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', border: '1px solid #93c5fd', borderRadius: 8, background: '#fff', color: '#2563eb', fontSize: 12, fontWeight: 600, cursor: 'pointer' },
+  addBtn: { display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', border: '1px solid #99eeff', borderRadius: 8, background: '#fff', color: '#00d7ff', fontSize: 12, fontWeight: 600, cursor: 'pointer' },
 };
 
 // ─── Create Staff Modal ──────────────────────────────────────────────────────
@@ -798,7 +798,7 @@ const btnStyles = {
   primary: {
     display: 'inline-flex', alignItems: 'center', gap: 6,
     padding: '9px 16px', borderRadius: 10, border: 'none',
-    background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+    background: '#00d7ff',
     color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
   },
   ghost: {
@@ -812,7 +812,7 @@ const btnStyles = {
     background: '#fff', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer',
   },
   tabActive: {
-    background: '#eff6ff', borderColor: '#bfdbfe', color: '#2563eb',
+    background: '#e6fbff', borderColor: '#e6fbff', color: '#00d7ff',
   },
 };
 
@@ -822,8 +822,8 @@ const splitStyles = {
   listHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #f1f5f9', flexShrink: 0 },
   listTitle: { fontSize: 13, fontWeight: 700, color: '#0f172a' },
   listItem: { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #f8fafc', transition: 'background 0.15s' },
-  listItemActive: { background: '#eff6ff' },
-  itemAvatar: { width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%)', color: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, flexShrink: 0 },
+  listItemActive: { background: '#e6fbff' },
+  itemAvatar: { width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(180deg, #e6fbff 0%, #e6fbff 100%)', color: '#00d7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, flexShrink: 0 },
   itemName: { fontSize: 13, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   itemEmail: { fontSize: 11, color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   deleteBtn: { background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4, flexShrink: 0 },
@@ -887,7 +887,7 @@ const pageStyles = {
     borderBottom: '2px solid transparent', marginBottom: -2, transition: 'all 0.15s',
   },
   tabActive: {
-    color: '#2563eb', borderBottomColor: '#2563eb',
+    color: '#00d7ff', borderBottomColor: '#00d7ff',
   },
   body: { paddingTop: 8 },
 };

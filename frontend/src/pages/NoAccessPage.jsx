@@ -26,7 +26,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#f8fafc',
+    background: '#f0f4f9',
   },
   card: {
     background: '#fff',
@@ -61,8 +61,8 @@ const styles = {
   },
   btn: {
     padding: '11px 28px',
-    background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
-    color: '#fff',
+    background: '#00d7ff',
+    color: '#0f172a',
     border: 'none',
     borderRadius: 12,
     fontSize: 14,

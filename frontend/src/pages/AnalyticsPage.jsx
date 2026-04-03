@@ -19,10 +19,10 @@ const PLATFORM_META = {
 };
 
 const METRIC_META = {
-  impressions:  { label: 'Impressions',  icon: Eye,         color: '#6366f1' },
-  reach:        { label: 'Reach',        icon: Users,       color: '#2563eb' },
+  impressions:  { label: 'Impressions',  icon: Eye,         color: '#00d7ff' },
+  reach:        { label: 'Reach',        icon: Users,       color: '#00d7ff' },
   clicks:       { label: 'Clicks',       icon: MousePointer,color: '#0891b2' },
-  video_views:  { label: 'Video Views',  icon: Play,        color: '#7c3aed' },
+  video_views:  { label: 'Video Views',  icon: Play,        color: '#00d7ff' },
   followers:    { label: 'Followers',    icon: UserPlus,    color: '#059669' },
 };
 
@@ -60,7 +60,7 @@ function KPICard({ label, value, prev, icon: Icon, color, loading }) {
         </span>
       </div>
       {loading ? (
-        <div style={{ height: 32, background: '#f1f5f9', borderRadius: 6, animation: 'pulse 1.5s infinite' }} />
+        <div style={{ height: 32, background: '#f0f4f9', borderRadius: 6, animation: 'pulse 1.5s infinite' }} />
       ) : (
         <>
           <div style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', lineHeight: 1.1 }}>
@@ -192,7 +192,7 @@ export default function AnalyticsPage() {
   const platformData = (overview?.by_platform || []).map(p => ({
     ...p,
     label: PLATFORM_META[p.platform]?.label || p.platform,
-    color: PLATFORM_META[p.platform]?.color || '#6366f1',
+    color: PLATFORM_META[p.platform]?.color || '#00d7ff',
     icon:  PLATFORM_META[p.platform]?.icon  || '📱',
   }));
 
@@ -241,7 +241,7 @@ export default function AnalyticsPage() {
   const selectedClientName = clients.find(c => String(c.id) === String(selectedClientId))?.company;
 
   return (
-    <div style={{ padding: '32px 36px', background: '#f8fafc', minHeight: '100vh' }}>
+    <div style={{ padding: '32px 36px', background: '#f0f4f9', minHeight: '100vh' }}>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
         <div>
@@ -464,9 +464,9 @@ export default function AnalyticsPage() {
                 <YAxis tickFormatter={v => fmt(v)} tick={{ fontSize: 10, fill: '#94a3b8' }} width={48} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="reach"       name="Reach"       fill="#2563eb" radius={[3,3,0,0]} />
+                <Bar dataKey="reach"       name="Reach"       fill="#00d7ff" radius={[3,3,0,0]} />
                 <Bar dataKey="clicks"      name="Clicks"      fill="#0891b2" radius={[3,3,0,0]} />
-                <Bar dataKey="video_views" name="Video Views" fill="#7c3aed" radius={[3,3,0,0]} />
+                <Bar dataKey="video_views" name="Video Views" fill="#00d7ff" radius={[3,3,0,0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -490,10 +490,10 @@ export default function AnalyticsPage() {
                 <YAxis tickFormatter={v => fmt(v)} tick={{ fontSize: 11, fill: '#94a3b8' }} width={52} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="impressions"  name="Impressions"  stroke="#6366f1" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="reach"        name="Reach"        stroke="#2563eb" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="impressions"  name="Impressions"  stroke="#00d7ff" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="reach"        name="Reach"        stroke="#00d7ff" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="clicks"       name="Clicks"       stroke="#0891b2" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="video_views"  name="Video Views"  stroke="#7c3aed" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="video_views"  name="Video Views"  stroke="#00d7ff" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -546,7 +546,7 @@ export default function AnalyticsPage() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#f8fafc' }}>
+                <tr style={{ background: '#f0f4f9' }}>
                   {['Platform', 'Impressions', 'Reach', 'Clicks', 'Video Views', 'Followers', 'CTR'].map(h => (
                     <th key={h} style={{
                       padding: '10px 16px', textAlign: 'left', fontWeight: 700,
@@ -565,7 +565,7 @@ export default function AnalyticsPage() {
                           <div style={{
                             width: 32, height: 32, borderRadius: 8, display: 'flex',
                             alignItems: 'center', justifyContent: 'center',
-                            background: PLATFORM_META[p.platform]?.lightBg || '#f0f4ff',
+                            background: PLATFORM_META[p.platform]?.lightBg || '#e6fbff',
                             fontSize: 16,
                           }}>
                             {p.icon}
@@ -575,8 +575,8 @@ export default function AnalyticsPage() {
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '13px 16px', fontWeight: 700, color: '#6366f1' }}>{fmt(p.impressions)}</td>
-                      <td style={{ padding: '13px 16px', color: '#2563eb', fontWeight: 600 }}>{fmt(p.reach)}</td>
+                      <td style={{ padding: '13px 16px', fontWeight: 700, color: '#00d7ff' }}>{fmt(p.impressions)}</td>
+                      <td style={{ padding: '13px 16px', color: '#00d7ff', fontWeight: 600 }}>{fmt(p.reach)}</td>
                       <td style={{ padding: '13px 16px' }}>{fmt(p.clicks)}</td>
                       <td style={{ padding: '13px 16px' }}>{fmt(p.video_views)}</td>
                       <td style={{ padding: '13px 16px' }}>{fmt(p.followers)}</td>
@@ -617,7 +617,7 @@ export default function AnalyticsPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc' }}>
+                  <tr style={{ background: '#f0f4f9' }}>
                     {['Client', 'Status', 'Created', 'Website', ''].map(h => (
                       <th key={h} style={{
                         padding: '10px 16px', textAlign: 'left', fontWeight: 700,
@@ -632,9 +632,9 @@ export default function AnalyticsPage() {
                       <td style={{ padding: '13px 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{
-                            width: 34, height: 34, borderRadius: 10, background: '#eff6ff',
+                            width: 34, height: 34, borderRadius: 10, background: '#e6fbff',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: 13, fontWeight: 800, color: '#2563eb',
+                            fontSize: 13, fontWeight: 800, color: '#00d7ff',
                           }}>
                             {(c.company || 'C')[0].toUpperCase()}
                           </div>
@@ -660,7 +660,7 @@ export default function AnalyticsPage() {
                       <td style={{ padding: '13px 16px' }}>
                         {c.website ? (
                           <a href={c.website} target="_blank" rel="noreferrer"
-                            style={{ color: '#2563eb', fontSize: 12, textDecoration: 'none' }}>
+                            style={{ color: '#00d7ff', fontSize: 12, textDecoration: 'none' }}>
                             {c.website.replace(/^https?:\/\//, '')}
                           </a>
                         ) : <span style={{ color: '#cbd5e1' }}>—</span>}
@@ -669,8 +669,8 @@ export default function AnalyticsPage() {
                         <button
                           onClick={() => setSelectedClientId(String(c.id))}
                           style={{
-                            padding: '5px 14px', borderRadius: 8, border: '1.5px solid #2563eb',
-                            background: '#fff', color: '#2563eb', fontSize: 12, fontWeight: 700,
+                            padding: '5px 14px', borderRadius: 8, border: '1.5px solid #00d7ff',
+                            background: '#fff', color: '#00d7ff', fontSize: 12, fontWeight: 700,
                             cursor: 'pointer',
                           }}
                         >

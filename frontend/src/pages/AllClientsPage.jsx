@@ -140,7 +140,7 @@ const styles = {
   page:     { padding: '28px 32px', maxWidth: 1400, margin: '0 auto' },
   addBtn: {
     padding: '10px 20px', borderRadius: 10, border: 'none',
-    background: '#2563eb', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+    background: '#00d7ff', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
   },
   btnInner: { display: 'flex', alignItems: 'center', gap: 6 },
   createBox: {
@@ -176,18 +176,18 @@ const styles = {
   },
   table:  { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
   th: {
-    textAlign: 'left', padding: '10px 12px', background: '#f8fafc',
+    textAlign: 'left', padding: '10px 12px', background: '#f0f4f9',
     color: '#64748b', fontWeight: 600, fontSize: 12, borderBottom: '1px solid #e5e7eb',
     whiteSpace: 'nowrap',
   },
   tr:   { borderBottom: '1px solid #f1f5f9' },
   td:   { padding: '12px 12px', color: '#374151' },
   empty:{ padding: '40px 12px', textAlign: 'center', color: '#94a3b8' },
-  link: { color: '#2563eb', textDecoration: 'none' },
+  link: { color: '#00d7ff', textDecoration: 'none' },
   actions: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   viewBtn: {
-    padding: '6px 14px', borderRadius: 8, border: '1.5px solid #2563eb',
-    background: 'transparent', color: '#2563eb', cursor: 'pointer', fontWeight: 600, fontSize: 12,
+    padding: '6px 14px', borderRadius: 8, border: '1.5px solid #00d7ff',
+    background: 'transparent', color: '#00d7ff', cursor: 'pointer', fontWeight: 600, fontSize: 12,
   },
   iconBtn: {
     padding: '6px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb',

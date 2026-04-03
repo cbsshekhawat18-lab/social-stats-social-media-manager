@@ -28,12 +28,12 @@ const HASHTAG_PLATFORMS = {
 
 const TIER_ORDER = ['mega', 'large', 'medium', 'small', 'local', 'branded'];
 const TIER_CONFIG = {
-  mega:    { label: 'Mega',    subtitle: '1M+ posts',    color: '#7c3aed', bg: '#f3e8ff', border: '#e9d5ff' },
-  large:   { label: 'Large',   subtitle: '100K–1M posts', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
+  mega:    { label: 'Mega',    subtitle: '1M+ posts',    color: '#00d7ff', bg: '#f3e8ff', border: '#99eeff' },
+  large:   { label: 'Large',   subtitle: '100K–1M posts', color: '#00d7ff', bg: '#e6fbff', border: '#e6fbff' },
   medium:  { label: 'Medium',  subtitle: '10K–100K posts',color: '#0891b2', bg: '#ecfeff', border: '#a5f3fc' },
   small:   { label: 'Small',   subtitle: '1K–10K posts',  color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
   local:   { label: 'Local',   subtitle: 'Location tags', color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
-  branded: { label: 'Branded', subtitle: 'Your own brand',color: '#db2777', bg: '#fdf2f8', border: '#fbcfe8' },
+  branded: { label: 'Branded', subtitle: 'Your own brand',color: '#00d7ff', bg: '#fdf2f8', border: '#fbcfe8' },
 };
 
 const HASHTAG_POST_TYPES = [
@@ -142,7 +142,7 @@ function CaptionCard({ platform, caption, hashtags, bestTime, onAddToCalendar })
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
             {hashtags.map(tag => (
-              <span key={tag} style={{ padding: '3px 10px', borderRadius: 99, background: '#eff6ff', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>{tag}</span>
+              <span key={tag} style={{ padding: '3px 10px', borderRadius: 99, background: '#e6fbff', color: '#00d7ff', fontSize: 12, fontWeight: 600 }}>{tag}</span>
             ))}
           </div>
           <button onClick={() => copy(tagsText, `tags-${platform}`)} style={{ ...cardStyles.ghostBtn, fontSize: 11 }}>
@@ -165,7 +165,7 @@ function CaptionCard({ platform, caption, hashtags, bestTime, onAddToCalendar })
           <Copy size={13} />
           {copied === platform ? 'Copied!' : 'Copy'}
         </button>
-        <button onClick={() => setEditing(e => !e)} style={{ ...cardStyles.actionBtn, ...(editing ? { background: '#eff6ff', color: '#2563eb', borderColor: '#bfdbfe' } : {}) }}>
+        <button onClick={() => setEditing(e => !e)} style={{ ...cardStyles.actionBtn, ...(editing ? { background: '#e6fbff', color: '#00d7ff', borderColor: '#e6fbff' } : {}) }}>
           <Edit2 size={13} />
           {editing ? 'Done' : 'Edit'}
         </button>
@@ -234,10 +234,10 @@ function TierCard({ tier, data, selectedTags, onToggleTag }) {
 function RecommendedSetCard({ rec, onCopy, copied }) {
   if (!rec) return null;
   return (
-    <div style={{ border: '1px solid #bfdbfe', borderRadius: 14, overflow: 'hidden', marginBottom: 12, background: '#eff6ff' }}>
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid #bfdbfe', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Sparkles size={14} color="#2563eb" />
-        <span style={{ fontSize: 13, fontWeight: 800, color: '#1d4ed8' }}>Recommended Set</span>
+    <div style={{ border: '1px solid #e6fbff', borderRadius: 14, overflow: 'hidden', marginBottom: 12, background: '#e6fbff' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid #e6fbff', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Sparkles size={14} color="#00d7ff" />
+        <span style={{ fontSize: 13, fontWeight: 800, color: '#00d7ff' }}>Recommended Set</span>
       </div>
       <div style={{ padding: '14px 16px' }}>
         {rec.caption && (
@@ -251,7 +251,7 @@ function RecommendedSetCard({ rec, onCopy, copied }) {
           </div>
         )}
         {rec.first_comment && (
-          <div style={{ marginBottom: 12, paddingTop: 12, borderTop: '1px solid #bfdbfe' }}>
+          <div style={{ marginBottom: 12, paddingTop: 12, borderTop: '1px solid #e6fbff' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>First comment hashtags</div>
             <p style={{ fontSize: 13, color: '#1e293b', lineHeight: 1.7, margin: '0 0 8px', wordBreak: 'break-word' }}>{rec.first_comment}</p>
             <button onClick={() => onCopy(rec.first_comment, 'rec-comment')} style={cardStyles.ghostBtn}>
@@ -261,8 +261,8 @@ function RecommendedSetCard({ rec, onCopy, copied }) {
           </div>
         )}
         {rec.mix_explanation && (
-          <div style={{ paddingTop: 10, borderTop: '1px solid #bfdbfe' }}>
-            <span style={{ fontSize: 12, color: '#1d4ed8', lineHeight: 1.6 }}>{rec.mix_explanation}</span>
+          <div style={{ paddingTop: 10, borderTop: '1px solid #e6fbff' }}>
+            <span style={{ fontSize: 12, color: '#00d7ff', lineHeight: 1.6 }}>{rec.mix_explanation}</span>
           </div>
         )}
       </div>
@@ -535,13 +535,13 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           {/* Tab switcher */}
-          <div style={{ display: 'flex', border: '1.5px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', background: '#f8fafc' }}>
+          <div style={{ display: 'flex', border: '1.5px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', background: '#f0f4f9' }}>
             <button
               onClick={() => setMode('caption')}
               style={{
                 padding: '8px 16px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
                 display: 'flex', alignItems: 'center', gap: 6,
-                background: mode === 'caption' ? 'linear-gradient(135deg,#2563eb,#7c3aed)' : 'transparent',
+                background: mode === 'caption' ? '#00d7ff' : 'transparent',
                 color: mode === 'caption' ? '#fff' : '#64748b',
                 transition: 'all .15s',
               }}
@@ -554,7 +554,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
               style={{
                 padding: '8px 16px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
                 display: 'flex', alignItems: 'center', gap: 6,
-                background: mode === 'hashtag' ? 'linear-gradient(135deg,#7c3aed,#db2777)' : 'transparent',
+                background: mode === 'hashtag' ? '#00d7ff' : 'transparent',
                 color: mode === 'hashtag' ? '#fff' : '#64748b',
                 transition: 'all .15s',
               }}
@@ -727,7 +727,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                 )}
 
                 <button onClick={handleGenerateHashtags} disabled={hashLoading}
-                  style={{ ...styles.generateBtn, background: 'linear-gradient(135deg, #7c3aed, #db2777)', opacity: hashLoading ? 0.85 : 1, cursor: hashLoading ? 'not-allowed' : 'pointer' }}>
+                  style={{ ...styles.generateBtn, background: 'linear-gradient(135deg, #00d7ff, #00d7ff)', opacity: hashLoading ? 0.85 : 1, cursor: hashLoading ? 'not-allowed' : 'pointer' }}>
                   {hashLoading ? (
                     <><Loader2 size={18} style={{ animation: 'spin .8s linear infinite' }} />Researching… (5-10 seconds)</>
                   ) : (
@@ -760,7 +760,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
             <>
               {!capLoading && !captions && (
                 <div style={styles.emptyState}>
-                  <div style={styles.emptyIcon}><Sparkles size={40} color="#c4b5fd" /></div>
+                  <div style={styles.emptyIcon}><Sparkles size={40} color="#99eeff" /></div>
                   <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 8px' }}>Your captions will appear here</h3>
                   <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>Fill in the form and click Generate</p>
                 </div>
@@ -813,14 +813,14 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                       <Copy size={14} />
                       {globalCopied === 'all' ? '✓ Copied All!' : 'Copy All Captions'}
                     </button>
-                    <button onClick={handleGenerateCaption} disabled={capLoading} style={{ ...styles.bottomBtn, background: '#f8fafc' }}>
+                    <button onClick={handleGenerateCaption} disabled={capLoading} style={{ ...styles.bottomBtn, background: '#f0f4f9' }}>
                       <RefreshCw size={14} />Regenerate
                     </button>
                   </div>
 
                   <div style={{ marginTop: 24, border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden' }}>
                     <button onClick={() => setCapHistOpen(o => !o)}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: 'none', background: '#f8fafc', cursor: 'pointer' }}>
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: 'none', background: '#f0f4f9', cursor: 'pointer' }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: '#374151' }}>History ({capHistory.length})</span>
                       {capHistOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
                     </button>
@@ -841,7 +841,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
             <>
               {!hashLoading && !hashResult && (
                 <div style={styles.emptyState}>
-                  <div style={{ ...styles.emptyIcon, background: '#f3e8ff' }}><Hash size={40} color="#7c3aed" /></div>
+                  <div style={{ ...styles.emptyIcon, background: '#f3e8ff' }}><Hash size={40} color="#00d7ff" /></div>
                   <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: '0 0 8px' }}>Hashtag research will appear here</h3>
                   <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>Click each tag to select it, then copy or save your set</p>
                 </div>
@@ -868,8 +868,8 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                 <>
                   {/* Strategy banner */}
                   {hashResult.strategy && (
-                    <div style={{ background: 'linear-gradient(135deg,#7c3aed15,#db277715)', border: '1px solid #e9d5ff', borderRadius: 14, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                      <Sparkles size={16} color="#7c3aed" style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ background: 'linear-gradient(135deg,#00d7ff15,#00d7ff15)', border: '1px solid #99eeff', borderRadius: 14, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                      <Sparkles size={16} color="#00d7ff" style={{ flexShrink: 0, marginTop: 1 }} />
                       <p style={{ fontSize: 14, color: '#4c1d95', fontWeight: 500, margin: 0, lineHeight: 1.6 }}>{hashResult.strategy}</p>
                     </div>
                   )}
@@ -889,7 +889,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
 
                   {/* Platform tips */}
                   {hashResult.platform_tips && (
-                    <div style={{ border: '1px solid #e2e8f0', borderRadius: 14, padding: '14px 16px', marginBottom: 12, background: '#f8fafc' }}>
+                    <div style={{ border: '1px solid #e2e8f0', borderRadius: 14, padding: '14px 16px', marginBottom: 12, background: '#f0f4f9' }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ fontSize: 14 }}>{HASHTAG_PLATFORMS[hPlatform]?.emoji}</span>
                         {HASHTAG_PLATFORMS[hPlatform]?.label} Tips
@@ -912,14 +912,14 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
 
                   {/* Regenerate + history */}
                   <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
-                    <button onClick={handleGenerateHashtags} disabled={hashLoading} style={{ ...styles.bottomBtn, background: '#f8fafc' }}>
+                    <button onClick={handleGenerateHashtags} disabled={hashLoading} style={{ ...styles.bottomBtn, background: '#f0f4f9' }}>
                       <RefreshCw size={14} />Regenerate
                     </button>
                   </div>
 
                   <div style={{ marginTop: 20, border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden' }}>
                     <button onClick={() => setHashHistOpen(o => !o)}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: 'none', background: '#f8fafc', cursor: 'pointer' }}>
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', border: 'none', background: '#f0f4f9', cursor: 'pointer' }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: '#374151' }}>History ({hashHistory.length})</span>
                       {hashHistOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
                     </button>
@@ -952,9 +952,9 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
             </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, flex: 1 }}>
               {selectedTags.map(tag => (
-                <span key={tag} style={{ padding: '3px 10px', borderRadius: 99, background: '#eff6ff', color: '#2563eb', fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <span key={tag} style={{ padding: '3px 10px', borderRadius: 99, background: '#e6fbff', color: '#00d7ff', fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   {tag}
-                  <button onClick={() => toggleTag(tag)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#93c5fd', lineHeight: 1, fontSize: 14 }}>×</button>
+                  <button onClick={() => toggleTag(tag)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#99eeff', lineHeight: 1, fontSize: 14 }}>×</button>
                 </span>
               ))}
             </div>
@@ -965,7 +965,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
               {globalCopied === 'sel' ? '✓ Copied!' : 'Copy'}
             </button>
             {hashResultId && (
-              <button onClick={() => { setSaveModal(true); setSaveError(''); setSaveName(''); }} style={{ ...styles.barBtn, background: 'linear-gradient(135deg,#7c3aed,#db2777)', color: '#fff', border: 'none' }}>
+              <button onClick={() => { setSaveModal(true); setSaveError(''); setSaveName(''); }} style={{ ...styles.barBtn, background: '#00d7ff', color: '#0f172a', border: 'none' }}>
                 <Save size={13} />Save Set
               </button>
             )}
@@ -987,7 +987,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
             <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px' }}>Saving {selectedTags.length} tags</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16, maxHeight: 100, overflowY: 'auto' }}>
               {selectedTags.map(tag => (
-                <span key={tag} style={{ padding: '3px 10px', borderRadius: 99, background: '#eff6ff', color: '#2563eb', fontSize: 12, fontWeight: 600 }}>{tag}</span>
+                <span key={tag} style={{ padding: '3px 10px', borderRadius: 99, background: '#e6fbff', color: '#00d7ff', fontSize: 12, fontWeight: 600 }}>{tag}</span>
               ))}
             </div>
             <label style={styles.label}>Set name</label>
@@ -1004,7 +1004,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button onClick={() => setSaveModal(false)} style={styles.bottomBtn}>Cancel</button>
               <button onClick={handleSaveSet} disabled={saving}
-                style={{ ...styles.generateBtn, width: 'auto', padding: '0 20px', height: 40, fontSize: 13, background: 'linear-gradient(135deg,#7c3aed,#db2777)', opacity: saving ? 0.7 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>
+                style={{ ...styles.generateBtn, width: 'auto', padding: '0 20px', height: 40, fontSize: 13, background: 'linear-gradient(135deg,#00d7ff,#00d7ff)', opacity: saving ? 0.7 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>
                 {saving ? <Loader2 size={14} style={{ animation: 'spin .8s linear infinite' }} /> : <><Save size={14} />Save Set</>}
               </button>
             </div>
@@ -1032,15 +1032,15 @@ const styles = {
   select: { width: '100%', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 14, color: '#1e293b', background: '#fff', outline: 'none', marginTop: 6 },
   input: { width: '100%', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 14, color: '#1e293b', background: '#fff', outline: 'none', boxSizing: 'border-box' },
   toneBtn: { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
-  toneBtnActive: { background: '#2563eb', color: '#fff', borderColor: '#2563eb' },
-  generateBtn: { width: '100%', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg, #2563eb, #7c3aed)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700 },
+  toneBtnActive: { background: '#00d7ff', color: '#0f172a', borderColor: '#00d7ff' },
+  generateBtn: { width: '100%', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#00d7ff', color: '#0f172a', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700 },
   errorBox: { padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, color: '#dc2626', fontSize: 13, marginBottom: 16 },
   recentLabel: { fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 },
-  recentChip: { padding: '4px 10px', borderRadius: 99, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  recentChip: { padding: '4px 10px', borderRadius: 99, border: '1px solid #e2e8f0', background: '#f0f4f9', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 360, textAlign: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 18 },
   emptyIcon: { width: 80, height: 80, borderRadius: '50%', background: '#f3e8ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   platTab: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
-  platTabActive: { background: '#eff6ff', borderColor: '#bfdbfe', color: '#2563eb' },
+  platTabActive: { background: '#e6fbff', borderColor: '#e6fbff', color: '#00d7ff' },
   bottomBtn: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 18px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: '#fff', color: '#374151', fontSize: 13, fontWeight: 700, cursor: 'pointer' },
   stickyBar: { position: 'fixed', bottom: 0, left: 240, right: 0, background: '#fff', borderTop: '1.5px solid #e2e8f0', padding: '12px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, zIndex: 50, boxShadow: '0 -4px 20px rgba(0,0,0,0.08)' },
   barBtn: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: '#fff', color: '#374151', fontSize: 13, fontWeight: 700, cursor: 'pointer' },

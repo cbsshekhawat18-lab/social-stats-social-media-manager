@@ -228,12 +228,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div style={styles.footerRow}>
-            <span style={styles.footerText}>Need access to the platform?</span>
-            <button type="button" style={styles.inlineLink}>
-              Create Account
-            </button>
-          </div>
         </div>
       </section>
     </div>

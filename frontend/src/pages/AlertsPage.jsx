@@ -8,7 +8,7 @@ const ALERT_TYPE_META = {
   reach_drop:         { label: 'Reach Drop',            color: '#d97706', bg: '#fffbeb', icon: '📉' },
   viral_post:         { label: 'Viral Post',            color: '#059669', bg: '#f0fdf4', icon: '🚀' },
   goal_at_risk:       { label: 'Goal At Risk',          color: '#9333ea', bg: '#faf5ff', icon: '🎯' },
-  follower_milestone: { label: 'Follower Milestone',    color: '#2563eb', bg: '#eff6ff', icon: '🎉' },
+  follower_milestone: { label: 'Follower Milestone',    color: '#00d7ff', bg: '#e6fbff', icon: '🎉' },
 };
 
 const PLATFORM_ICONS = {
@@ -134,9 +134,9 @@ export default function AlertsPage() {
             style={{
               padding: '6px 16px', borderRadius: 8, border: '1.5px solid',
               cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
-              background:  filterRead === f ? '#0f172a' : '#fff',
-              borderColor: filterRead === f ? '#0f172a' : '#e2e8f0',
-              color:       filterRead === f ? '#fff'    : '#64748b',
+              background:  filterRead === f ? '#00d7ff' : '#fff',
+              borderColor: filterRead === f ? '#00d7ff' : '#e2e8f0',
+              color:       filterRead === f ? '#0f172a' : '#64748b',
             }}
           >
             {f === 'unread' ? <><Bell size={12} style={{ verticalAlign: 'middle', marginRight: 5 }} />Unread</> :
@@ -166,7 +166,7 @@ export default function AlertsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map(alert => {
             const meta = ALERT_TYPE_META[alert.alert_type] || {
-              label: alert.alert_type, color: '#6366f1', bg: '#f0f4ff', icon: '📢',
+              label: alert.alert_type, color: '#00d7ff', bg: '#e6fbff', icon: '📢',
             };
             return (
               <div
@@ -255,6 +255,6 @@ const btnSecondary = {
 const btnPrimary = {
   display: 'flex', alignItems: 'center', gap: 7,
   padding: '8px 16px', borderRadius: 10, border: 'none',
-  background: '#2563eb', color: '#fff', fontSize: 13, fontWeight: 700,
+  background: '#00d7ff', color: '#0f172a', fontSize: 13, fontWeight: 700,
   cursor: 'pointer',
 };

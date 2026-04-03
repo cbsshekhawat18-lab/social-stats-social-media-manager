@@ -31,14 +31,14 @@ export default function ContentCalculatorPage({ clientId }) {
           label="Caption Length"
           value="0 chars"
           hint="Ideal for quick draft reviews"
-          color="#2563eb"
+          color="#00d7ff"
         />
         <MetricCard
           icon={Hash}
           label="Hashtag Count"
           value="0 tags"
           hint="Keep platform-specific limits in mind"
-          color="#7c3aed"
+          color="#00d7ff"
         />
         <MetricCard
           icon={Sparkles}
@@ -81,8 +81,8 @@ const styles = {
     padding: '8px 12px',
     borderRadius: 999,
     background: '#fff',
-    border: '1px solid #dbeafe',
-    color: '#1d4ed8',
+    border: '1px solid #e6fbff',
+    color: '#00d7ff',
     fontSize: 12,
     fontWeight: 700,
     whiteSpace: 'nowrap',
@@ -150,8 +150,8 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#eef2ff',
-    color: '#4f46e5',
+    background: '#e6fbff',
+    color: '#00d7ff',
     flexShrink: 0,
   },
   cardTitle: {
@@ -176,7 +176,7 @@ const styles = {
     lineHeight: 1.6,
     color: '#0f172a',
     outline: 'none',
-    background: '#f8fafc',
+    background: '#f0f4f9',
     boxSizing: 'border-box',
   },
 };

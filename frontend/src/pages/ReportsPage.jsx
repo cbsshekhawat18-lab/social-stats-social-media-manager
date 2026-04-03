@@ -68,7 +68,7 @@ function SharedLinksPanel({ clientFilter }) {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
-          <Link2 size={16} style={{ verticalAlign: 'middle', marginRight: 8, color: '#6366f1' }} />
+          <Link2 size={16} style={{ verticalAlign: 'middle', marginRight: 8, color: '#00d7ff' }} />
           Shared Report Links
         </h2>
         <button onClick={load} style={btnSecondary}>
@@ -80,7 +80,7 @@ function SharedLinksPanel({ clientFilter }) {
         <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>Loading links…</div>
       ) : links.length === 0 ? (
         <div style={{
-          textAlign: 'center', padding: '48px 0', background: '#f8fafc',
+          textAlign: 'center', padding: '48px 0', background: '#f0f4f9',
           borderRadius: 12, border: '1px dashed #cbd5e1',
         }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}>🔗</div>
@@ -140,7 +140,7 @@ function SharedLinksPanel({ clientFilter }) {
                   >
                     {copied === link.id ? <Check size={14} /> : <Copy size={14} />}
                   </button>
-                  <a href={url} target="_blank" rel="noreferrer" style={{ ...iconBtn, color: '#6366f1' }} title="Open report">
+                  <a href={url} target="_blank" rel="noreferrer" style={{ ...iconBtn, color: '#00d7ff' }} title="Open report">
                     <ExternalLink size={14} />
                   </a>
                   <button
@@ -180,14 +180,14 @@ function ROIReportsPanel() {
 
   function roiColor(pct) {
     if (pct >= 200) return '#059669';
-    if (pct >= 100) return '#2563eb';
+    if (pct >= 100) return '#00d7ff';
     if (pct >= 0)   return '#d97706';
     return '#dc2626';
   }
 
   function roiLabel(pct) {
     if (pct >= 200) return { label: 'Excellent', bg: '#d1fae5', color: '#059669' };
-    if (pct >= 100) return { label: 'Good',      bg: '#dbeafe', color: '#2563eb' };
+    if (pct >= 100) return { label: 'Good',      bg: '#e6fbff', color: '#00d7ff' };
     if (pct >= 0)   return { label: 'Average',   bg: '#fef3c7', color: '#d97706' };
     return             { label: 'Review',         bg: '#fee2e2', color: '#dc2626' };
   }
@@ -196,7 +196,7 @@ function ROIReportsPanel() {
     <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
-          <TrendingUp size={16} style={{ verticalAlign: 'middle', marginRight: 8, color: '#2563eb' }} />
+          <TrendingUp size={16} style={{ verticalAlign: 'middle', marginRight: 8, color: '#00d7ff' }} />
           ROI Reports
         </h2>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -221,7 +221,7 @@ function ROIReportsPanel() {
         <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>Loading ROI reports…</div>
       ) : filtered.length === 0 ? (
         <div style={{
-          textAlign: 'center', padding: '48px 0', background: '#f8fafc',
+          textAlign: 'center', padding: '48px 0', background: '#f0f4f9',
           borderRadius: 12, border: '1px dashed #cbd5e1',
         }}>
           <div style={{ fontSize: 36, marginBottom: 10 }}>📊</div>
@@ -234,7 +234,7 @@ function ROIReportsPanel() {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
-              <tr style={{ background: '#f8fafc' }}>
+              <tr style={{ background: '#f0f4f9' }}>
                 {['User', 'Month', 'ROI %', 'Investment', 'Revenue', 'Leads', 'Status', ''].map(h => (
                   <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#64748b', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
@@ -272,7 +272,7 @@ function ROIReportsPanel() {
                     <td style={{ padding: '12px 14px' }}>
                       <a
                         href={`/admin/roi`}
-                        style={{ fontSize: 12, color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}
+                        style={{ fontSize: 12, color: '#00d7ff', textDecoration: 'none', fontWeight: 600 }}
                       >
                         View →
                       </a>
@@ -325,7 +325,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: '#f1f5f9', borderRadius: 12, padding: 4, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: '#f0f4f9', borderRadius: 12, padding: 4, width: 'fit-content' }}>
         {tabs.map(tab => (
           <button
             key={tab.id}
@@ -372,7 +372,7 @@ const btnSecondary = {
 const iconBtn = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   width: 32, height: 32, borderRadius: 8, border: '1px solid #e2e8f0',
-  background: '#f8fafc', cursor: 'pointer', transition: 'all 0.15s',
+  background: '#f0f4f9', cursor: 'pointer', transition: 'all 0.15s',
   textDecoration: 'none',
 };
 

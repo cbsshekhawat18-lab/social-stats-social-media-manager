@@ -132,9 +132,9 @@ export default function ClientDashboard({ clientId: propClientId }) {
             <div style={styles.primaryColumn}>
               {/* KPI Cards */}
               <div style={styles.cards}>
-                <StatCard label="Impressions"    value={totals.total_impressions}    icon={Eye}           color="#6366f1" />
+                <StatCard label="Impressions"    value={totals.total_impressions}    icon={Eye}           color="#00d7ff" />
                 <StatCard label="Reach"          value={totals.total_reach}          icon={Radio}         color="#22c55e" />
-                <StatCard label="Clicks"         value={totals.total_clicks}         icon={MousePointer2} color="#2563eb" />
+                <StatCard label="Clicks"         value={totals.total_clicks}         icon={MousePointer2} color="#00d7ff" />
                 <StatCard label="Likes"          value={totals.total_likes}          icon={Heart}         color="#ef4444" />
                 <StatCard label="Video Views"    value={totals.total_video_views}    icon={Play}          color="#f59e0b" />
                 <StatCard label="Followers"      value={totals.total_followers}      icon={UserPlus}      color="#8b5cf6" />
@@ -285,7 +285,7 @@ export default function ClientDashboard({ clientId: propClientId }) {
                           <td style={styles.td}>
                             {PLATFORMS[p.platform]?.icon} {PLATFORMS[p.platform]?.label}
                           </td>
-                          <td style={{ ...styles.td, color: '#6366f1', fontWeight: 500 }}>
+                          <td style={{ ...styles.td, color: '#00d7ff', fontWeight: 500 }}>
                             {p.account_name ? `@${p.account_name}` : '—'}
                           </td>
                           <td style={styles.td}>
@@ -340,7 +340,7 @@ function UpcomingPostsWidget({ clientId }) {
             <div key={post.id} style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '8px 10px', borderRadius: 8,
-              background: '#F8FAFC', border: `1px solid ${p.color}30`,
+              background: '#f0f4f9', border: `1px solid ${p.color}30`,
             }}>
               <span style={{ fontSize: 18, flexShrink: 0 }}>{p.icon}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -384,7 +384,7 @@ const styles = {
     marginBottom: 20,
   },
   summaryCard: {
-    background: '#f8fafc',
+    background: '#f0f4f9',
     border: '1px solid #e5e7eb',
     borderRadius: 14,
     padding: '14px 16px',
@@ -409,7 +409,7 @@ const styles = {
   },
   shareBtn: {
     padding: '10px 18px', borderRadius: 10, border: 'none',
-    background: '#6366f1', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 13,
+    background: '#00d7ff', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 13,
   },
   pdfBtn: {
     padding: '10px 18px', borderRadius: 10, border: 'none',
@@ -484,7 +484,7 @@ const styles = {
   loading: { textAlign: 'center', color: '#94a3b8', padding: 60 },
   empty: {
     textAlign: 'center', color: '#94a3b8', padding: 60,
-    background: '#f8fafc', borderRadius: 14,
+    background: '#f0f4f9', borderRadius: 14,
   },
   tableWrap: {
     background: '#fff', borderRadius: 14, padding: 24,
@@ -494,10 +494,10 @@ const styles = {
   table: { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
   th: {
     textAlign: 'left', padding: '10px 12px',
-    background: '#f8fafc', color: '#64748b',
+    background: '#f0f4f9', color: '#64748b',
     fontWeight: 600, fontSize: 12, borderBottom: '1px solid #e5e7eb',
   },
   tr: { borderBottom: '1px solid #f1f5f9' },
   td: { padding: '12px 12px', color: '#374151' },
-  postLink: { color: '#2563eb', textDecoration: 'none', fontWeight: 500 },
+  postLink: { color: '#00d7ff', textDecoration: 'none', fontWeight: 500 },
 };

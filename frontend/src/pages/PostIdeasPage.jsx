@@ -289,7 +289,7 @@ export default function PostIdeasPage() {
         return Object.entries(counts).map(([name, value]) => ({
           name: name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
           value,
-          fill: PLATFORM_COLORS[name] || '#6366f1',
+          fill: PLATFORM_COLORS[name] || '#00d7ff',
         }));
       })()
     : [];
@@ -298,7 +298,7 @@ export default function PostIdeasPage() {
     ? [...new Set(ideaSet.ideas.map(i => i.week_number))].sort()
     : [];
 
-  const MIX_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ec4899'];
+  const MIX_COLORS = ['#00d7ff', '#22c55e', '#f59e0b', '#ec4899'];
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -678,7 +678,7 @@ function ResultsView({
             <div style={{
               ...styles.progressFill,
               width: totalIdeas ? `${(addedCount / totalIdeas) * 100}%` : '0%',
-              background: 'linear-gradient(90deg, #3b82f6, #2563eb)',
+              background: 'linear-gradient(90deg, #00d7ff, #00d7ff)',
             }} />
           </div>
           {approvedCount > addedCount && (
@@ -754,12 +754,12 @@ function IdeaCard({ idea, editingIdea, saving, onToggleApprove, onAddToCalendar,
   const isEditingTopic    = editingIdea?.id === idea.id && editingIdea?.field === 'topic';
   const isEditingCaption  = editingIdea?.id === idea.id && editingIdea?.field === 'caption_hint';
 
-  const platformColor = PLATFORM_COLORS[idea.platform] || '#6366f1';
+  const platformColor = PLATFORM_COLORS[idea.platform] || '#00d7ff';
   const platformLabel = PLATFORMS.find(p => p.value === idea.platform)?.label || idea.platform;
   const platformIcon  = PLATFORMS.find(p => p.value === idea.platform)?.icon || '📱';
 
   let cardBorder = '1px solid #e2e8f0';
-  if (idea.is_added_to_calendar) cardBorder = '2px solid #2563eb';
+  if (idea.is_added_to_calendar) cardBorder = '2px solid #00d7ff';
   else if (idea.is_approved)     cardBorder = '2px solid #22c55e';
 
   return (
@@ -775,7 +775,7 @@ function IdeaCard({ idea, editingIdea, saving, onToggleApprove, onAddToCalendar,
         <div style={{ ...styles.platformPill, background: platformColor }}>
           {platformIcon} {platformLabel}
         </div>
-        <div style={{ ...styles.typePill, background: '#f1f5f9', color: '#475569' }}>
+        <div style={{ ...styles.typePill, background: '#f0f4f9', color: '#475569' }}>
           {idea.post_type}
         </div>
       </div>
@@ -914,7 +914,7 @@ const styles = {
   },
   newBtn: {
     padding: '10px 20px',
-    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+    background: '#00d7ff',
     color: '#fff',
     border: 'none',
     borderRadius: 10,
@@ -1011,8 +1011,8 @@ const styles = {
     transition: 'all .15s',
   },
   platformBtnSel: {
-    border: '1.5px solid #6366f1',
-    background: '#eef2ff',
+    border: '1.5px solid #00d7ff',
+    background: '#e6fbff',
     color: '#4338ca',
   },
   platformIcon: { fontSize: 16 },
@@ -1032,8 +1032,8 @@ const styles = {
     cursor: 'pointer',
   },
   ppwBtnSel: {
-    border: '1.5px solid #6366f1',
-    background: '#eef2ff',
+    border: '1.5px solid #00d7ff',
+    background: '#e6fbff',
     color: '#4338ca',
   },
   errorBox: {
@@ -1048,7 +1048,7 @@ const styles = {
   generateBtn: {
     width: '100%',
     padding: '16px',
-    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+    background: '#00d7ff',
     color: '#fff',
     border: 'none',
     borderRadius: 12,
@@ -1090,7 +1090,7 @@ const styles = {
     padding: '10px 12px',
     borderRadius: 10,
     border: '1.5px solid #e5e7eb',
-    background: '#f8fafc',
+    background: '#f0f4f9',
     cursor: 'pointer',
     textAlign: 'left',
   },
@@ -1106,7 +1106,7 @@ const styles = {
   },
   historyCount: {
     fontSize: 11,
-    color: '#6366f1',
+    color: '#00d7ff',
     fontWeight: 700,
   },
   historyBiz: {
@@ -1136,7 +1136,7 @@ const styles = {
     width: 52,
     height: 52,
     border: '4px solid #e2e8f0',
-    borderTopColor: '#6366f1',
+    borderTopColor: '#00d7ff',
     borderRadius: '50%',
     margin: '0 auto 24px',
     animation: 'spin 0.8s linear infinite',
@@ -1174,7 +1174,7 @@ const styles = {
   },
   loadingStepActive: {
     color: '#4338ca',
-    background: '#eef2ff',
+    background: '#e6fbff',
     fontWeight: 600,
   },
   loadingStepIcon: {
@@ -1247,13 +1247,13 @@ const styles = {
     whiteSpace: 'nowrap',
   },
   calMsg: {
-    background: '#eff6ff',
-    color: '#1d4ed8',
+    background: '#e6fbff',
+    color: '#00d7ff',
     padding: '12px 16px',
     borderRadius: 10,
     fontSize: 13,
     fontWeight: 600,
-    border: '1px solid #bfdbfe',
+    border: '1px solid #e6fbff',
     marginBottom: 16,
   },
   weekTabs: {
@@ -1272,8 +1272,8 @@ const styles = {
     cursor: 'pointer',
   },
   weekTabActive: {
-    border: '1.5px solid #6366f1',
-    background: '#eef2ff',
+    border: '1.5px solid #00d7ff',
+    background: '#e6fbff',
     color: '#4338ca',
   },
   weekThemeBadge: {
@@ -1322,7 +1322,7 @@ const styles = {
     minWidth: 44,
     padding: '4px 8px',
     borderRadius: 8,
-    background: '#f1f5f9',
+    background: '#f0f4f9',
     flexShrink: 0,
   },
   dayText: {
@@ -1360,7 +1360,7 @@ const styles = {
   captionToggle: {
     background: 'none',
     border: 'none',
-    color: '#6366f1',
+    color: '#00d7ff',
     fontSize: 12,
     fontWeight: 600,
     cursor: 'pointer',
@@ -1374,7 +1374,7 @@ const styles = {
     cursor: 'text',
     padding: '8px 10px',
     borderRadius: 8,
-    background: '#f8fafc',
+    background: '#f0f4f9',
   },
   hashtagRow: {
     display: 'flex',
@@ -1384,8 +1384,8 @@ const styles = {
   hashtagPill: {
     padding: '2px 8px',
     borderRadius: 999,
-    background: '#eff6ff',
-    color: '#2563eb',
+    background: '#e6fbff',
+    color: '#00d7ff',
     fontSize: 11,
     fontWeight: 600,
   },
@@ -1412,9 +1412,9 @@ const styles = {
     color: '#16a34a',
   },
   cardBtnCal: {
-    border: '1.5px solid #bfdbfe',
-    background: '#eff6ff',
-    color: '#1d4ed8',
+    border: '1.5px solid #e6fbff',
+    background: '#e6fbff',
+    color: '#00d7ff',
   },
   cardBtnIcon: {
     padding: '6px 8px',
@@ -1428,8 +1428,8 @@ const styles = {
   addedBadge: {
     fontSize: 12,
     fontWeight: 700,
-    color: '#1d4ed8',
-    background: '#eff6ff',
+    color: '#00d7ff',
+    background: '#e6fbff',
     padding: '5px 10px',
     borderRadius: 8,
   },
@@ -1437,7 +1437,7 @@ const styles = {
   inlineInput: {
     padding: '6px 10px',
     borderRadius: 8,
-    border: '1.5px solid #6366f1',
+    border: '1.5px solid #00d7ff',
     fontSize: 13,
     outline: 'none',
     width: '100%',
@@ -1472,7 +1472,7 @@ const styles = {
   progressBar: {
     height: 6,
     borderRadius: 999,
-    background: '#f1f5f9',
+    background: '#f0f4f9',
     overflow: 'hidden',
   },
   progressFill: {
@@ -1486,7 +1486,7 @@ const styles = {
     padding: '9px 0',
     borderRadius: 10,
     border: 'none',
-    background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    background: '#00d7ff',
     color: '#fff',
     fontSize: 12,
     fontWeight: 700,

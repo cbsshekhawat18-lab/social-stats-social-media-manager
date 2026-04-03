@@ -32,7 +32,7 @@ if (typeof document !== 'undefined' && !document.getElementById('roi-styles')) {
       appearance: none;
       height: 6px;
       border-radius: 4px;
-      background: linear-gradient(to right, #2563EB var(--val, 50%), #E2E8F0 var(--val, 50%));
+      background: linear-gradient(to right, #00d7ff var(--val, 50%), #e2e8f0 var(--val, 50%));
       outline: none;
       cursor: pointer;
       width: 100%;
@@ -504,7 +504,7 @@ export default function ROICalculatorPage({ clientId: propClientId }) {
           {calcLoading && (
             <div style={loadingSkeleton}>
               {[1, 2, 3].map(i => (
-                <div key={i} style={{ height: 100, background: '#F1F5F9', borderRadius: 12, marginBottom: 16 }} />
+                <div key={i} style={{ height: 100, background: '#f0f4f9', borderRadius: 12, marginBottom: 16 }} />
               ))}
             </div>
           )}
@@ -562,7 +562,7 @@ export default function ROICalculatorPage({ clientId: propClientId }) {
                 {/* Bar visualization */}
                 {result.total_investment > 0 && (
                   <div>
-                    <div style={{ height: 12, background: '#F1F5F9', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
+                    <div style={{ height: 12, background: '#f0f4f9', borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
                       <div style={{
                         position: 'absolute', left: 0, top: 0, height: '100%',
                         width: `${Math.min((result.total_investment / Math.max(result.estimated_revenue, result.total_investment)) * 100, 100)}%`,
@@ -642,7 +642,7 @@ export default function ROICalculatorPage({ clientId: propClientId }) {
                       {result.platform_breakdown.map(row => (
                         <PlatformRow key={row.platform} row={row} symbol={symbol} />
                       ))}
-                      <tr style={{ ...trStyle, fontWeight: 700, background: '#F8FAFC' }}>
+                      <tr style={{ ...trStyle, fontWeight: 700, background: '#f0f4f9' }}>
                         <td style={tdStyle}><strong>Total</strong></td>
                         <td style={{ ...tdStyle, textAlign: 'right' }}><strong>{fmtCurrency(result.total_investment, symbol)}</strong></td>
                         <td style={{ ...tdStyle, textAlign: 'right' }}><strong>{fmtNum(result.total_clicks)}</strong></td>
@@ -752,15 +752,15 @@ const cardTitle    = {
   margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: '#1E293B',
 };
 const inputLabel   = { fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 5 };
-const inputWrap    = { display: 'flex', alignItems: 'center', border: '1.5px solid #E2E8F0', borderRadius: 10, background: '#F8FAFC', overflow: 'hidden' };
-const inputPrefix  = { padding: '8px 12px', fontSize: 14, fontWeight: 600, color: '#64748B', background: '#F1F5F9', borderRight: '1px solid #E2E8F0' };
+const inputWrap    = { display: 'flex', alignItems: 'center', border: '1.5px solid #E2E8F0', borderRadius: 10, background: '#f0f4f9', overflow: 'hidden' };
+const inputPrefix  = { padding: '8px 12px', fontSize: 14, fontWeight: 600, color: '#64748B', background: '#f0f4f9', borderRight: '1px solid #E2E8F0' };
 const inputField   = { flex: 1, padding: '8px 12px', fontSize: 14, border: 'none', background: 'transparent', outline: 'none', color: '#0F172A' };
 const helperText   = { margin: '4px 0 0', fontSize: 11, color: '#94A3B8' };
-const totalDisplay = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#F0F4FF', borderRadius: 10 };
+const totalDisplay = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#e6fbff', borderRadius: 10 };
 const selectStyle  = { padding: '8px 12px', borderRadius: 8, border: '1.5px solid #E2E8F0', fontSize: 13, background: '#fff', outline: 'none', cursor: 'pointer', color: '#0F172A' };
-const primaryBtn   = { display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center', padding: '11px 16px', background: '#2563EB', color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
+const primaryBtn   = { display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center', padding: '11px 16px', background: '#00d7ff', color: '#0f172a', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' };
 const secondaryBtn = { display: 'flex', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'center', padding: '11px 16px', background: '#fff', color: '#374151', border: '1.5px solid #E2E8F0', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer' };
 const loadingSkeleton = { padding: 0 };
-const thStyle = { textAlign: 'left', padding: '8px 10px', background: '#F8FAFC', color: '#64748B', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #E2E8F0', whiteSpace: 'nowrap' };
+const thStyle = { textAlign: 'left', padding: '8px 10px', background: '#f0f4f9', color: '#64748B', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #E2E8F0', whiteSpace: 'nowrap' };
 const trStyle = { borderBottom: '1px solid #F1F5F9' };
 const tdStyle = { padding: '10px 10px', color: '#374151', fontSize: 12 };

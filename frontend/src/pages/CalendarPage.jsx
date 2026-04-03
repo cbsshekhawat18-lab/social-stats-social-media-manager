@@ -44,7 +44,7 @@ function fmt(n) {
 
 const STATUS_BADGE = {
   published: { bg: '#D1FAE5', color: '#059669' },
-  scheduled: { bg: '#DBEAFE', color: '#2563EB' },
+  scheduled: { bg: '#e6fbff', color: '#007a9a' },
   draft:     { bg: '#F1F5F9', color: '#64748B' },
   failed:    { bg: '#FEE2E2', color: '#EF4444' },
 };
@@ -76,7 +76,7 @@ function ListView({ postsByDate, onPostClick, onEditPost, onDeletePost, onResche
           {/* Sticky date header */}
           <div style={{
             position: 'sticky', top: 0, zIndex: 10,
-            background: '#F8FAFC', padding: '8px 0',
+            background: '#f0f4f9', padding: '8px 0',
             borderBottom: '2px solid #E2E8F0', marginBottom: 8,
           }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
@@ -132,7 +132,7 @@ function ListView({ postsByDate, onPostClick, onEditPost, onDeletePost, onResche
                     {post.caption || '(no caption)'}
                   </div>
                   {post.hashtags && (
-                    <div style={{ fontSize: 11, color: '#2563EB' }}>
+                    <div style={{ fontSize: 11, color: '#007a9a' }}>
                       {post.hashtags.split(' ').filter(h => h.startsWith('#')).length} hashtags
                     </div>
                   )}
@@ -176,7 +176,7 @@ function ListView({ postsByDate, onPostClick, onEditPost, onDeletePost, onResche
 
 const listBtnStyle = {
   padding: '4px 10px', borderRadius: 6,
-  background: '#F8FAFC', border: '1px solid #E2E8F0',
+  background: '#f0f4f9', border: '1px solid #E2E8F0',
   cursor: 'pointer', fontSize: 11, color: '#475569',
 };
 
@@ -328,7 +328,7 @@ export default function CalendarPage({ clientId: propClientId }) {
   return (
     <div style={{
       padding: '28px 32px 40px',
-      background: '#F8FAFC',
+      background: '#f0f4f9',
       minHeight: '100vh',
       width: '100%',
       maxWidth: '100%',
@@ -395,7 +395,7 @@ export default function CalendarPage({ clientId: propClientId }) {
           </div>
           <button onClick={nextMonth} style={navBtnStyle}><ChevronRight size={16} /></button>
           <button onClick={goToday} style={{
-            padding: '6px 12px', borderRadius: 8, background: '#F1F5F9',
+            padding: '6px 12px', borderRadius: 8, background: '#f0f4f9',
             border: '1px solid #E2E8F0', cursor: 'pointer', fontSize: 12,
             fontWeight: 600, color: '#475569',
           }}>Today</button>
@@ -409,7 +409,7 @@ export default function CalendarPage({ clientId: propClientId }) {
           flex: '999 1 420px',
           minWidth: 0,
         }}>
-          {[{ key: 'all', label: 'All', icon: '🔘', color: '#2563EB' },
+          {[{ key: 'all', label: 'All', icon: '🔘', color: '#00d7ff' },
             ...PLATFORM_LIST.map(k => ({ key: k, ...PLATFORMS[k] }))
           ].map(p => (
             <button
@@ -418,10 +418,10 @@ export default function CalendarPage({ clientId: propClientId }) {
               style={{
                 padding: '5px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600,
                 cursor: 'pointer', transition: 'all 0.15s',
-                background: platform === p.key ? (p.color || '#2563EB') : '#fff',
+                background: platform === p.key ? '#00d7ff' : '#fff',
                 color:      platform === p.key ? '#fff' : '#64748B',
                 border:     platform === p.key
-                  ? `1px solid ${p.color || '#2563EB'}`
+                  ? '1px solid #00d7ff'
                   : '1px solid #E2E8F0',
               }}
             >
@@ -446,7 +446,7 @@ export default function CalendarPage({ clientId: propClientId }) {
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '8px 16px', borderRadius: 8,
-                background: '#2563EB', color: '#fff',
+                background: '#00d7ff', color: '#0f172a',
                 border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
                 whiteSpace: 'nowrap',
               }}
@@ -470,7 +470,7 @@ export default function CalendarPage({ clientId: propClientId }) {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '7px 14px', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                  background: view === v.key ? '#2563EB' : '#fff',
+                  background: view === v.key ? '#00d7ff' : '#fff',
                   color:      view === v.key ? '#fff'   : '#64748B',
                   transition: 'all 0.15s',
                   whiteSpace: 'nowrap',

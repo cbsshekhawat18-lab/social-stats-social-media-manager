@@ -124,8 +124,8 @@ export default function SyncLogsPage() {
 const statusColors = {
   success: { background: '#dcfce7', color: '#16a34a' },
   failed:  { background: '#fee2e2', color: '#dc2626' },
-  running: { background: '#dbeafe', color: '#2563eb' },
-  pending: { background: '#f1f5f9', color: '#64748b' },
+  running: { background: '#e6fbff', color: '#00d7ff' },
+  pending: { background: '#f0f4f9', color: '#64748b' },
 };
 
 function badge(status) {
@@ -153,7 +153,7 @@ const styles = {
   },
   table:     { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
   th: {
-    textAlign: 'left', padding: '10px 12px', background: '#f8fafc',
+    textAlign: 'left', padding: '10px 12px', background: '#f0f4f9',
     color: '#64748b', fontWeight: 600, fontSize: 12, borderBottom: '1px solid #e5e7eb',
     whiteSpace: 'nowrap',
   },

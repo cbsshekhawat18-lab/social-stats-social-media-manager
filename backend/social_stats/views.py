@@ -64,6 +64,28 @@ class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenSerializer
     permission_classes = [AllowAny]
 
+    def post(self, request, *args, **kwargs):
+        terms_accepted = request.data.get('terms_accepted', False)
+        if not terms_accepted:
+            return Response(
+                {'detail': 'You must accept the Terms of Service and Privacy Policy to sign in.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            from django.contrib.auth.models import User
+            username = request.data.get('username', '')
+            try:
+                user = User.objects.get(username=username)
+                profile = user.profile
+                if not profile.terms_accepted:
+                    profile.terms_accepted = True
+                    profile.terms_accepted_at = timezone.now()
+                    profile.save(update_fields=['terms_accepted', 'terms_accepted_at'])
+            except Exception:
+                pass
+        return response
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def parse_dates(request):

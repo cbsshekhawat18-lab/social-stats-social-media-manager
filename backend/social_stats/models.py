@@ -52,6 +52,8 @@ class UserProfile(models.Model):
     assigned_clients  = models.ManyToManyField(Client, blank=True, related_name='staff_assigned')
     avatar            = models.ImageField(upload_to='avatars/', blank=True, null=True)
     created_at        = models.DateTimeField(auto_now_add=True)
+    terms_accepted    = models.BooleanField(default=False)
+    terms_accepted_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.email} ({self.role})"

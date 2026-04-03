@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [focused, setFocused] = useState('');
   const [hoveredButton, setHoveredButton] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 980);
+  const [accepted, setAccepted] = useState(false);
 
   const urlError = new URLSearchParams(window.location.search).get('error');
 
@@ -34,7 +35,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const user = await login(email, password);
+      const user = await login(email, password, accepted);
       navigate(user.role === 'superadmin' || user.role === 'staff' ? '/admin' : '/dashboard');
     } catch {
       setError('Invalid email or password. Please try again.');
@@ -174,10 +175,25 @@ export default function LoginPage() {
               </div>
             )}
 
+            <label style={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={accepted}
+                onChange={e => setAccepted(e.target.checked)}
+                style={styles.checkbox}
+              />
+              <span style={styles.checkboxText}>
+                I agree to the{' '}
+                <a href="/terms" target="_blank" rel="noreferrer" style={styles.checkboxLink}>Terms of Service</a>
+                {' '}and{' '}
+                <a href="/privacy" target="_blank" rel="noreferrer" style={styles.checkboxLink}>Privacy Policy</a>
+              </span>
+            </label>
+
             <button
               type="submit"
-              disabled={loading}
-              style={styles.primaryButton(hoveredButton)}
+              disabled={loading || !accepted}
+              style={styles.primaryButton(hoveredButton && accepted)}
               onMouseEnter={() => setHoveredButton(true)}
               onMouseLeave={() => setHoveredButton(false)}
             >
@@ -674,5 +690,29 @@ const styles = {
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
+  },
+  checkboxRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 10,
+    cursor: 'pointer',
+  },
+  checkbox: {
+    marginTop: 2,
+    width: 16,
+    height: 16,
+    accentColor: CYAN,
+    flexShrink: 0,
+    cursor: 'pointer',
+  },
+  checkboxText: {
+    fontSize: 13,
+    color: '#64748b',
+    lineHeight: 1.5,
+  },
+  checkboxLink: {
+    color: CYAN,
+    textDecoration: 'none',
+    fontWeight: 600,
   },
 };

@@ -27,6 +27,7 @@ import CaptionWriterPage   from './pages/CaptionWriterPage';
 import PostIdeasPage       from './pages/PostIdeasPage';
 import PrivacyPolicyPage   from './pages/PrivacyPolicyPage';
 import TermsOfServicePage  from './pages/TermsOfServicePage';
+import DataDeletionPage    from './pages/DataDeletionPage';
 import logoStatoxBig from './assets/logo_statox_big.png';
 
 // ── Protected route wrapper ───────────────────────────────────────────────────
@@ -192,8 +193,9 @@ export default function App() {
           <Route path="/login"         element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/report/:token" element={<PublicReportPage />} />
-          <Route path="/privacy"       element={<PrivacyPolicyPage />} />
-          <Route path="/terms"         element={<TermsOfServicePage />} />
+          <Route path="/privacy"         element={<PrivacyPolicyPage />} />
+          <Route path="/terms"           element={<TermsOfServicePage />} />
+          <Route path="/data-deletion"   element={<DataDeletionPage />} />
 
           <Route path="/admin/*" element={
             <Protected roles={['superadmin','staff']}>

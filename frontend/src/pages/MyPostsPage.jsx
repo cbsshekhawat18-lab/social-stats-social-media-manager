@@ -3,8 +3,9 @@ import { ExternalLink, MessageCircle, Heart, Play, CalendarDays } from 'lucide-r
 import PageHeader from '../components/layout/PageHeader';
 import DateRangePicker from '../components/ui/DateRangePicker';
 import PlatformTabs from '../components/ui/PlatformTabs';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
 import { useAuth } from '../hooks/useAuth';
-import { useDateRange, useOAuthStatus, usePosts } from '../hooks/useData';
+import { useDateRange, useOAuthStatus, usePosts, useLookups } from '../hooks/useData';
 import { PLATFORMS, fmt } from '../services/platforms';
 
 function EmptyState() {
@@ -24,6 +25,18 @@ export default function MyPostsPage() {
   const [platform, setPlatform] = useState('all');
   const { posts, loading } = usePosts(clientId, platform, range);
   const { status: oauthStatus } = useOAuthStatus(clientId);
+  const { lookups } = useLookups();
+
+  const platformLabelMap = (lookups.platforms || []).reduce((acc, item) => {
+    acc[item.key] = item.label;
+    return acc;
+  }, {});
+
+  const platformMeta = (key) => ({
+    label: platformLabelMap[key] || PLATFORMS[key]?.label || key,
+    color: PLATFORMS[key]?.color || '#64748b',
+    bg: PLATFORMS[key]?.bg || '#f8fafc',
+  });
 
   const connectedPlatforms = useMemo(() => (
     Object.entries(oauthStatus)
@@ -32,7 +45,7 @@ export default function MyPostsPage() {
   ), [oauthStatus]);
 
   return (
-    <div style={styles.page}>
+    <div className="app-page app-page--content app-page--xl">
       <PageHeader
         title="My Posts"
         subtitle="Review recent content performance across your connected accounts."
@@ -40,15 +53,16 @@ export default function MyPostsPage() {
         meta={[
           { label: 'Posts', value: posts.length },
           { label: 'Platforms', value: connectedPlatforms.length || 0 },
-          { label: 'View', value: platform === 'all' ? 'All Platforms' : (PLATFORMS[platform]?.label || platform) },
+          { label: 'View', value: platform === 'all' ? 'All Platforms' : (platformLabelMap[platform] || PLATFORMS[platform]?.label || platform) },
         ]}
       />
 
-      <div style={styles.filterBar}>
+      <div className="app-surface app-surface--compact" style={styles.filterBar}>
         <PlatformTabs
           selected={platform}
           onChange={setPlatform}
           connected={connectedPlatforms}
+          platforms={lookups.platforms || []}
         />
       </div>
 
@@ -59,25 +73,30 @@ export default function MyPostsPage() {
       ) : (
         <div style={styles.grid}>
           {posts.map((post) => {
-            const platformMeta = PLATFORMS[post.platform] || { icon: '🔗', label: post.platform, color: '#64748b', bg: '#f8fafc' };
+            const postPlatformMeta = platformMeta(post.platform);
             const title = post.caption || post.title || 'Untitled post';
             const isVideo = post.video_views > 0 || post.post_type?.includes('video');
             return (
               <article key={post.id} style={styles.card}>
-                <div style={{ ...styles.thumb, background: platformMeta.bg }}>
+                <div style={{ ...styles.thumb, background: postPlatformMeta.bg }}>
                   {post.thumbnail_url ? (
                     <img src={post.thumbnail_url} alt="" style={styles.thumbImg} />
                   ) : isVideo ? (
-                    <Play size={28} style={{ color: platformMeta.color }} />
+                    <Play size={28} style={{ color: postPlatformMeta.color }} />
                   ) : (
-                    <span style={styles.thumbIcon}>{platformMeta.icon}</span>
+                    <span style={styles.thumbIcon}>
+                      <SocialPlatformIcon platform={post.platform} size={34} />
+                    </span>
                   )}
                 </div>
 
                 <div style={styles.cardBody}>
                   <div style={styles.cardTop}>
-                    <span style={{ ...styles.platformPill, color: platformMeta.color, background: `${platformMeta.color}14` }}>
-                      {platformMeta.icon} {platformMeta.label}
+                    <span style={{ ...styles.platformPill, color: postPlatformMeta.color, background: `${postPlatformMeta.color}14` }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <SocialPlatformIcon platform={post.platform} size={14} />
+                        {postPlatformMeta.label}
+                      </span>
                     </span>
                     <span style={styles.dateText}>
                       {post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Draft'}
@@ -110,14 +129,8 @@ export default function MyPostsPage() {
 }
 
 const styles = {
-  page: { padding: '28px 32px 40px', maxWidth: 1480, margin: '0 auto' },
   filterBar: {
-    background: '#fff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 16,
-    padding: '14px 16px',
     marginBottom: 20,
-    boxShadow: '0 1px 6px rgba(15,23,42,.05)',
   },
   loading: { textAlign: 'center', color: '#94a3b8', padding: 60 },
   emptyState: {

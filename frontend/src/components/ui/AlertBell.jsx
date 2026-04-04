@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell, CheckCheck, AlertCircle, TrendingDown, Zap, Target, Users, X } from 'lucide-react';
 import { useAlerts } from '../../hooks/useData';
+import { formatTimeAgo } from '../../services/formatters';
 
 const ALERT_ICONS = {
   token_expired:      { icon: AlertCircle,  color: '#dc2626' },
@@ -10,15 +11,6 @@ const ALERT_ICONS = {
   goal_at_risk:       { icon: Target,       color: '#c2410c' },
   follower_milestone: { icon: Users,         color: '#16a34a' },
 };
-
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60)  return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24)   return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 export default function AlertBell({ clientId }) {
   const [open, setOpen] = useState(false);
@@ -83,7 +75,7 @@ export default function AlertBell({ clientId }) {
                         {alert.client_name && (
                           <span style={styles.clientTag}>{alert.client_name}</span>
                         )}
-                        <span style={styles.time}>{timeAgo(alert.created_at)}</span>
+                        <span style={styles.time}>{formatTimeAgo(alert.created_at, { includeSeconds: false })}</span>
                       </div>
                     </div>
                     {!alert.is_read && <div style={styles.dot} />}

@@ -195,7 +195,7 @@ def facebook_social_start(request):
         'client_id':     FACEBOOK_APP_ID,
         'redirect_uri':  FACEBOOK_SOCIAL_REDIRECT_URI,
         'response_type': 'code',
-        'scope':         'email,public_profile',
+        'scope':         'public_profile',
         'state':         state,
     }
     url = 'https://www.facebook.com/v18.0/dialog/oauth?' + urllib.parse.urlencode(params)

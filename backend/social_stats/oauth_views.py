@@ -18,12 +18,25 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from .models import PlatformCredential, Client
+from django.contrib.auth.models import User
 
 
 def _save_credential(client_id, platform, defaults):
     PlatformCredential.objects.update_or_create(
         client_id=client_id, platform=platform, defaults={**defaults, 'is_active': True}
     )
+
+
+def _settings_redirect(client_id, query=''):
+    """Redirect to the correct settings page based on user role."""
+    try:
+        from social_stats.models import UserProfile
+        profile = UserProfile.objects.filter(client_id=client_id).first()
+        if profile and profile.role == 'client':
+            return redirect(f"{settings.FRONTEND_URL}/dashboard/settings{query}")
+    except Exception:
+        pass
+    return redirect(f"{settings.FRONTEND_URL}/admin/client/{client_id}/settings{query}")
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -42,11 +55,6 @@ def facebook_oauth_start(request, client_id):
         'client_id':     settings.META_APP_ID,
         'redirect_uri':  settings.META_REDIRECT_URI,
         'scope':         ','.join([
-            'pages_read_engagement',
-            'pages_show_list',
-            'read_insights',
-            'instagram_basic',
-            'instagram_manage_insights',
             'pages_manage_metadata',
         ]),
         'response_type': 'code',
@@ -151,34 +159,54 @@ def facebook_oauth_callback(request):
         break  # Use first page only (can extend to page picker)
 
     platforms = ','.join(connected)
-    return redirect(f"{settings.FRONTEND_URL}/admin/client/{client_id}/settings?connected={platforms}")
+    return _settings_redirect(client_id, f"?connected={platforms}")
 
 
 # ══════════════════════════════════════════════════════════════════════
 # GOOGLE (YouTube + Google My Business) — One OAuth flow, two APIs
 # ══════════════════════════════════════════════════════════════════════
 
+GOOGLE_SCOPES_YOUTUBE = ' '.join([
+    'https://www.googleapis.com/auth/youtube.readonly',
+    'https://www.googleapis.com/auth/yt-analytics.readonly',
+    'openid', 'email', 'profile',
+])
+
+GOOGLE_SCOPES_GMB = ' '.join([
+    'https://www.googleapis.com/auth/business.manage',
+    'openid', 'email', 'profile',
+])
+
+# Keep combined for backwards compatibility
 GOOGLE_SCOPES = ' '.join([
     'https://www.googleapis.com/auth/youtube.readonly',
     'https://www.googleapis.com/auth/yt-analytics.readonly',
     'https://www.googleapis.com/auth/business.manage',
-    'openid',
-    'email',
-    'profile',
+    'openid', 'email', 'profile',
 ])
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def google_oauth_start(request, client_id):
-    """Redirect to Google consent screen."""
-    state = f"{client_id}:{secrets.token_urlsafe(16)}"
+    """Redirect to Google consent screen.
+    Optional ?platform=youtube or ?platform=google_my_business for separate flows.
+    """
+    platform = request.GET.get('platform', 'all')  # youtube | google_my_business | all
+    state = f"{client_id}:{platform}:{secrets.token_urlsafe(16)}"
     request.session['oauth_state'] = state
+
+    if platform == 'youtube':
+        scopes = GOOGLE_SCOPES_YOUTUBE
+    elif platform == 'google_my_business':
+        scopes = GOOGLE_SCOPES_GMB
+    else:
+        scopes = GOOGLE_SCOPES
 
     params = {
         'client_id':     settings.GOOGLE_CLIENT_ID,
         'redirect_uri':  settings.GOOGLE_REDIRECT_URI,
         'response_type': 'code',
-        'scope':          GOOGLE_SCOPES,
+        'scope':          scopes,
         'access_type':   'offline',
         'prompt':        'consent',
         'state':          state,
@@ -197,7 +225,9 @@ def google_oauth_callback(request):
     if error:
         return redirect(f"{settings.FRONTEND_URL}/settings?error=google_denied")
 
-    client_id = state.split(':')[0]
+    parts = state.split(':')
+    client_id = parts[0]
+    platform  = parts[1] if len(parts) >= 3 else 'all'  # youtube | google_my_business | all
 
     # Exchange code for tokens
     token_resp = requests.post(
@@ -222,67 +252,101 @@ def google_oauth_callback(request):
 
     connected = []
 
-    # ── YouTube: get channel info ─────────────────────────
-    yt_resp = requests.get(
-        'https://www.googleapis.com/youtube/v3/channels',
-        params={
-            'part':        'snippet,statistics',
-            'mine':        'true',
-            'access_token': access_token,
-        }, timeout=10
-    ).json()
-
-    logger.info("YouTube channels response: %s", yt_resp)
-
-    yt_items = yt_resp.get('items', [])
-    if yt_items:
-        channel     = yt_items[0]
-        channel_id  = channel['id']
-        channel_name= channel['snippet']['title']
-
-        _save_credential(client_id, 'youtube', {
-            'access_token':  access_token,
-            'refresh_token': refresh_token,
-            'expires_at':    expires_at,
-            'channel_id':    channel_id,
-            'channel_name':  channel_name,
-        })
-        connected.append('youtube')
-
-    # ── Google My Business: get account + location ────────
-    gmb_accounts = requests.get(
-        'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
-        headers={'Authorization': f'Bearer {access_token}'}, timeout=10
-    ).json()
-
-    accounts = gmb_accounts.get('accounts', [])
-    if accounts:
-        gmb_account_id = accounts[0]['name']  # e.g. "accounts/123456"
-
-        gmb_locations = requests.get(
-            f'https://mybusinessbusinessinformation.googleapis.com/v1/{gmb_account_id}/locations',
-            params={'readMask': 'name,title'},
-            headers={'Authorization': f'Bearer {access_token}'}, timeout=10
+    # ── YouTube ───────────────────────────────────────────
+    if platform in ('youtube', 'all'):
+        yt_resp = requests.get(
+            'https://www.googleapis.com/youtube/v3/channels',
+            params={
+                'part':        'snippet,statistics',
+                'mine':        'true',
+                'access_token': access_token,
+            }, timeout=10
         ).json()
 
-        locations = gmb_locations.get('locations', [])
-        if locations:
-            location    = locations[0]
-            location_id = location['name']
-            biz_name    = location.get('title', '')
+        logger.info("YouTube channels response: %s", yt_resp)
 
+        yt_items = yt_resp.get('items', [])
+        if yt_items:
+            channel      = yt_items[0]
+            channel_id   = channel['id']
+            channel_name = channel['snippet']['title']
+
+            _save_credential(client_id, 'youtube', {
+                'access_token':  access_token,
+                'refresh_token': refresh_token,
+                'expires_at':    expires_at,
+                'channel_id':    channel_id,
+                'channel_name':  channel_name,
+            })
+            connected.append('youtube')
+
+    # ── Google My Business ────────────────────────────────
+    if platform in ('google_my_business', 'all'):
+        gmb_accounts_resp = requests.get(
+            'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
+            headers={'Authorization': f'Bearer {access_token}'}, timeout=10
+        )
+        gmb_accounts = gmb_accounts_resp.json()
+        logger.info("GMB accounts status=%s body=%s", gmb_accounts_resp.status_code, gmb_accounts)
+
+        accounts = gmb_accounts.get('accounts', [])
+        if accounts:
+            gmb_account_id = accounts[0]['name']
+
+            gmb_locations_resp = requests.get(
+                f'https://mybusinessbusinessinformation.googleapis.com/v1/{gmb_account_id}/locations',
+                params={'readMask': 'name,title'},
+                headers={'Authorization': f'Bearer {access_token}'}, timeout=10
+            )
+            gmb_locations = gmb_locations_resp.json()
+            logger.info("GMB locations status=%s body=%s", gmb_locations_resp.status_code, gmb_locations)
+
+            locations = gmb_locations.get('locations', [])
+            if locations:
+                location    = locations[0]
+                location_id = location['name']
+                biz_name    = location.get('title', '')
+
+                _save_credential(client_id, 'google_my_business', {
+                    'access_token':    access_token,
+                    'refresh_token':   refresh_token,
+                    'expires_at':      expires_at,
+                    'gmb_account_id':  gmb_account_id,
+                    'gmb_location_id': location_id,
+                    'page_name':       biz_name,
+                })
+                connected.append('google_my_business')
+            else:
+                # No locations found — save token anyway so user shows as connected
+                logger.warning("GMB: no locations found for account %s", gmb_account_id)
+                _save_credential(client_id, 'google_my_business', {
+                    'access_token':    access_token,
+                    'refresh_token':   refresh_token,
+                    'expires_at':      expires_at,
+                    'gmb_account_id':  gmb_account_id,
+                    'gmb_location_id': '',
+                    'page_name':       accounts[0].get('accountName', 'Google My Business'),
+                })
+                connected.append('google_my_business')
+        else:
+            # No GMB account — still save the token with the Google profile name
+            logger.warning("GMB: no accounts found. Response: %s", gmb_accounts)
+            user_info = requests.get(
+                'https://www.googleapis.com/oauth2/v3/userinfo',
+                headers={'Authorization': f'Bearer {access_token}'}, timeout=10
+            ).json()
             _save_credential(client_id, 'google_my_business', {
                 'access_token':    access_token,
                 'refresh_token':   refresh_token,
                 'expires_at':      expires_at,
-                'gmb_account_id':  gmb_account_id,
-                'gmb_location_id': location_id,
-                'page_name':       biz_name,
+                'gmb_account_id':  '',
+                'gmb_location_id': '',
+                'page_name':       user_info.get('name', 'Google My Business'),
             })
             connected.append('google_my_business')
 
     platforms = ','.join(connected)
-    return redirect(f"{settings.FRONTEND_URL}/admin/client/{client_id}/settings?connected={platforms}")
+    return _settings_redirect(client_id, f"?connected={platforms}")
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -367,16 +431,51 @@ def linkedin_oauth_callback(request):
             'organization_name': org_name,
         })
 
-    return redirect(f"{settings.FRONTEND_URL}/admin/client/{client_id}/settings?connected=linkedin")
+    return _settings_redirect(client_id, "?connected=linkedin")
 
 
 # ══════════════════════════════════════════════════════════════════════
 # STATUS CHECK — used by React to show connected/disconnected
 # ══════════════════════════════════════════════════════════════════════
 
+def _refresh_google_token(cred):
+    """Refresh an expired Google OAuth access token using the stored refresh_token."""
+    try:
+        resp = requests.post('https://oauth2.googleapis.com/token', data={
+            'client_id':     settings.GOOGLE_CLIENT_ID,
+            'client_secret': settings.GOOGLE_CLIENT_SECRET,
+            'refresh_token': cred.refresh_token,
+            'grant_type':    'refresh_token',
+        }, timeout=10).json()
+        if 'access_token' in resp:
+            cred.access_token = resp['access_token']
+            cred.expires_at   = timezone.now() + timedelta(seconds=resp.get('expires_in', 3600))
+            cred.save(update_fields=['access_token', 'expires_at'])
+    except Exception as e:
+        logger.warning(f"Google token refresh failed for cred {cred.id}: {e}")
+
+
+def _refresh_facebook_token(cred):
+    """Extend a Facebook long-lived token (valid for 60 more days)."""
+    try:
+        resp = requests.get('https://graph.facebook.com/v18.0/oauth/access_token', params={
+            'grant_type':        'fb_exchange_token',
+            'client_id':         settings.META_APP_ID,
+            'client_secret':     settings.META_APP_SECRET,
+            'fb_exchange_token': cred.refresh_token or cred.access_token,
+        }, timeout=10).json()
+        if 'access_token' in resp:
+            expires_in = resp.get('expires_in', 5184000)
+            cred.access_token = resp['access_token']
+            cred.expires_at   = timezone.now() + timedelta(seconds=expires_in)
+            cred.save(update_fields=['access_token', 'expires_at'])
+    except Exception as e:
+        logger.warning(f"Facebook token refresh failed for cred {cred.id}: {e}")
+
+
 @api_view(['GET'])
 def oauth_status(request, client_id):
-    """Return connection status for all platforms for a client."""
+    """Return connection status for all platforms. Auto-refreshes expired Google tokens."""
     credentials = PlatformCredential.objects.filter(client_id=client_id)
     result = {}
     for platform, label in [
@@ -388,6 +487,12 @@ def oauth_status(request, client_id):
     ]:
         cred = credentials.filter(platform=platform).first()
         if cred and cred.access_token:
+            # Auto-refresh expired Google tokens silently
+            if cred.is_expired and cred.refresh_token:
+                if platform in ('youtube', 'google_my_business'):
+                    _refresh_google_token(cred)
+                elif platform in ('facebook', 'instagram'):
+                    _refresh_facebook_token(cred)
             result[platform] = {
                 'status':       cred.status,
                 'connected_at': cred.connected_at.isoformat(),

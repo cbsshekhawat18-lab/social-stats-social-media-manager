@@ -1,10 +1,15 @@
 # ======================
 # Backend (Django)
 # ======================
+__pycache__/
+**/__pycache__/
 backend/__pycache__/
 backend/*.pyc
 backend/*.pyo
 backend/*.pyd
+*.pyc
+*.pyo
+*.pyd
 backend/db.sqlite3
 backend/*.sqlite3
 

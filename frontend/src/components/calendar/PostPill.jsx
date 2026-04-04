@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PLATFORMS } from '../../services/platforms';
+import SocialPlatformIcon from '../ui/SocialPlatformIcon';
 
 const STATUS_STYLES = {
   published: (color) => ({
@@ -29,7 +30,7 @@ const STATUS_STYLES = {
 export default function PostPill({ post, onClick }) {
   const [hovered, setHovered] = useState(false);
   const [tooltipPos, setTooltipPos] = useState({ left: 0, top: 0 });
-  const platform = PLATFORMS[post.platform] || { color: '#64748B', icon: '🔗', label: post.platform };
+  const platform = PLATFORMS[post.platform] || { color: '#64748B', label: post.platform };
   const statusStyle = (STATUS_STYLES[post.status] || STATUS_STYLES.draft)(platform.color);
   const label = post.title || post.caption || '(no caption)';
   const truncated = label.length > 22 ? label.slice(0, 22) + '…' : label;
@@ -80,7 +81,9 @@ export default function PostPill({ post, onClick }) {
           userSelect: 'none',
         }}
       >
-        <span style={{ flexShrink: 0, fontSize: 10 }}>{platform.icon}</span>
+        <span style={{ flexShrink: 0, display: 'inline-flex' }}>
+          <SocialPlatformIcon platform={post.platform} size={10} />
+        </span>
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, color: '#1e293b' }}>
           {truncated}
         </span>
@@ -106,7 +109,7 @@ export default function PostPill({ post, onClick }) {
           pointerEvents: 'none',
         }}>
           <div style={{ fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>{platform.icon}</span>
+            <SocialPlatformIcon platform={post.platform} size={14} />
             <span style={{ color: platform.color }}>{platform.label}</span>
             <span style={{
               marginLeft: 'auto',

@@ -1,0 +1,64 @@
+.app-page {
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 36px;
+}
+
+.app-page--content {
+  padding: 28px 32px 40px;
+}
+
+.app-page--md {
+  max-width: 1200px;
+}
+
+.app-page--lg {
+  max-width: 1280px;
+}
+
+.app-page--wide {
+  max-width: 1400px;
+}
+
+.app-page--xl {
+  max-width: 1480px;
+}
+
+.app-surface {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 6px rgba(15,23,42,.05);
+}
+
+.app-surface--panel {
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.app-surface--compact {
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.app-surface--rounded-lg {
+  border-radius: 18px;
+}
+
+.app-empty-state {
+  text-align: center;
+  color: #94a3b8;
+}
+
+.app-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .app-page,
+  .app-page--content {
+    padding: 20px 16px 28px;
+  }
+}

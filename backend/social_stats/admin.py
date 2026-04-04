@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog,
     ROISettings, ROIReport,
-    CalendarPost, CalendarNote, PostingSchedule,
+    CalendarPost, CalendarNote, PostingSchedule, SiteContent, LookupCollection, LookupItem,
 )
 
 @admin.register(Client)
@@ -75,3 +75,23 @@ class PostingScheduleAdmin(admin.ModelAdmin):
     list_filter   = ['platform', 'is_active']
     search_fields = ['client__company']
     raw_id_fields = ['client']
+
+
+@admin.register(SiteContent)
+class SiteContentAdmin(admin.ModelAdmin):
+    list_display = ['key', 'title', 'is_public', 'last_updated', 'updated_at']
+    list_filter = ['is_public']
+    search_fields = ['key', 'title']
+
+
+class LookupItemInline(admin.TabularInline):
+    model = LookupItem
+    extra = 0
+
+
+@admin.register(LookupCollection)
+class LookupCollectionAdmin(admin.ModelAdmin):
+    list_display = ['key', 'title', 'is_public', 'updated_at']
+    search_fields = ['key', 'title']
+    list_filter = ['is_public']
+    inlines = [LookupItemInline]

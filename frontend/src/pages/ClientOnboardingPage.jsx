@@ -5,7 +5,7 @@ import { clientsAPI } from '../services/api';
 import PageHeader from '../components/layout/PageHeader';
 import ConnectedAccounts from '../components/ui/ConnectedAccounts';
 import CompetitorSection from '../components/ui/CompetitorSection';
-import { useOAuthStatus } from '../hooks/useData';
+import { useOAuthStatus, useLookups } from '../hooks/useData';
 import {
   ArrowRight, Building2, CheckCircle2, Globe2, ImagePlus, Loader2,
   MapPin, MessageCircle, Palette, Phone, PlugZap, Upload, Users, X,
@@ -36,12 +36,9 @@ const BRAND_TONES = [
 const SOCIAL_PLATFORMS = [
   { value: 'facebook', label: 'Facebook' },
   { value: 'instagram', label: 'Instagram' },
-  { value: 'google_my_business', label: 'Google My Business' },
   { value: 'linkedin', label: 'LinkedIn' },
   { value: 'youtube', label: 'YouTube' },
-  { value: 'twitter', label: 'Twitter' },
-  { value: 'tiktok', label: 'TikTok' },
-  { value: 'other', label: 'Other' },
+  { value: 'google_my_business', label: 'Google My Business' },
 ];
 
 const GENDERS = [
@@ -57,6 +54,16 @@ export default function ClientOnboardingPage() {
   const navigate = useNavigate();
   const clientId = user?.client_id;
   const { status: oauthStatus } = useOAuthStatus(clientId);
+  const { lookups } = useLookups();
+
+  const businessCategoryOptions = (lookups.business_categories || BUSINESS_CATEGORIES.map((label) => ({
+    key: label.toLowerCase().replace(/[^a-z0-9]+/gi, '_'),
+    label,
+  })));
+  const brandToneOptions = lookups.brand_tones?.map(item => ({ value: item.key, label: item.label })) || BRAND_TONES;
+  const genderOptions = lookups.genders?.map(item => ({ value: item.key, label: item.label })) || GENDERS;
+  const socialPlatformOptions = lookups.platforms?.map(item => ({ value: item.key, label: item.label })) || SOCIAL_PLATFORMS;
+  const getCategoryKey = (category) => businessCategoryOptions.find(item => item.label === category)?.key;
 
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -533,8 +540,8 @@ export default function ClientOnboardingPage() {
                       style={styles.select}
                     >
                       <option value="">Select a category</option>
-                      {BUSINESS_CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                      {businessCategoryOptions.map(item => (
+                        <option key={item.key} value={item.label}>{item.label}</option>
                       ))}
                     </select>
                     {getFieldError('business_category') && <div style={styles.errorTooltip}>{getFieldError('business_category')}</div>}
@@ -543,7 +550,7 @@ export default function ClientOnboardingPage() {
                   <div style={styles.field}>
                     <label style={styles.label}>Brand Tone</label>
                     <div style={styles.choiceGrid}>
-                      {BRAND_TONES.map(tone => {
+                      {brandToneOptions.map(tone => {
                         const active = formData.brand_tone === tone.value;
                         return (
                           <button
@@ -642,7 +649,7 @@ export default function ClientOnboardingPage() {
                 <div style={styles.field}>
                   <label style={styles.label}>Primary Gender</label>
                   <div style={styles.choiceGrid}>
-                    {GENDERS.map(gender => {
+                    {genderOptions.map(gender => {
                       const active = formData.gender === gender.value;
                       return (
                         <button
@@ -778,7 +785,7 @@ export default function ClientOnboardingPage() {
           <div style={styles.stepContent}>
             <CompetitorSection
               competitors={formData.competitors}
-              socialPlatforms={SOCIAL_PLATFORMS}
+              socialPlatforms={socialPlatformOptions}
               onAddCompetitor={addCompetitor}
               onUpdateCompetitor={updateCompetitor}
               onRemoveCompetitor={removeCompetitor}
@@ -842,6 +849,15 @@ export default function ClientOnboardingPage() {
   };
 
   const getSubcategoriesForCategory = (category) => {
+    const parentKey = getCategoryKey(category);
+    if (parentKey) {
+      const lookupSubs = (lookups.business_subcategories || [])
+        .filter(item => item.parent_key === parentKey)
+        .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+        .map(item => item.label);
+      if (lookupSubs.length) return lookupSubs;
+    }
+
     const subcategories = {
       'Electronics': ['Consumer Electronics', 'Computer Stores', 'Mobile Phones', 'Audio Equipment', 'Video Games', 'Cameras', 'Drones', 'Smart Devices', 'Electronic Repair', 'Security Systems'],
       'Retail': ['Department Stores', 'Specialty Shops', 'Online Retail', 'Wholesale', 'Discount Stores', 'Convenience Stores', 'Pharmacies', 'Bookstores', 'Pet Stores', 'Sporting Goods'],
@@ -873,7 +889,7 @@ export default function ClientOnboardingPage() {
   };
 
   return (
-    <div style={styles.page}>
+    <div className="app-page app-page--content app-page--lg">
       <PageHeader
         title="Complete Your Profile"
         subtitle="Set up your business profile to get the most out of Statox"
@@ -996,12 +1012,6 @@ export default function ClientOnboardingPage() {
 }
 
 const styles = {
-  page: {
-    padding: '28px 32px 40px',
-    maxWidth: 1240,
-    margin: '0 auto',
-    width: '100%'
-  },
   heroShell: {
     display: 'grid',
     gridTemplateColumns: 'minmax(0, 1.7fr) minmax(280px, .9fr)',

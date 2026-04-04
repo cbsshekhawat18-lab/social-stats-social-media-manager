@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useOverview, useDateRange, useClients, useGoals, useAlerts } from '../hooks/useData';
+import { useOverview, useDateRange, useClients, useGoals, useAlerts, useLookups } from '../hooks/useData';
+import { formatTimeAgo } from '../services/formatters';
 import DateRangePicker from '../components/ui/DateRangePicker';
 import StatCard from '../components/ui/StatCard';
 import { PLATFORMS, fmt } from '../services/platforms';
 import { Users, Eye, MousePointer2, TrendingUp, Target, Plus, Trash2, ChevronDown, ChevronUp, Bell, CheckCheck, AlertCircle, TrendingDown, Zap, Trophy, ExternalLink, Play, Link2, Copy, Lock } from 'lucide-react';
 import { goalsAPI, topPostsAPI, sharedReportsAPI, roiAPI } from '../services/api';
-import PageHeader from '../components/layout/PageHeader';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
 
 const METRICS = [
   { value: 'impressions',    label: 'Impressions' },
@@ -21,11 +22,11 @@ const METRICS = [
 
 const PLATFORM_OPTIONS = [
   { value: 'all',               label: 'All Platforms' },
-  { value: 'facebook',          label: '📘 Facebook' },
-  { value: 'instagram',         label: '📸 Instagram' },
-  { value: 'youtube',           label: '▶️ YouTube' },
-  { value: 'linkedin',          label: '💼 LinkedIn' },
-  { value: 'google_my_business',label: '🏢 Google My Business' },
+  { value: 'facebook',          label: 'Facebook' },
+  { value: 'instagram',         label: 'Instagram' },
+  { value: 'linkedin',          label: 'LinkedIn' },
+  { value: 'youtube',           label: 'YouTube' },
+  { value: 'google_my_business',label: 'Google My Business' },
 ];
 
 const now = new Date();
@@ -126,7 +127,7 @@ function GoalManager() {
             <div style={styles.goalField}>
               <label style={styles.goalLabel}>Platform</label>
               <select value={form.platform} onChange={e => handleFieldChange('platform', e.target.value)} style={styles.sel}>
-                {PLATFORM_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                {(platformOptions || PLATFORM_OPTIONS).map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
             </div>
 
@@ -223,15 +224,6 @@ const ALERT_ICONS = {
   follower_milestone: { icon: Users,         color: '#16a34a' },
 };
 
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60)  return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24)   return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
-
 function AlertsPanel() {
   const [open, setOpen] = useState(true);
   const { alerts, unreadCount, markRead, markAllRead } = useAlerts();
@@ -286,7 +278,7 @@ function AlertsPanel() {
                           <span style={alertClientTag}>{alert.client_name}</span>
                         )}
                         <span style={{ fontSize: 11, color: '#94a3b8' }}>
-                          {timeAgo(alert.created_at)}
+                          {formatTimeAgo(alert.created_at, { includeSeconds: false })}
                         </span>
                       </div>
                     </div>
@@ -391,7 +383,10 @@ function TopPostsPanel() {
                   <tr key={entry.id} style={styles.tr}>
                     <td style={{ ...styles.td, fontWeight: 600 }}>{entry.client_name}</td>
                     <td style={{ ...styles.td, color: p.color }}>
-                      {p.icon} {p.label || entry.platform}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <SocialPlatformIcon platform={entry.platform} size={15} />
+                        {p.label || entry.platform}
+                      </span>
                     </td>
                     <td style={{ ...styles.td, maxWidth: 200 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -399,7 +394,7 @@ function TopPostsPanel() {
                           <img src={post.thumbnail_url} alt="" style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
                         ) : (
                           <div style={{ width: 36, height: 36, borderRadius: 6, background: p.bg || '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            {isVideo ? <Play size={14} style={{ color: p.color }} /> : <span>{p.icon || '📄'}</span>}
+                            {isVideo ? <Play size={14} style={{ color: p.color }} /> : <SocialPlatformIcon platform={entry.platform} size={14} />}
                           </div>
                         )}
                         <span style={{ fontSize: 12, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -640,42 +635,112 @@ function ROIOverviewPanel() {
   );
 }
 
+function SignalCard({ label, value, detail, accent = '#00d7ff' }) {
+  return (
+    <div style={{ ...styles.signalCard, borderColor: `${accent}25` }}>
+      <div style={styles.signalLabel}>{label}</div>
+      <div style={{ ...styles.signalValue, color: accent }}>{value}</div>
+      <div style={styles.signalDetail}>{detail}</div>
+    </div>
+  );
+}
+
 export default function AdminOverview() {
   const [range, setRange] = useDateRange(30);
-  const { data: overview } = useOverview(range);
+  const { data: overview, loading } = useOverview(range);
+  const { lookups } = useLookups();
+
+  const platformLabelMap = (lookups.platforms || []).reduce((acc, item) => {
+    acc[item.key] = item.label;
+    return acc;
+  }, {});
+
+  const platformOptions = (lookups.platforms && lookups.platforms.length > 0)
+    ? [{ value: 'all', label: 'All Platforms' }, ...lookups.platforms.map((item) => ({ value: item.key, label: item.label }))]
+    : PLATFORM_OPTIONS;
 
   const totalImpressions = overview?.by_platform?.reduce((s, p) => s + (p.impressions||0), 0) || 0;
+  const totalReach       = overview?.by_platform?.reduce((s, p) => s + (p.reach||0), 0) || 0;
   const totalClicks      = overview?.by_platform?.reduce((s, p) => s + (p.clicks||0), 0) || 0;
   const totalFollowers   = overview?.by_platform?.reduce((s, p) => s + (p.followers||0), 0) || 0;
+  const activePlatforms  = overview?.by_platform?.filter((p) => (p.impressions || p.reach || p.clicks || p.followers || p.video_views || 0) > 0).length || 0;
   const topPlatform      = [...(overview?.by_platform || [])].sort((a, b) => (b.impressions || 0) - (a.impressions || 0))[0];
   const latestSync       = overview?.recent_syncs?.[0];
+  const syncSuccessCount = (overview?.recent_syncs || []).filter((sync) => sync.status === 'success').length;
+  const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0.00';
+  const topPlatformLabel = topPlatform ? (platformLabelMap[topPlatform.platform] || PLATFORMS[topPlatform.platform]?.label || topPlatform.platform) : 'No data yet';
+  const topPlatformColor = topPlatform ? (PLATFORMS[topPlatform.platform]?.color || '#00d7ff') : '#00d7ff';
+  const latestSyncLabel = latestSync ? `${latestSync.client_name} · ${latestSync.status}` : 'No recent syncs';
 
   return (
     <div style={styles.page}>
-      <PageHeader
-        title="Agency Overview"
-        subtitle={`${overview?.total_clients || 0} active users`}
-        actions={<DateRangePicker range={range} onChange={setRange} />}
-      />
+      <div style={styles.heroPanel}>
+        <div style={styles.heroGlowA} />
+        <div style={styles.heroGlowB} />
+        <div style={styles.heroTopRow}>
+          <div style={styles.heroCopy}>
+            <div style={styles.heroEyebrow}>Agency Command Center</div>
+            <h1 style={styles.heroTitle}>Make the numbers feel actionable.</h1>
+            <p style={styles.heroSubtitle}>
+              Track client momentum, sync health, campaign traction, and cross-platform performance from one polished control room.
+            </p>
+          </div>
+          <div style={styles.heroActions}>
+            <DateRangePicker range={range} onChange={setRange} />
+          </div>
+        </div>
+
+        <div style={styles.signalGrid}>
+          <SignalCard
+            label="Active Users"
+            value={loading ? '...' : fmt(overview?.total_clients || 0)}
+            detail={loading ? 'Loading agency coverage' : `${activePlatforms} active platforms in this window`}
+            accent="#00d7ff"
+          />
+          <SignalCard
+            label="Top Platform"
+            value={topPlatformLabel}
+            detail={topPlatform ? `${fmt(topPlatform.impressions)} impressions · ${fmt(topPlatform.reach)} reach` : 'Waiting for synced performance data'}
+            accent={topPlatformColor}
+          />
+          <SignalCard
+            label="Click Efficiency"
+            value={`${ctr}%`}
+            detail={`${fmt(totalClicks)} clicks from ${fmt(totalImpressions)} impressions`}
+            accent="#22c55e"
+          />
+          <SignalCard
+            label="Sync Health"
+            value={latestSync ? `${syncSuccessCount}/${overview?.recent_syncs?.length || 0}` : '0/0'}
+            detail={latestSyncLabel}
+            accent={latestSync?.status === 'failed' ? '#ef4444' : latestSync?.status === 'running' ? '#00d7ff' : '#f59e0b'}
+          />
+        </div>
+      </div>
 
       <div style={styles.summaryBar}>
         <div style={styles.summaryItem}>
-          <span style={styles.summaryItemLabel}>Top Platform</span>
-          <strong style={styles.summaryItemValue}>
-            {topPlatform ? `${PLATFORMS[topPlatform.platform]?.icon} ${PLATFORMS[topPlatform.platform]?.label || topPlatform.platform}` : 'No data'}
-          </strong>
+          <span style={styles.summaryItemLabel}>Date Window</span>
+          <strong style={styles.summaryItemValue}>{overview?.period ? `${overview.period.since} to ${overview.period.until}` : 'Current period'}</strong>
         </div>
         <div style={styles.summaryItem}>
           <span style={styles.summaryItemLabel}>Best Reach</span>
           <strong style={styles.summaryItemValue}>{topPlatform ? fmt(topPlatform.reach) : '0'}</strong>
         </div>
         <div style={styles.summaryItem}>
-          <span style={styles.summaryItemLabel}>Latest Sync</span>
-          <strong style={styles.summaryItemValue}>{latestSync ? `${latestSync.client_name} · ${latestSync.status}` : 'No recent syncs'}</strong>
+          <span style={styles.summaryItemLabel}>Total Reach</span>
+          <strong style={styles.summaryItemValue}>{fmt(totalReach)}</strong>
         </div>
         <div style={styles.summaryItem}>
-          <span style={styles.summaryItemLabel}>Date Window</span>
-          <strong style={styles.summaryItemValue}>{overview?.period ? `${overview.period.since} to ${overview.period.until}` : 'Current period'}</strong>
+          <span style={styles.summaryItemLabel}>Latest Sync</span>
+          <strong style={styles.summaryItemValue}>{latestSyncLabel}</strong>
+        </div>
+      </div>
+
+      <div style={styles.sectionHeading}>
+        <div>
+          <div style={styles.sectionEyebrow}>Performance Snapshot</div>
+          <h2 style={styles.sectionTitle}>Core agency metrics at a glance</h2>
         </div>
       </div>
 
@@ -684,6 +749,13 @@ export default function AdminOverview() {
         <StatCard label="Total Impressions" value={totalImpressions}             icon={Eye}           color="#00d7ff" />
         <StatCard label="Total Clicks"      value={totalClicks}                  icon={MousePointer2} color="#22c55e" />
         <StatCard label="Total Followers"   value={totalFollowers}               icon={TrendingUp}    color="#f59e0b" />
+      </div>
+
+      <div style={styles.sectionHeading}>
+        <div>
+          <div style={styles.sectionEyebrow}>Operational Detail</div>
+          <h2 style={styles.sectionTitle}>Performance tables, alerts, goals, and recent syncs</h2>
+        </div>
       </div>
 
       <div style={styles.dashboardGrid}>
@@ -704,7 +776,10 @@ export default function AdminOverview() {
                     <tr key={p.platform} style={styles.tr}>
                       <td style={styles.td}>
                         <span style={{ color: PLATFORMS[p.platform]?.color }}>
-                          {PLATFORMS[p.platform]?.icon} {PLATFORMS[p.platform]?.label || p.platform}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <SocialPlatformIcon platform={p.platform} size={15} />
+                            {platformLabelMap[p.platform] || PLATFORMS[p.platform]?.label || p.platform}
+                          </span>
                         </span>
                       </td>
                       <td style={styles.td}>{fmt(p.impressions)}</td>
@@ -743,7 +818,10 @@ export default function AdminOverview() {
                     <tr key={l.id} style={styles.tr}>
                       <td style={styles.td}>{l.client_name || '—'}</td>
                       <td style={styles.td}>
-                        {PLATFORMS[l.platform]?.icon} {PLATFORMS[l.platform]?.label || l.platform}
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <SocialPlatformIcon platform={l.platform} size={15} />
+                          {PLATFORMS[l.platform]?.label || l.platform}
+                        </span>
                       </td>
                       <td style={styles.td}>
                         <span style={statusBadge(l.status)}>{l.status}</span>
@@ -778,7 +856,134 @@ function statusBadge(status) {
 }
 
 const styles = {
-  page:      { padding: '28px 32px', maxWidth: 1400, margin: '0 auto' },
+  page:      {
+    padding: '32px 32px 54px',
+    maxWidth: 1440,
+    margin: '0 auto',
+    background: `
+      radial-gradient(circle at top left, rgba(0,215,255,0.12), transparent 28%),
+      radial-gradient(circle at top right, rgba(34,197,94,0.08), transparent 20%),
+      linear-gradient(180deg, #f7fbff 0%, #f0f4f9 45%, #eef3f8 100%)
+    `,
+    minHeight: '100vh',
+  },
+  heroPanel: {
+    position: 'relative',
+    overflow: 'hidden',
+    background: 'linear-gradient(135deg, #f8fdff 0%, #effbff 48%, #eefcf6 100%)',
+    borderRadius: 28,
+    padding: '28px 28px 24px',
+    marginBottom: 20,
+    border: '1px solid #dbeafe',
+    boxShadow: '0 24px 54px rgba(15,23,42,.08)',
+  },
+  heroGlowA: {
+    position: 'absolute',
+    top: -110,
+    right: -70,
+    width: 260,
+    height: 260,
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(0,215,255,.18) 0%, rgba(0,215,255,0) 70%)',
+    pointerEvents: 'none',
+  },
+  heroGlowB: {
+    position: 'absolute',
+    bottom: -120,
+    left: -60,
+    width: 240,
+    height: 240,
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(52,211,153,.14) 0%, rgba(52,211,153,0) 70%)',
+    pointerEvents: 'none',
+  },
+  heroTopRow: {
+    position: 'relative',
+    zIndex: 1,
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 18,
+    flexWrap: 'wrap',
+    marginBottom: 24,
+  },
+  heroCopy: {
+    minWidth: 0,
+    maxWidth: 720,
+  },
+  heroEyebrow: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '6px 12px',
+    borderRadius: 999,
+    background: '#ffffff',
+    border: '1px solid #dbeafe',
+    color: '#0f766e',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '.12em',
+    textTransform: 'uppercase',
+    marginBottom: 14,
+  },
+  heroTitle: {
+    margin: 0,
+    fontSize: 36,
+    lineHeight: 1,
+    fontWeight: 900,
+    color: '#0f172a',
+    letterSpacing: '-0.05em',
+  },
+  heroSubtitle: {
+    margin: '12px 0 0',
+    color: '#64748b',
+    fontSize: 15,
+    lineHeight: 1.8,
+    maxWidth: 640,
+  },
+  heroActions: {
+    position: 'relative',
+    zIndex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+  },
+  signalGrid: {
+    position: 'relative',
+    zIndex: 1,
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: 14,
+  },
+  signalCard: {
+    background: 'rgba(255,255,255,.82)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid #dbeafe',
+    borderRadius: 20,
+    padding: '18px 18px 16px',
+    minHeight: 120,
+  },
+  signalLabel: {
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '.08em',
+    textTransform: 'uppercase',
+    color: '#64748b',
+    marginBottom: 10,
+  },
+  signalValue: {
+    fontSize: 24,
+    lineHeight: 1.2,
+    fontWeight: 800,
+    letterSpacing: '-0.03em',
+    marginBottom: 8,
+    wordBreak: 'break-word',
+  },
+  signalDetail: {
+    fontSize: 12,
+    lineHeight: 1.6,
+    color: '#475569',
+  },
   summaryBar: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -786,11 +991,12 @@ const styles = {
     marginBottom: 22,
   },
   summaryItem: {
-    background: '#fff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 16,
-    padding: '14px 16px',
-    boxShadow: '0 1px 6px rgba(15,23,42,.05)',
+    background: 'rgba(255,255,255,.82)',
+    border: '1px solid rgba(203,213,225,.8)',
+    borderRadius: 18,
+    padding: '16px 18px',
+    boxShadow: '0 8px 24px rgba(15,23,42,.06)',
+    backdropFilter: 'blur(10px)',
   },
   summaryItemLabel: {
     display: 'block',
@@ -806,6 +1012,28 @@ const styles = {
     lineHeight: 1.4,
     color: '#0f172a',
   },
+  sectionHeading: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: 16,
+    marginBottom: 16,
+  },
+  sectionEyebrow: {
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '.08em',
+    textTransform: 'uppercase',
+    color: '#0891b2',
+    marginBottom: 6,
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: 22,
+    fontWeight: 800,
+    color: '#0f172a',
+    letterSpacing: '-0.03em',
+  },
   cards: {
     display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px,1fr))',
     gap: 14, marginBottom: 28,
@@ -820,14 +1048,19 @@ const styles = {
   mainColumn: { minWidth: 0 },
   sideColumn: { minWidth: 0 },
   tableWrap: {
-    background: '#fff', borderRadius: 14, padding: 24,
-    boxShadow: '0 1px 6px rgba(0,0,0,.07)', marginBottom: 24, overflowX: 'auto',
+    background: 'linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(248,250,252,.96) 100%)',
+    borderRadius: 22,
+    padding: 24,
+    boxShadow: '0 18px 40px rgba(15,23,42,.08)',
+    marginBottom: 24,
+    overflowX: 'auto',
+    border: '1px solid rgba(226,232,240,.95)',
   },
   goalHeader: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     cursor: 'pointer', marginBottom: 0,
   },
-  tableTitle: { margin: 0, fontSize: 15, fontWeight: 700, color: '#1e293b' },
+  tableTitle: { margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' },
   goalForm: {
     display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center',
     marginTop: 16, marginBottom: 12,
@@ -847,7 +1080,7 @@ const styles = {
   inputError: { borderColor: '#ef4444', background: '#fef2f2' },
   addGoalBtn: {
     padding: '8px 16px', borderRadius: 8, border: 'none',
-    background: '#00d7ff', color: '#fff', cursor: 'pointer',
+    background: '#00d7ff', color: '#0f172a', cursor: 'pointer',
     fontWeight: 700, fontSize: 13,
   },
   delBtn: {
@@ -861,23 +1094,23 @@ const styles = {
   },
   table:      { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
   th: {
-    textAlign: 'left', padding: '10px 12px', background: '#f0f4f9',
-    color: '#64748b', fontWeight: 600, fontSize: 12, borderBottom: '1px solid #e5e7eb',
+    textAlign: 'left', padding: '12px 12px', background: '#eef6fb',
+    color: '#5b6b79', fontWeight: 700, fontSize: 12, borderBottom: '1px solid #dbe5f0',
     whiteSpace: 'nowrap',
   },
-  tr: { borderBottom: '1px solid #f1f5f9' },
-  td: { padding: '12px 12px', color: '#374151' },
+  tr: { borderBottom: '1px solid #eef2f7' },
+  td: { padding: '13px 12px', color: '#334155' },
   inlineSuccess: { fontSize: 13, marginBottom: 12, padding: '10px 14px', borderRadius: 8, background: '#dcfce7', color: '#16a34a' },
   inlineError: { fontSize: 13, marginBottom: 12, padding: '10px 14px', borderRadius: 8, background: '#fee2e2', color: '#dc2626' },
 };
 
-const panelWrap   = { background: '#fff', borderRadius: 14, boxShadow: '0 1px 6px rgba(0,0,0,.07)', marginBottom: 24, overflow: 'hidden' };
+const panelWrap   = { background: 'linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(248,250,252,.96) 100%)', borderRadius: 22, boxShadow: '0 18px 40px rgba(15,23,42,.08)', marginBottom: 24, overflow: 'hidden', border: '1px solid rgba(226,232,240,.95)' };
 const panelToggle = {
   width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer',
-  fontSize: 14, fontWeight: 700, color: '#1e293b',
+  padding: '18px 22px', background: 'none', border: 'none', cursor: 'pointer',
+  fontSize: 14, fontWeight: 800, color: '#0f172a',
 };
-const panelBody   = { padding: '0 20px 20px', overflowX: 'auto' };
+const panelBody   = { padding: '0 22px 22px', overflowX: 'auto' };
 const countBadge  = { fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 };
 const emptyMsg    = { color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '16px 0', margin: 0 };
 const iconActionBtn = {

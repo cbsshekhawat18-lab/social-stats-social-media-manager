@@ -13,6 +13,7 @@ import ROIFunnel from '../components/ui/ROIFunnel';
 import { PLATFORMS } from '../services/platforms';
 import { useClients } from '../hooks/useData';
 import PageHeader from '../components/layout/PageHeader';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
 
 // ── Inject styles once ────────────────────────────────────────────────────────
 if (typeof document !== 'undefined' && !document.getElementById('roi-styles')) {
@@ -191,7 +192,10 @@ function PlatformRow({ row, symbol }) {
   return (
     <tr style={trStyle}>
       <td style={tdStyle}>
-        <span style={{ fontWeight: 600 }}>{pl.icon || '📊'} {pl.label || row.platform}</span>
+        <span style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <SocialPlatformIcon platform={row.platform} size={15} />
+          {pl.label || row.platform}
+        </span>
       </td>
       <td style={{ ...tdStyle, textAlign: 'right' }}>{symbol}{(row.budget || 0).toLocaleString()}</td>
       <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtNum(row.clicks)}</td>
@@ -334,29 +338,37 @@ export default function ROICalculatorPage({ clientId: propClientId }) {
   // No client selected (admin-level page with no clientId prop)
   if (!clientId) {
     return (
-      <div style={{ padding: 40, maxWidth: 500, margin: '60px auto', textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 20 }}>📈</div>
-        <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, color: '#0F172A' }}>ROI Calculator</h2>
-        <p style={{ color: '#64748B', fontSize: 14, marginBottom: 28 }}>
-          Select a user to view and calculate their return on investment.
-        </p>
-        {clients.length > 0 ? (
-          <select
-            onChange={e => {
-              const nextClientId = e.target.value ? parseInt(e.target.value, 10) : null;
-              setSelectedClientId(nextClientId);
-              updateSearch({ client: nextClientId });
-            }}
-            style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 15, color: '#0F172A', background: '#fff', outline: 'none', cursor: 'pointer' }}
-          >
-            <option value="">— Select a user —</option>
-            {clients.map(c => (
-              <option key={c.id} value={c.id}>{c.company}</option>
-            ))}
-          </select>
-        ) : (
-          <p style={{ color: '#94A3B8', fontSize: 13 }}>No users found.</p>
-        )}
+      <div style={pageWrap}>
+        <PageHeader
+          title="ROI Calculator"
+          subtitle="Measure the return on your social media investment"
+          actions={(
+            <select
+              value=""
+              onChange={e => {
+                const nextClientId = e.target.value ? parseInt(e.target.value, 10) : null;
+                setSelectedClientId(nextClientId);
+                updateSearch({ client: nextClientId });
+              }}
+              style={clientSelectStyle}
+            >
+              <option value="">All Users</option>
+              {clients.map(c => (
+                <option key={c.id} value={c.id}>{c.company}</option>
+              ))}
+            </select>
+          )}
+        />
+        <div style={{ padding: 40, maxWidth: 500, margin: '60px auto', textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 20 }}>📈</div>
+          <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, color: '#0F172A' }}>ROI Calculator</h2>
+          <p style={{ color: '#64748B', fontSize: 14, marginBottom: 0 }}>
+            Select a user from the top-right dropdown to view and calculate their return on investment.
+          </p>
+          {clients.length === 0 && (
+            <p style={{ color: '#94A3B8', fontSize: 13, marginTop: 12 }}>No users found.</p>
+          )}
+        </div>
       </div>
     );
   }
@@ -378,6 +390,20 @@ export default function ROICalculatorPage({ clientId: propClientId }) {
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             {saveMsg && <span style={{ fontSize: 13, color: saveMsg.startsWith('✓') ? '#059669' : '#EF4444', fontWeight: 600 }}>{saveMsg}</span>}
             <div style={{ display: 'flex', gap: 8 }}>
+              {showClientSelector && (
+                <select
+                  value={clientId || ''}
+                  onChange={e => {
+                    const nextClientId = e.target.value ? parseInt(e.target.value, 10) : null;
+                    setSelectedClientId(nextClientId);
+                    updateSearch({ client: nextClientId });
+                  }}
+                  style={clientSelectStyle}
+                >
+                  <option value="">All Users</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
+                </select>
+              )}
               <select value={month} onChange={e => setMonthYear(parseInt(e.target.value), year)} style={selectStyle}>
                 {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
               </select>
@@ -388,23 +414,6 @@ export default function ROICalculatorPage({ clientId: propClientId }) {
           </div>
         )}
       />
-
-      {showClientSelector && (
-        <div style={clientBanner}>
-          <span style={clientBannerLabel}>Viewing ROI for:</span>
-          <select
-            value={clientId || ''}
-            onChange={e => {
-              const nextClientId = e.target.value ? parseInt(e.target.value, 10) : null;
-              setSelectedClientId(nextClientId);
-              updateSearch({ client: nextClientId });
-            }}
-            style={clientSelectStyle}
-          >
-            {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
-          </select>
-        </div>
-      )}
 
       <div style={twoCol}>
         {/* ── LEFT PANEL ─────────────────────────────────────────── */}
@@ -427,7 +436,7 @@ export default function ROICalculatorPage({ clientId: propClientId }) {
               return (
                 <div key={pc.key} style={{ marginBottom: 10 }}>
                   <label style={{ ...inputLabel, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 14 }}>{pl.icon || '📊'}</span>
+                    <SocialPlatformIcon platform={pc.platformKey} size={14} />
                     {pl.label || pc.label}
                   </label>
                   <div style={fieldsDisabled ? disabledInputWrap : inputWrap}>
@@ -791,9 +800,7 @@ export default function ROICalculatorPage({ clientId: propClientId }) {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const pageWrap     = { padding: '24px 28px', maxWidth: 1400, margin: '0 auto' };
-const clientBanner = { marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' };
-const clientBannerLabel = { fontSize: 13, color: '#64748B', fontWeight: 600 };
-const clientSelectStyle = { padding: '6px 12px', borderRadius: 8, border: '1px solid #E2E8F0', fontSize: 13, background: '#fff', color: '#0F172A', fontWeight: 600 };
+const clientSelectStyle = { padding: '8px 14px', borderRadius: 10, border: '1.5px solid #dbe5f3', fontSize: 13, background: '#fff', color: '#1e293b', fontWeight: 600, outline: 'none', minWidth: 200 };
 const twoCol       = { display: 'grid', gridTemplateColumns: '40% 1fr', gap: 24, alignItems: 'flex-start' };
 const leftPanel    = { position: 'sticky', top: 24 };
 const rightPanel   = {};

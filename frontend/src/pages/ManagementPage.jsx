@@ -5,6 +5,8 @@ import {
   Plus, Trash2, X, RefreshCw, Eye,
   ToggleLeft, ToggleRight, Save,
 } from 'lucide-react';
+import PageHeader from '../components/layout/PageHeader';
+import SegmentedTabs from '../components/ui/SegmentedTabs';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -581,18 +583,15 @@ function StaffTab() {
                 <div style={splitStyles.detailName}>{selected.name || selected.email}</div>
                 <div style={splitStyles.detailEmail}>{selected.email}</div>
               </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {['permissions', 'clients'].map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setPanel(tab)}
-                    style={{ ...btnStyles.tab, ...(activePanel === tab ? btnStyles.tabActive : {}) }}
-                  >
-                    {tab === 'permissions' ? <Shield size={13} /> : <Users size={13} />}
-                    {tab === 'permissions' ? 'Permissions' : 'Users'}
-                  </button>
-                ))}
-              </div>
+              <SegmentedTabs
+                items={[
+                  { id: 'permissions', label: 'Permissions', icon: <Shield size={13} /> },
+                  { id: 'clients', label: 'Users', icon: <Users size={13} /> },
+                ]}
+                active={activePanel}
+                onChange={setPanel}
+                compact
+              />
             </div>
             {activePanel === 'permissions'
               ? <PermissionsPanel entityId={selected.id} entityType="staff" />
@@ -673,18 +672,15 @@ function ClientsTab() {
                 <div style={splitStyles.detailName}>{selected.company}</div>
                 <div style={splitStyles.detailEmail}>{selected.email || 'No email'}</div>
               </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {['permissions', 'portal'].map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setPanel(tab)}
-                    style={{ ...btnStyles.tab, ...(activePanel === tab ? btnStyles.tabActive : {}) }}
-                  >
-                    {tab === 'permissions' ? <Shield size={13} /> : <Eye size={13} />}
-                    {tab === 'permissions' ? 'Permissions' : 'Portal Config'}
-                  </button>
-                ))}
-              </div>
+              <SegmentedTabs
+                items={[
+                  { id: 'permissions', label: 'Permissions', icon: <Shield size={13} /> },
+                  { id: 'portal', label: 'Portal Config', icon: <Eye size={13} /> },
+                ]}
+                active={activePanel}
+                onChange={setPanel}
+                compact
+              />
             </div>
             {activePanel === 'permissions'
               ? <PermissionsPanel entityId={selected.id} entityType="client" />
@@ -764,15 +760,15 @@ function RoleDefaultsTab() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <span style={{ fontSize: 14, fontWeight: 700, color: '#374151' }}>Role:</span>
-        {['staff', 'client'].map(r => (
-          <button
-            key={r}
-            onClick={() => setRole(r)}
-            style={{ ...btnStyles.tab, ...(role === r ? btnStyles.tabActive : {}) }}
-          >
-            {r.charAt(0).toUpperCase() + r.slice(1)}
-          </button>
-        ))}
+        <SegmentedTabs
+          items={[
+            { id: 'staff', label: 'Staff' },
+            { id: 'client', label: 'Client' },
+          ]}
+          active={role}
+          onChange={setRole}
+          compact
+        />
       </div>
       <ErrorMsg msg={error} />
       {loading ? <Loader /> : (
@@ -827,20 +823,12 @@ const btnStyles = {
     display: 'inline-flex', alignItems: 'center', gap: 6,
     padding: '9px 16px', borderRadius: 10, border: 'none',
     background: '#00d7ff',
-    color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+    color: '#0f172a', fontSize: 13, fontWeight: 700, cursor: 'pointer',
   },
   ghost: {
     display: 'inline-flex', alignItems: 'center', gap: 6,
     padding: '9px 16px', borderRadius: 10, border: '1px solid #dbe5f3',
     background: '#fff', color: '#475569', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-  },
-  tab: {
-    display: 'inline-flex', alignItems: 'center', gap: 5,
-    padding: '7px 14px', borderRadius: 9, border: '1px solid #e2e8f0',
-    background: '#fff', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer',
-  },
-  tabActive: {
-    background: '#e6fbff', borderColor: '#e6fbff', color: '#00d7ff',
   },
 };
 
@@ -874,24 +862,23 @@ export default function ManagementPage() {
   const [activeTab, setTab] = useState('staff');
 
   return (
-    <div style={pageStyles.page}>
-      <div style={pageStyles.header}>
-        <h1 style={pageStyles.title}>Access Management</h1>
-        <p style={pageStyles.sub}>Manage staff permissions, user access, and role defaults</p>
-      </div>
+    <div className="app-page app-page--md">
+      <PageHeader
+        title="Access Management"
+        subtitle="Manage staff permissions, user access, and role defaults"
+      />
 
-      <div style={pageStyles.tabBar}>
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{ ...pageStyles.tab, ...(activeTab === t.id ? pageStyles.tabActive : {}) }}
-          >
-            <t.icon size={15} />
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs
+        items={TABS.map((t) => ({
+          id: t.id,
+          label: t.label,
+          icon: <t.icon size={15} />,
+        }))}
+        active={activeTab}
+        onChange={setTab}
+        compact
+        style={{ marginBottom: 24 }}
+      />
 
       <div style={pageStyles.body}>
         {activeTab === 'staff'    && <StaffTab />}
@@ -903,19 +890,8 @@ export default function ManagementPage() {
 }
 
 const pageStyles = {
-  page: { padding: '32px 36px', maxWidth: 1200, margin: '0 auto' },
   header: { marginBottom: 28 },
   title: { fontSize: 26, fontWeight: 800, color: '#0f172a', margin: 0 },
   sub: { fontSize: 14, color: '#64748b', marginTop: 4 },
-  tabBar: { display: 'flex', gap: 6, marginBottom: 24, borderBottom: '2px solid #f1f5f9', paddingBottom: 0 },
-  tab: {
-    display: 'inline-flex', alignItems: 'center', gap: 7,
-    padding: '10px 18px', border: 'none', background: 'none',
-    color: '#64748b', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-    borderBottom: '2px solid transparent', marginBottom: -2, transition: 'all 0.15s',
-  },
-  tabActive: {
-    color: '#00d7ff', borderBottomColor: '#00d7ff',
-  },
   body: { paddingTop: 8 },
 };

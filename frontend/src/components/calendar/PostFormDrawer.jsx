@@ -3,6 +3,7 @@ import { format, isBefore } from 'date-fns';
 import { X } from 'lucide-react';
 import { PLATFORMS, PLATFORM_LIST } from '../../services/platforms';
 import { useSuggestedTimes } from '../../hooks/useCalendar';
+import SocialPlatformIcon from '../ui/SocialPlatformIcon';
 
 const CHAR_LIMITS = {
   facebook:          63206,
@@ -177,7 +178,7 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
     }
   }
 
-  const plat = PLATFORMS[platform] || { color: '#64748B', icon: '🔗', label: platform };
+  const plat = PLATFORMS[platform] || { color: '#64748B', label: platform };
 
   return (
     <>
@@ -249,7 +250,10 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
                       transition: 'all 0.15s',
                     }}
                   >
-                    {p.icon} {p.label.split(' ')[0]}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <SocialPlatformIcon platform={key} size={14} />
+                      {p.label.split(' ')[0]}
+                    </span>
                   </button>
                 );
               })}

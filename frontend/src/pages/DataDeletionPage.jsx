@@ -1,10 +1,10 @@
 import { StatoxLogoHorizontal } from '../components/ui/StatoxLogo';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
 
 const PLATFORMS = [
   {
     key: 'facebook',
     label: 'Facebook & Instagram',
-    icon: '📘',
     badge: 'Meta',
     steps: [
       <>Go to your <strong>Facebook account</strong></>,
@@ -18,7 +18,6 @@ const PLATFORMS = [
   {
     key: 'google',
     label: 'Google & YouTube',
-    icon: '🔴',
     badge: 'Google',
     steps: [
       <>Go to <strong>myaccount.google.com</strong></>,
@@ -32,7 +31,6 @@ const PLATFORMS = [
   {
     key: 'linkedin',
     label: 'LinkedIn',
-    icon: '💼',
     badge: 'LinkedIn',
     steps: [
       <>Go to your <strong>LinkedIn account</strong></>,
@@ -73,7 +71,9 @@ export default function DataDeletionPage() {
           {PLATFORMS.map((platform) => (
             <div key={platform.key} style={styles.platformBlock}>
               <div style={styles.platformHeader}>
-                <span style={styles.platformIcon}>{platform.icon}</span>
+                <span style={styles.platformIcon}>
+                  <SocialPlatformIcon platform={platform.key} size={28} />
+                </span>
                 <div>
                   <div style={styles.platformLabel}>{platform.label}</div>
                   <div style={styles.platformBadge}>{platform.badge}</div>

@@ -227,6 +227,32 @@ class DailyMetric(models.Model):
     direction_requests   = models.BigIntegerField(default=0)
     phone_calls          = models.BigIntegerField(default=0)
 
+    # GMB-specific extended metrics
+    maps_impressions     = models.BigIntegerField(default=0)   # impressions on Google Maps
+    search_impressions   = models.BigIntegerField(default=0)   # impressions on Google Search
+    photo_views          = models.BigIntegerField(default=0)   # business photo views
+    business_conversations = models.BigIntegerField(default=0) # messages/Q&A
+
+    # YouTube-specific
+    watch_time_minutes  = models.BigIntegerField(default=0)   # estimatedMinutesWatched
+    avg_view_duration   = models.FloatField(default=0)        # averageViewDuration (seconds)
+    subscribers_lost    = models.BigIntegerField(default=0)   # subscribersLost
+
+    # Facebook-specific
+    followers_lost      = models.BigIntegerField(default=0)   # page_fan_removes (unfollows)
+    negative_feedback   = models.BigIntegerField(default=0)   # page_negative_feedback (hides/spam)
+    fb_video_views      = models.BigIntegerField(default=0)   # page_video_views
+    fb_video_watch_time = models.BigIntegerField(default=0)   # page_video_view_time (ms → seconds)
+    reactions           = models.JSONField(default=dict, blank=True)  # {like,love,haha,wow,sad,angry}
+
+    # Instagram-specific
+    accounts_engaged    = models.BigIntegerField(default=0)   # accounts that engaged
+    total_interactions  = models.BigIntegerField(default=0)   # likes+comments+shares+saves
+    email_contacts      = models.BigIntegerField(default=0)   # email button clicks
+    phone_call_clicks   = models.BigIntegerField(default=0)   # call button clicks
+    direction_clicks    = models.BigIntegerField(default=0)   # get directions clicks
+    ig_followers_lost   = models.BigIntegerField(default=0)   # unfollows
+
     # Calculated
     engagement_rate = models.FloatField(default=0)
     ctr             = models.FloatField(default=0)
@@ -269,6 +295,57 @@ class PostMetric(models.Model):
     class Meta:
         unique_together = ('client', 'platform', 'post_id')
         ordering = ['-published_at']
+
+
+# ── GMB Business Info (synced from Business Information API) ──────────────────
+class GMBBusinessInfo(models.Model):
+    client          = models.OneToOneField(Client, on_delete=models.CASCADE, related_name='gmb_info')
+    business_name   = models.CharField(max_length=300, blank=True)
+    address         = models.TextField(blank=True)
+    phone           = models.CharField(max_length=50, blank=True)
+    website         = models.URLField(blank=True)
+    category        = models.CharField(max_length=200, blank=True)       # primary category
+    additional_categories = models.JSONField(default=list, blank=True)   # extra categories
+    description     = models.TextField(blank=True)
+    opening_date    = models.DateField(null=True, blank=True)
+    is_verified     = models.BooleanField(default=False)
+    is_open         = models.BooleanField(default=True)                  # currently open?
+    regular_hours   = models.JSONField(default=dict, blank=True)         # {MON: [{open:'09:00',close:'17:00'}]}
+    special_hours   = models.JSONField(default=list, blank=True)         # holiday hours
+    profile_photo_url  = models.URLField(blank=True)
+    cover_photo_url    = models.URLField(blank=True)
+    maps_url           = models.URLField(blank=True)
+    place_id           = models.CharField(max_length=200, blank=True)
+    latitude           = models.FloatField(null=True, blank=True)
+    longitude          = models.FloatField(null=True, blank=True)
+    # Aggregate review stats (refreshed on each sync)
+    avg_rating         = models.FloatField(default=0)
+    total_reviews      = models.IntegerField(default=0)
+    synced_at          = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.client.company} — GMB Info"
+
+
+# ── GMB Reviews (synced via Account Management API) ───────────────────────────
+class GMBReview(models.Model):
+    client          = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='gmb_reviews')
+    review_id       = models.CharField(max_length=300, unique=True)
+    reviewer_name   = models.CharField(max_length=200, blank=True)
+    reviewer_photo  = models.URLField(blank=True)
+    rating          = models.PositiveSmallIntegerField(default=5)        # 1–5
+    comment         = models.TextField(blank=True)
+    owner_reply     = models.TextField(blank=True)
+    reply_updated_at = models.DateTimeField(null=True, blank=True)
+    published_at    = models.DateTimeField(null=True, blank=True)
+    synced_at       = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-published_at']
+        indexes = [models.Index(fields=['client', 'published_at'])]
+
+    def __str__(self):
+        return f"{self.client.company} — ★{self.rating} by {self.reviewer_name}"
 
 
 GOAL_METRIC_CHOICES = [
@@ -966,3 +1043,54 @@ class HashtagSet(models.Model):
 
     def __str__(self):
         return f"{self.client.company} | {self.niche} | {self.platform}"
+
+
+class SiteContent(models.Model):
+    key = models.SlugField(max_length=120, unique=True)
+    title = models.CharField(max_length=255)
+    effective_date = models.DateField(null=True, blank=True)
+    last_updated = models.DateField(null=True, blank=True)
+    content = models.JSONField(default=dict, blank=True)
+    is_public = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['key']
+        verbose_name = 'Site Content'
+        verbose_name_plural = 'Site Content'
+
+    def __str__(self):
+        return f"{self.key} — {self.title}"
+
+
+class LookupCollection(models.Model):
+    key = models.SlugField(max_length=120, unique=True)
+    title = models.CharField(max_length=255)
+    is_public = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['key']
+
+    def __str__(self):
+        return self.title
+
+
+class LookupItem(models.Model):
+    collection = models.ForeignKey(LookupCollection, on_delete=models.CASCADE, related_name='items')
+    key = models.CharField(max_length=120)
+    label = models.CharField(max_length=255)
+    value = models.CharField(max_length=255, blank=True)
+    parent_key = models.CharField(max_length=120, blank=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ['collection__key', 'sort_order', 'label']
+        unique_together = [('collection', 'key')]
+
+    def __str__(self):
+        return f"{self.collection.key} — {self.label}"

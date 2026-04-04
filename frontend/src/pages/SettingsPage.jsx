@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useOAuthStatus } from '../hooks/useData';
+import { useOAuthStatus, useLookups } from '../hooks/useData';
 import { clientsAPI } from '../services/api';
 import ConnectedAccounts from '../components/ui/ConnectedAccounts';
 import CompetitorSection from '../components/ui/CompetitorSection';
 import PageHeader from '../components/layout/PageHeader';
+import SegmentedTabs from '../components/ui/SegmentedTabs';
 import {
   Building2, ImagePlus, Loader2, Palette, Save, Sparkles, Target, Upload, Users, X,
 } from 'lucide-react';
@@ -33,12 +34,9 @@ const BRAND_TONES = [
 const SOCIAL_PLATFORMS = [
   { value: 'facebook', label: 'Facebook' },
   { value: 'instagram', label: 'Instagram' },
-  { value: 'google_my_business', label: 'Google My Business' },
   { value: 'linkedin', label: 'LinkedIn' },
   { value: 'youtube', label: 'YouTube' },
-  { value: 'twitter', label: 'Twitter' },
-  { value: 'tiktok', label: 'TikTok' },
-  { value: 'other', label: 'Other' },
+  { value: 'google_my_business', label: 'Google My Business' },
 ];
 
 const GENDERS = [
@@ -53,6 +51,7 @@ export default function SettingsPage({ clientId: propClientId }) {
   const { user }   = useAuth();
   const clientId   = propClientId || user?.client_id;
   const { status, refetch } = useOAuthStatus(clientId);
+  const { lookups, loading: lookupsLoading } = useLookups();
   const [searchParams, setSearchParams] = useSearchParams();
   const didRefetch = useRef(false);
 
@@ -256,6 +255,58 @@ export default function SettingsPage({ clientId: propClientId }) {
     }));
   };
 
+  const businessCategoryOptions = (lookups.business_categories || BUSINESS_CATEGORIES.map((label) => ({
+    key: label.toLowerCase().replace(/[^a-z0-9]+/gi, '_'),
+    label,
+  }))).map(item => ({ key: item.key, label: item.label }));
+
+  const brandToneOptions = lookups.brand_tones?.map(item => ({ value: item.key, label: item.label })) || BRAND_TONES;
+  const genderOptions = lookups.genders?.map(item => ({ value: item.key, label: item.label })) || GENDERS;
+  const socialPlatformOptions = lookups.platforms?.map(item => ({ value: item.key, label: item.label })) || SOCIAL_PLATFORMS;
+
+  const getCategoryKey = (categoryLabel) => businessCategoryOptions.find(item => item.label === categoryLabel)?.key;
+
+  const getSubcategoriesForCategory = (category) => {
+    const parentKey = getCategoryKey(category);
+    if (!parentKey) return [];
+    const subcategories = (lookups.business_subcategories || []).
+      filter(item => item.parent_key === parentKey)
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map(item => item.label);
+
+    if (subcategories.length > 0) return subcategories;
+
+    const fallback = {
+      'Electronics': ['Consumer Electronics', 'Computer Stores', 'Mobile Phones', 'Audio Equipment', 'Video Games', 'Cameras', 'Drones', 'Smart Devices', 'Electronic Repair', 'Security Systems'],
+      'Retail': ['Department Stores', 'Specialty Shops', 'Online Retail', 'Wholesale', 'Discount Stores', 'Convenience Stores', 'Pharmacies', 'Bookstores', 'Pet Stores', 'Sporting Goods'],
+      'Services': ['Cleaning Services', 'Maintenance', 'Repair Services', 'Installation', 'Delivery', 'Courier', 'Security Services', 'Waste Management', 'Recycling', 'Laundry'],
+      'Food & Beverage': ['Restaurants', 'Cafes', 'Fast Food', 'Bakeries', 'Catering', 'Delivery', 'Bars & Nightclubs', 'Food Trucks', 'Grocery Stores', 'Specialty Foods'],
+      'Healthcare': ['Hospitals', 'Clinics', 'Dentistry', 'Pharmacy', 'Fitness', 'Mental Health', 'Chiropractic', 'Physical Therapy', 'Medical Supplies', 'Home Health Care'],
+      'Education': ['Schools', 'Universities', 'Tutoring', 'Online Learning', 'Training', 'Courses', 'Daycare', 'Preschools', 'Language Schools', 'Music Schools'],
+      'Real Estate': ['Residential', 'Commercial', 'Property Management', 'Real Estate Agents', 'Construction', 'Mortgage Brokers', 'Appraisal Services', 'Property Development'],
+      'Automotive': ['Car Dealerships', 'Auto Repair', 'Car Rental', 'Parts', 'Motorcycles', 'Towing', 'Detailing', 'Car Wash', 'Tire Shops', 'Auto Insurance'],
+      'Hospitality': ['Hotels', 'Resorts', 'Travel Agencies', 'Tourism', 'Events', 'Bed & Breakfast', 'Vacation Rentals', 'Cruise Lines', 'Airbnb Hosts'],
+      'Manufacturing': ['Industrial', 'Consumer Goods', 'Textiles', 'Electronics', 'Food Processing', 'Chemicals', 'Machinery', 'Plastics', 'Metalworking', 'Packaging'],
+      'Technology': ['Software', 'Hardware', 'IT Services', 'Startups', 'Consulting', 'Web Development', 'Mobile Apps', 'Cloud Services', 'Cybersecurity', 'Data Analytics'],
+      'Fashion': ['Clothing', 'Accessories', 'Shoes', 'Jewelry', 'Boutiques', 'Designer Brands', 'Vintage Clothing', 'Sportswear', 'Lingerie', 'Costume Design'],
+      'Sports & Recreation': ['Gyms', 'Sports Clubs', 'Outdoor Activities', 'Fitness', 'Leisure', 'Sports Equipment', 'Adventure Sports', 'Yoga Studios', 'Martial Arts', 'Dance Studios'],
+      'Beauty & Wellness': ['Salons', 'Spas', 'Cosmetics', 'Wellness Centers', 'Personal Care', 'Nail Salons', 'Barber Shops', 'Tattoo Parlors', 'Massage Therapy', 'Aromatherapy'],
+      'Home & Garden': ['Home Improvement', 'Gardening', 'Furniture', 'Decor', 'Tools', 'Landscaping', 'Interior Design', 'Home Staging', 'Smart Home', 'Pest Control'],
+      'Professional Services': ['Accounting', 'Marketing', 'Advertising', 'Consulting', 'Legal Services', 'Architecture', 'Engineering', 'Photography', 'Graphic Design', 'Event Planning'],
+      'Entertainment': ['Movie Theaters', 'Music Venues', 'Comedy Clubs', 'Art Galleries', 'Museums', 'Theaters', 'Concert Halls', 'Amusement Parks', 'Arcades', 'Escape Rooms'],
+      'Transportation': ['Taxi Services', 'Ride Sharing', 'Delivery Services', 'Logistics', 'Shipping', 'Moving Services', 'Bus Services', 'Rail Services', 'Airports', 'Parking'],
+      'Agriculture': ['Farms', 'Greenhouses', 'Nurseries', 'Livestock', 'Crop Production', 'Organic Farming', 'Agricultural Equipment', 'Seed Suppliers', 'Farmers Markets', 'Agricultural Consulting'],
+      'Financial Services': ['Banks', 'Credit Unions', 'Investment Firms', 'Insurance', 'Mortgage Lenders', 'Financial Planning', 'Tax Services', 'Payroll Services', 'Cryptocurrency', 'Fintech'],
+      'Legal Services': ['Law Firms', 'Notary Services', 'Paralegal Services', 'Legal Consulting', 'Mediation Services', 'Court Reporting', 'Intellectual Property', 'Immigration Law', 'Family Law', 'Corporate Law'],
+      'Construction': ['General Contractors', 'Electrical', 'Plumbing', 'HVAC', 'Roofing', 'Flooring', 'Painting', 'Carpentry', 'Masonry', 'Demolition'],
+      'Media & Communications': ['Newspapers', 'TV Stations', 'Radio Stations', 'Podcasting', 'Social Media', 'Public Relations', 'Journalism', 'Film Production', 'Advertising Agencies', 'Publishing'],
+      'Non-Profit': ['Charities', 'Foundations', 'NGOs', 'Community Organizations', 'Religious Organizations', 'Environmental Groups', 'Animal Welfare', 'Youth Organizations', 'Arts & Culture', 'Education Advocacy'],
+      'Government': ['Municipal Services', 'State Agencies', 'Federal Agencies', 'Public Safety', 'Utilities', 'Transportation', 'Parks & Recreation', 'Libraries', 'Courts', 'Licensing'],
+    };
+
+    return fallback[category] || [];
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -298,40 +349,8 @@ export default function SettingsPage({ clientId: propClientId }) {
     }
   };
 
-  // Helper function for subcategories
-  const getSubcategoriesForCategory = (category) => {
-    const subcategories = {
-      'Electronics': ['Consumer Electronics', 'Computer Stores', 'Mobile Phones', 'Audio Equipment', 'Video Games', 'Cameras', 'Drones', 'Smart Devices', 'Electronic Repair', 'Security Systems'],
-      'Retail': ['Department Stores', 'Specialty Shops', 'Online Retail', 'Wholesale', 'Discount Stores', 'Convenience Stores', 'Pharmacies', 'Bookstores', 'Pet Stores', 'Sporting Goods'],
-      'Services': ['Cleaning Services', 'Maintenance', 'Repair Services', 'Installation', 'Delivery', 'Courier', 'Security Services', 'Waste Management', 'Recycling', 'Laundry'],
-      'Food & Beverage': ['Restaurants', 'Cafes', 'Fast Food', 'Bakeries', 'Catering', 'Delivery', 'Bars & Nightclubs', 'Food Trucks', 'Grocery Stores', 'Specialty Foods'],
-      'Healthcare': ['Hospitals', 'Clinics', 'Dentistry', 'Pharmacy', 'Fitness', 'Mental Health', 'Chiropractic', 'Physical Therapy', 'Medical Supplies', 'Home Health Care'],
-      'Education': ['Schools', 'Universities', 'Tutoring', 'Online Learning', 'Training', 'Courses', 'Daycare', 'Preschools', 'Language Schools', 'Music Schools'],
-      'Real Estate': ['Residential', 'Commercial', 'Property Management', 'Real Estate Agents', 'Construction', 'Mortgage Brokers', 'Appraisal Services', 'Property Development'],
-      'Automotive': ['Car Dealerships', 'Auto Repair', 'Car Rental', 'Parts', 'Motorcycles', 'Towing', 'Detailing', 'Car Wash', 'Tire Shops', 'Auto Insurance'],
-      'Hospitality': ['Hotels', 'Resorts', 'Travel Agencies', 'Tourism', 'Events', 'Bed & Breakfast', 'Vacation Rentals', 'Cruise Lines', 'Airbnb Hosts'],
-      'Manufacturing': ['Industrial', 'Consumer Goods', 'Textiles', 'Electronics', 'Food Processing', 'Chemicals', 'Machinery', 'Plastics', 'Metalworking', 'Packaging'],
-      'Technology': ['Software', 'Hardware', 'IT Services', 'Startups', 'Consulting', 'Web Development', 'Mobile Apps', 'Cloud Services', 'Cybersecurity', 'Data Analytics'],
-      'Fashion': ['Clothing', 'Accessories', 'Shoes', 'Jewelry', 'Boutiques', 'Designer Brands', 'Vintage Clothing', 'Sportswear', 'Lingerie', 'Costume Design'],
-      'Sports & Recreation': ['Gyms', 'Sports Clubs', 'Outdoor Activities', 'Fitness', 'Leisure', 'Sports Equipment', 'Adventure Sports', 'Yoga Studios', 'Martial Arts', 'Dance Studios'],
-      'Beauty & Wellness': ['Salons', 'Spas', 'Cosmetics', 'Wellness Centers', 'Personal Care', 'Nail Salons', 'Barber Shops', 'Tattoo Parlors', 'Massage Therapy', 'Aromatherapy'],
-      'Home & Garden': ['Home Improvement', 'Gardening', 'Furniture', 'Decor', 'Tools', 'Landscaping', 'Interior Design', 'Home Staging', 'Smart Home', 'Pest Control'],
-      'Professional Services': ['Accounting', 'Marketing', 'Advertising', 'Consulting', 'Legal Services', 'Architecture', 'Engineering', 'Photography', 'Graphic Design', 'Event Planning'],
-      'Entertainment': ['Movie Theaters', 'Music Venues', 'Comedy Clubs', 'Art Galleries', 'Museums', 'Theaters', 'Concert Halls', 'Amusement Parks', 'Arcades', 'Escape Rooms'],
-      'Transportation': ['Taxi Services', 'Ride Sharing', 'Delivery Services', 'Logistics', 'Shipping', 'Moving Services', 'Bus Services', 'Rail Services', 'Airports', 'Parking'],
-      'Agriculture': ['Farms', 'Greenhouses', 'Nurseries', 'Livestock', 'Crop Production', 'Organic Farming', 'Agricultural Equipment', 'Seed Suppliers', 'Farmers Markets', 'Agricultural Consulting'],
-      'Financial Services': ['Banks', 'Credit Unions', 'Investment Firms', 'Insurance', 'Mortgage Lenders', 'Financial Planning', 'Tax Services', 'Payroll Services', 'Cryptocurrency', 'Fintech'],
-      'Legal Services': ['Law Firms', 'Notary Services', 'Paralegal Services', 'Legal Consulting', 'Mediation Services', 'Court Reporting', 'Intellectual Property', 'Immigration Law', 'Family Law', 'Corporate Law'],
-      'Construction': ['General Contractors', 'Electrical', 'Plumbing', 'HVAC', 'Roofing', 'Flooring', 'Painting', 'Carpentry', 'Masonry', 'Demolition'],
-      'Media & Communications': ['Newspapers', 'TV Stations', 'Radio Stations', 'Podcasting', 'Social Media', 'Public Relations', 'Journalism', 'Film Production', 'Advertising Agencies', 'Publishing'],
-      'Non-Profit': ['Charities', 'Foundations', 'NGOs', 'Community Organizations', 'Religious Organizations', 'Environmental Groups', 'Animal Welfare', 'Youth Organizations', 'Arts & Culture', 'Education Advocacy'],
-      'Government': ['Municipal Services', 'State Agencies', 'Federal Agencies', 'Public Safety', 'Utilities', 'Transportation', 'Parks & Recreation', 'Libraries', 'Courts', 'Licensing']
-    };
-    return subcategories[category] || [];
-  };
-
   return (
-    <div style={pageStyle}>
+    <div className="app-page app-page--content app-page--lg">
       <PageHeader
         title="Settings"
         subtitle="Manage your account and business profile."
@@ -361,26 +380,14 @@ export default function SettingsPage({ clientId: propClientId }) {
 
       {/* Tab Navigation */}
       <div style={{ marginBottom: 32 }}>
-        <div style={tabBarStyle}>
-          <button
-            onClick={() => setActiveTab('accounts')}
-            style={{
-              ...tabStyle,
-              ...(activeTab === 'accounts' ? activeTabStyle : {}),
-            }}
-          >
-            Connect Accounts
-          </button>
-          <button
-            onClick={() => setActiveTab('profile')}
-            style={{
-              ...tabStyle,
-              ...(activeTab === 'profile' ? activeTabStyle : {}),
-            }}
-          >
-            Business Profile
-          </button>
-        </div>
+        <SegmentedTabs
+          items={[
+            { id: 'accounts', label: 'Connect Accounts' },
+            { id: 'profile', label: 'Business Profile' },
+          ]}
+          active={activeTab}
+          onChange={setActiveTab}
+        />
       </div>
 
       {/* Tab Content */}
@@ -496,8 +503,8 @@ export default function SettingsPage({ clientId: propClientId }) {
                       style={inputStyle}
                     >
                       <option value="">Select category</option>
-                      {BUSINESS_CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                      {businessCategoryOptions.map(item => (
+                        <option key={item.key} value={item.label}>{item.label}</option>
                       ))}
                     </select>
                   </div>
@@ -509,7 +516,7 @@ export default function SettingsPage({ clientId: propClientId }) {
                       style={inputStyle}
                     >
                       <option value="">Select tone</option>
-                      {BRAND_TONES.map(tone => (
+                      {brandToneOptions.map(tone => (
                         <option key={tone.value} value={tone.value}>{tone.label}</option>
                       ))}
                     </select>
@@ -587,7 +594,7 @@ export default function SettingsPage({ clientId: propClientId }) {
                       onChange={(e) => handleInputChange('gender', e.target.value)}
                       style={inputStyle}
                     >
-                      {GENDERS.map(gender => (
+                      {genderOptions.map(gender => (
                         <option key={gender.value} value={gender.value}>{gender.label}</option>
                       ))}
                     </select>
@@ -700,7 +707,7 @@ export default function SettingsPage({ clientId: propClientId }) {
               <div style={sectionStyle}>
                 <CompetitorSection
                   competitors={formData.competitors}
-                  socialPlatforms={SOCIAL_PLATFORMS}
+                  socialPlatforms={socialPlatformOptions}
                   onAddCompetitor={addCompetitor}
                   onUpdateCompetitor={updateCompetitor}
                   onRemoveCompetitor={removeCompetitor}
@@ -750,12 +757,6 @@ export default function SettingsPage({ clientId: propClientId }) {
     </div>
   );
 }
-
-const pageStyle = {
-  padding: '28px 32px 40px',
-  maxWidth: 1240,
-  margin: '0 auto',
-};
 
 const heroStyle = {
   display: 'grid',
@@ -823,33 +824,6 @@ const heroPanelTextStyle = {
   fontSize: 13,
   color: '#475569',
   fontWeight: 600,
-};
-
-const tabBarStyle = {
-  display: 'inline-flex',
-  gap: 8,
-  padding: 6,
-  borderRadius: 18,
-  background: '#f8fafc',
-  border: '1px solid #e2e8f0',
-};
-
-const tabStyle = {
-  padding: '12px 18px',
-  background: 'transparent',
-  border: 'none',
-  borderRadius: 12,
-  fontSize: 14,
-  fontWeight: 700,
-  color: '#64748b',
-  cursor: 'pointer',
-  transition: 'all 0.2s',
-};
-
-const activeTabStyle = {
-  background: '#ffffff',
-  color: '#0f172a',
-  boxShadow: '0 8px 20px rgba(15,23,42,.06)',
 };
 
 const loadingStateStyle = {

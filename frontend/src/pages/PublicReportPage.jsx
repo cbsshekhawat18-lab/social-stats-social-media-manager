@@ -6,7 +6,9 @@ import {
 } from 'recharts';
 import { Lock, Eye, TrendingUp, Users, MousePointerClick, Play, Heart, ExternalLink } from 'lucide-react';
 import { publicReportAPI } from '../services/api';
-import { PLATFORMS, fmt } from '../services/platforms';
+import { useLookups } from '../hooks/useData';
+import { fmt } from '../services/platforms';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
 
 // ── Inject styles once ────────────────────────────────────────────────────────
 if (typeof document !== 'undefined' && !document.getElementById('pub-report-styles')) {
@@ -25,13 +27,39 @@ if (typeof document !== 'undefined' && !document.getElementById('pub-report-styl
   document.head.appendChild(s);
 }
 
+const KPI_ICON_MAP = {
+  impressions: Eye,
+  reach: TrendingUp,
+  clicks: MousePointerClick,
+  likes: Heart,
+  followers: Users,
+  video_views: Play,
+};
+
+const KPI_COLOR_MAP = {
+  impressions: '#00d7ff',
+  reach: '#00d7ff',
+  clicks: '#059669',
+  likes: '#ef4444',
+  followers: '#d97706',
+  video_views: '#ff0000',
+};
+
+const PLATFORM_COLOR_MAP = {
+  facebook: '#1877f2',
+  instagram: '#e1306c',
+  youtube: '#ff0000',
+  linkedin: '#0077b5',
+  google_my_business: '#34a853',
+};
+
 const KPI_DEFS = [
-  { key: 'impressions', label: 'Impressions',  icon: Eye,              color: '#00d7ff' },
-  { key: 'reach',       label: 'Reach',         icon: TrendingUp,       color: '#00d7ff' },
-  { key: 'clicks',      label: 'Clicks',        icon: MousePointerClick, color: '#059669' },
-  { key: 'likes',       label: 'Likes',         icon: Heart,            color: '#ef4444' },
-  { key: 'followers',   label: 'Followers',     icon: Users,            color: '#d97706' },
-  { key: 'video_views', label: 'Video Views',   icon: Play,             color: '#ff0000' },
+  { key: 'impressions', label: 'Impressions' },
+  { key: 'reach',       label: 'Reach' },
+  { key: 'clicks',      label: 'Clicks' },
+  { key: 'likes',       label: 'Likes' },
+  { key: 'followers',   label: 'Followers' },
+  { key: 'video_views', label: 'Video Views' },
 ];
 
 function KpiCard({ label, value, icon: Icon, color }) {
@@ -114,6 +142,7 @@ function PasswordGate({ token, clientName, period, onUnlock }) {
 
 export default function PublicReportPage() {
   const { token } = useParams();
+  const { lookups } = useLookups();
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
@@ -150,6 +179,17 @@ export default function PublicReportPage() {
   }
 
   if (!data) return null;
+
+  const platformLabels = (lookups.platforms || []).reduce((acc, item) => {
+    acc[item.key] = item.label;
+    return acc;
+  }, {});
+
+  const kpiDefs = (lookups.kpi_defs || KPI_DEFS.map(item => ({ key: item.key, label: item.label }))).map(def => ({
+    ...def,
+    icon: KPI_ICON_MAP[def.key] || Eye,
+    color: KPI_COLOR_MAP[def.key] || '#00d7ff',
+  }));
 
   const { client, period, totals, by_platform, timeseries, top_posts } = data;
 
@@ -190,7 +230,7 @@ export default function PublicReportPage() {
         <section style={sectionWrap}>
           <h2 style={sectionTitle}>Overview</h2>
           <div style={kpiGrid}>
-            {KPI_DEFS.map(k => (
+            {kpiDefs.map(k => (
               <KpiCard key={k.key} label={k.label} value={totals?.[k.key]} icon={k.icon} color={k.color} />
             ))}
           </div>
@@ -211,11 +251,14 @@ export default function PublicReportPage() {
                 </thead>
                 <tbody>
                   {by_platform.map(row => {
-                    const pl = PLATFORMS[row.platform] || {};
+                    const label = platformLabels[row.platform] || row.platform;
                     return (
                       <tr key={row.platform} style={trStyle}>
                         <td style={tdStyle}>
-                          <span style={{ fontWeight: 600 }}>{pl.icon} {pl.label || row.platform}</span>
+                          <span style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <SocialPlatformIcon platform={row.platform} size={15} />
+                            {label}
+                          </span>
                         </td>
                         {['impressions', 'reach', 'clicks', 'likes', 'followers', 'video_views'].map(k => (
                           <td key={k} style={{ ...tdStyle, textAlign: 'right' }}>{fmt(row[k] || 0)}</td>
@@ -237,9 +280,9 @@ export default function PublicReportPage() {
               <BarChart data={by_platform} margin={{ top: 0, right: 20, bottom: 0, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="platform" tick={{ fontSize: 12 }}
-                  tickFormatter={p => PLATFORMS[p]?.label || p} />
+                  tickFormatter={p => platformLabels[p] || p} />
                 <YAxis tick={{ fontSize: 12 }} tickFormatter={v => fmt(v)} />
-                <Tooltip formatter={(v, n) => [fmt(v), PLATFORMS[n]?.label || n]} />
+                <Tooltip formatter={(v, n) => [fmt(v), platformLabels[n] || n]} />
                 <Bar dataKey="impressions" fill="#00d7ff" radius={[4, 4, 0, 0]} name="Impressions" />
               </BarChart>
             </ResponsiveContainer>
@@ -256,17 +299,17 @@ export default function PublicReportPage() {
                 <XAxis dataKey="date" tick={{ fontSize: 11 }}
                   tickFormatter={d => d.slice(5)} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={v => fmt(v)} />
-                <Tooltip formatter={(v, n) => [fmt(v), PLATFORMS[n]?.label || n]} />
-                <Legend formatter={n => PLATFORMS[n]?.label || n} />
+                <Tooltip formatter={(v, n) => [fmt(v), platformLabels[n] || n]} />
+                <Legend formatter={n => platformLabels[n] || n} />
                 {activePlatforms.map((p, i) => (
                   <Line
                     key={p}
                     type="monotone"
                     dataKey={p}
-                    stroke={PLATFORMS[p]?.color || `hsl(${i * 60},70%,50%)`}
+                    stroke={PLATFORM_COLOR_MAP[p] || `hsl(${i * 60},70%,50%)`}
                     strokeWidth={2}
                     dot={false}
-                    name={p}
+                    name={platformLabels[p] || p}
                   />
                 ))}
               </LineChart>
@@ -280,7 +323,10 @@ export default function PublicReportPage() {
             <h2 style={sectionTitle}>Top Posts</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {top_posts.map((post, i) => {
-                const pl = PLATFORMS[post.platform] || {};
+                const pl = {
+                  label: platformLabels[post.platform] || post.platform,
+                  color: PLATFORM_COLOR_MAP[post.platform] || '#64748b',
+                };
                 return (
                   <div key={i} style={postRow}>
                     {post.thumbnail_url && (
@@ -288,7 +334,10 @@ export default function PublicReportPage() {
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>
-                        <span style={{ fontWeight: 600 }}>{pl.icon} {pl.label || post.platform}</span>
+                        <span style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <SocialPlatformIcon platform={post.platform} size={15} />
+                          {pl.label || post.platform}
+                        </span>
                         {post.published_at && (
                           <span style={{ marginLeft: 8 }}>
                             {new Date(post.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -304,7 +353,7 @@ export default function PublicReportPage() {
                         {post.likes      > 0 && <span>❤️ {fmt(post.likes)}</span>}
                         {post.comments   > 0 && <span>💬 {fmt(post.comments)}</span>}
                         {post.shares     > 0 && <span>🔁 {fmt(post.shares)}</span>}
-                        {post.video_views > 0 && <span>▶️ {fmt(post.video_views)}</span>}
+                        {post.video_views > 0 && <span><Play size={12} style={{ verticalAlign: 'text-bottom' }} /> {fmt(post.video_views)}</span>}
                       </div>
                     </div>
                     {post.post_url && (

@@ -7,23 +7,25 @@ import {
   Clock, Hash, CheckSquare, Square, ChevronDown, ChevronUp, Loader2,
   Save, X, ChevronRight,
 } from 'lucide-react';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
+import PageHeader from '../components/layout/PageHeader';
+import SegmentedTabs from '../components/ui/SegmentedTabs';
 
 // ── Caption platform config ─────────────────────────────────────────────────────
 const PLATFORMS = {
-  facebook:           { label: 'Facebook',          emoji: '📘', color: '#1877f2', limit: 63206 },
-  instagram:          { label: 'Instagram',          emoji: '📸', color: '#e1306c', limit: 2200  },
-  linkedin:           { label: 'LinkedIn',           emoji: '💼', color: '#0077b5', limit: 3000  },
-  youtube:            { label: 'YouTube',            emoji: '▶️', color: '#ff0000', limit: 5000  },
-  google_my_business: { label: 'Google My Business', emoji: '🏢', color: '#34a853', limit: 1500  },
+  facebook:           { label: 'Facebook', color: '#1877f2', limit: 63206 },
+  instagram:          { label: 'Instagram', color: '#e1306c', limit: 2200  },
+  linkedin:           { label: 'LinkedIn', color: '#0077b5', limit: 3000  },
+  youtube:            { label: 'YouTube', color: '#ff0000', limit: 5000  },
+  google_my_business: { label: 'Google My Business', color: '#34a853', limit: 1500  },
 };
 
 // ── Hashtag platform config ─────────────────────────────────────────────────────
 const HASHTAG_PLATFORMS = {
-  instagram: { label: 'Instagram', emoji: '📸', color: '#e1306c' },
-  facebook:  { label: 'Facebook',  emoji: '📘', color: '#1877f2' },
-  linkedin:  { label: 'LinkedIn',  emoji: '💼', color: '#0077b5' },
-  youtube:   { label: 'YouTube',   emoji: '▶️', color: '#ff0000' },
-  tiktok:    { label: 'TikTok',    emoji: '🎵', color: '#69c9d0' },
+  instagram: { label: 'Instagram', color: '#e1306c' },
+  facebook:  { label: 'Facebook',  color: '#1877f2' },
+  linkedin:  { label: 'LinkedIn',  color: '#0077b5' },
+  youtube:   { label: 'YouTube',   color: '#ff0000' },
 };
 
 const TIER_ORDER = ['mega', 'large', 'medium', 'small', 'local', 'branded'];
@@ -96,7 +98,7 @@ function Skeleton({ height = 16, width = '100%', mb = 8 }) {
 
 // ── Caption card ───────────────────────────────────────────────────────────────
 function CaptionCard({ platform, caption, hashtags, bestTime, onAddToCalendar }) {
-  const cfg = PLATFORMS[platform] || { label: platform, emoji: '📄', color: '#64748b', limit: 2200 };
+  const cfg = PLATFORMS[platform] || { label: platform, color: '#64748b', limit: 2200 };
   const { copied, copy } = useCopyText();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(caption || '');
@@ -108,7 +110,7 @@ function CaptionCard({ platform, caption, hashtags, bestTime, onAddToCalendar })
     <div style={cardStyles.card}>
       <div style={{ ...cardStyles.header, background: cfg.color + '15', borderBottom: `2px solid ${cfg.color}30` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 20 }}>{cfg.emoji}</span>
+          <SocialPlatformIcon platform={platform} size={20} />
           <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a' }}>{cfg.label}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -287,7 +289,9 @@ function CaptionHistoryItem({ item, onRestore }) {
         <span style={histStyles.date}>{date}</span>
         <div style={{ display: 'flex', gap: 3 }}>
           {(item.platforms || []).map(p => (
-            <span key={p} style={{ fontSize: 13 }}>{PLATFORMS[p]?.emoji || '📄'}</span>
+            <span key={p} style={{ display: 'inline-flex' }}>
+              <SocialPlatformIcon platform={p} size={13} />
+            </span>
           ))}
         </div>
       </div>
@@ -303,7 +307,7 @@ function HashHistoryItem({ item, onRestore }) {
       <div style={histStyles.topic}>{item.niche.length > 30 ? item.niche.slice(0, 30) + '…' : item.niche}</div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         <span style={histStyles.date}>{date}</span>
-        <span style={{ fontSize: 13 }}>{pfCfg.emoji || '📄'}</span>
+        <SocialPlatformIcon platform={item.platform} size={13} />
       </div>
     </button>
   );
@@ -515,66 +519,43 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div style={styles.page}>
+    <div className="app-page app-page--lg">
       <style>{`
         @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
         @keyframes spin { to { transform:rotate(360deg) } }
       `}</style>
 
-      {/* Page header */}
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>
-            {mode === 'caption' ? 'AI Caption Writer' : 'AI Hashtag Research'}
-          </h1>
-          <p style={styles.sub}>
-            {mode === 'caption'
-              ? 'Generate perfect captions for every platform'
-              : 'Discover the best hashtags for maximum reach'}
-          </p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          {/* Tab switcher */}
-          <div style={{ display: 'flex', border: '1.5px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', background: '#f0f4f9' }}>
-            <button
-              onClick={() => setMode('caption')}
-              style={{
-                padding: '8px 16px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: mode === 'caption' ? '#00d7ff' : 'transparent',
-                color: mode === 'caption' ? '#fff' : '#64748b',
-                transition: 'all .15s',
-              }}
-            >
-              <Sparkles size={14} />
-              Caption Writer
-            </button>
-            <button
-              onClick={() => setMode('hashtag')}
-              style={{
-                padding: '8px 16px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: mode === 'hashtag' ? '#00d7ff' : 'transparent',
-                color: mode === 'hashtag' ? '#fff' : '#64748b',
-                transition: 'all .15s',
-              }}
-            >
-              <Hash size={14} />
-              Hashtag Research
-            </button>
+      <PageHeader
+        title={mode === 'caption' ? 'AI Caption Writer' : 'AI Hashtag Research'}
+        subtitle={
+          mode === 'caption'
+            ? 'Generate perfect captions for every platform'
+            : 'Discover the best hashtags for maximum reach'
+        }
+        actions={(
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <SegmentedTabs
+              items={[
+                { id: 'caption', label: 'Caption Writer', icon: <Sparkles size={14} /> },
+                { id: 'hashtag', label: 'Hashtag Research', icon: <Hash size={14} /> },
+              ]}
+              active={mode}
+              onChange={setMode}
+              compact
+            />
+            {isAdmin && (
+              <select
+                value={clientId || ''}
+                onChange={e => setClientId(e.target.value ? parseInt(e.target.value) : null)}
+                style={styles.clientSelect}
+              >
+                <option value="">— Select a user —</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
+              </select>
+            )}
           </div>
-          {isAdmin && (
-            <select
-              value={clientId || ''}
-              onChange={e => setClientId(e.target.value ? parseInt(e.target.value) : null)}
-              style={styles.clientSelect}
-            >
-              <option value="">— Select a user —</option>
-              {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
-            </select>
-          )}
-        </div>
-      </div>
+        )}
+      />
 
       <div style={styles.layout}>
         {/* ── LEFT: Input form ── */}
@@ -627,7 +608,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                         <button key={key} type="button" onClick={() => togglePlatform(key)}
                           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, border: `1.5px solid ${checked ? cfg.color + '60' : '#e2e8f0'}`, background: checked ? cfg.color + '08' : '#fff', cursor: 'pointer', textAlign: 'left' }}>
                           {checked ? <CheckSquare size={16} color={cfg.color} /> : <Square size={16} color="#cbd5e1" />}
-                          <span style={{ fontSize: 16 }}>{cfg.emoji}</span>
+                          <SocialPlatformIcon platform={key} size={16} />
                           <span style={{ fontSize: 13, fontWeight: 600, color: checked ? cfg.color : '#64748b' }}>{cfg.label}</span>
                         </button>
                       );
@@ -700,7 +681,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                           <div style={{ width: 16, height: 16, borderRadius: '50%', border: `2px solid ${checked ? cfg.color : '#cbd5e1'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             {checked && <div style={{ width: 8, height: 8, borderRadius: '50%', background: cfg.color }} />}
                           </div>
-                          <span style={{ fontSize: 16 }}>{cfg.emoji}</span>
+                          <SocialPlatformIcon platform={key} size={16} />
                           <span style={{ fontSize: 13, fontWeight: 600, color: checked ? cfg.color : '#64748b' }}>{cfg.label}</span>
                         </button>
                       );
@@ -742,7 +723,10 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                       {hashHistory.slice(0, 5).map(h => (
                         <button key={h.id} onClick={() => handleRestoreHash(h)}
                           style={styles.recentChip} title={h.niche}>
-                          {HASHTAG_PLATFORMS[h.platform]?.emoji} {h.niche.slice(0, 16)}{h.niche.length > 16 ? '…' : ''}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <SocialPlatformIcon platform={h.platform} size={13} />
+                            {h.niche.slice(0, 16)}{h.niche.length > 16 ? '…' : ''}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -795,7 +779,10 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                         return (
                           <button key={p} onClick={() => setActivePlatform(p)}
                             style={{ ...styles.platTab, ...(activePlatform === p ? { ...styles.platTabActive, borderColor: cfg.color, color: cfg.color, background: cfg.color + '10' } : {}) }}>
-                            {cfg.emoji} {cfg.label}
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              <SocialPlatformIcon platform={p} size={14} />
+                              {cfg.label}
+                            </span>
                           </button>
                         );
                       })}
@@ -891,7 +878,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                   {hashResult.platform_tips && (
                     <div style={{ border: '1px solid #e2e8f0', borderRadius: 14, padding: '14px 16px', marginBottom: 12, background: '#f0f4f9' }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 14 }}>{HASHTAG_PLATFORMS[hPlatform]?.emoji}</span>
+                        <SocialPlatformIcon platform={hPlatform} size={14} />
                         {HASHTAG_PLATFORMS[hPlatform]?.label} Tips
                       </div>
                       <p style={{ fontSize: 13, color: '#374151', margin: 0, lineHeight: 1.7 }}>{hashResult.platform_tips}</p>
@@ -1017,7 +1004,6 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = {
-  page: { padding: '32px 36px', maxWidth: 1280, margin: '0 auto' },
   header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 16 },
   title: { fontSize: 24, fontWeight: 800, color: '#0f172a', margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" },
   sub: { fontSize: 14, color: '#64748b', marginTop: 4, marginBottom: 0 },
@@ -1039,8 +1025,8 @@ const styles = {
   recentChip: { padding: '4px 10px', borderRadius: 99, border: '1px solid #e2e8f0', background: '#f0f4f9', color: '#475569', fontSize: 12, fontWeight: 600, cursor: 'pointer', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 360, textAlign: 'center', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 18 },
   emptyIcon: { width: 80, height: 80, borderRadius: '50%', background: '#f3e8ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  platTab: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
-  platTabActive: { background: '#e6fbff', borderColor: '#e6fbff', color: '#00d7ff' },
+  platTab: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: 'none', borderRadius: 10, background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer' },
+  platTabActive: { background: '#e6fbff', color: '#00d7ff' },
   bottomBtn: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 18px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: '#fff', color: '#374151', fontSize: 13, fontWeight: 700, cursor: 'pointer' },
   stickyBar: { position: 'fixed', bottom: 0, left: 240, right: 0, background: '#fff', borderTop: '1.5px solid #e2e8f0', padding: '12px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, zIndex: 50, boxShadow: '0 -4px 20px rgba(0,0,0,0.08)' },
   barBtn: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', border: '1.5px solid #e2e8f0', borderRadius: 10, background: '#fff', color: '#374151', fontSize: 13, fontWeight: 700, cursor: 'pointer' },

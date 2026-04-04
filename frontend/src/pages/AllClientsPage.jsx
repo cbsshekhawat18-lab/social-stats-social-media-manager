@@ -197,7 +197,7 @@ const styles = {
   page:     { padding: '28px 32px', maxWidth: 1400, margin: '0 auto' },
   addBtn: {
     padding: '10px 20px', borderRadius: 10, border: 'none',
-    background: '#00d7ff', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+    background: '#00d7ff', color: '#0f172a', cursor: 'pointer', fontWeight: 700, fontSize: 13,
   },
   btnInner: { display: 'flex', alignItems: 'center', gap: 6 },
   createBox: {

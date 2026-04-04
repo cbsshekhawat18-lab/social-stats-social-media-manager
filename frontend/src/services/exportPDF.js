@@ -199,7 +199,7 @@ export async function exportPDF({
       head: [['Post', 'Platform', 'Account', 'Published', 'Impr.', 'Reach', 'Likes', 'Comments']],
       body: posts.slice(0, 12).map((post) => [
         (post.caption || post.title || 'Untitled post').slice(0, 60),
-        `${PLATFORMS[post.platform]?.icon || ''} ${PLATFORMS[post.platform]?.label || post.platform}`,
+        PLATFORMS[post.platform]?.label || post.platform,
         post.account_name ? `@${post.account_name}` : '—',
         post.published_at ? format(parseISO(post.published_at), 'dd MMM yyyy') : '—',
         fmt(post.impressions),

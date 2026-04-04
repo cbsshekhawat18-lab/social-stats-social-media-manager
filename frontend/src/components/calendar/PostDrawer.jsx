@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { X, ExternalLink, Edit2, Trash2, Calendar, RefreshCw } from 'lucide-react';
 import { PLATFORMS } from '../../services/platforms';
+import SocialPlatformIcon from '../ui/SocialPlatformIcon';
 
 function fmt(n) {
   if (!n) return '0';
@@ -25,7 +26,7 @@ export default function PostDrawer({ post, isOpen, onClose, onEdit, onDelete, on
 
   if (!post) return null;
 
-  const platform = PLATFORMS[post.platform] || { color: '#64748B', icon: '🔗', label: post.platform };
+  const platform = PLATFORMS[post.platform] || { color: '#64748B', label: post.platform };
   const badge    = STATUS_BADGE[post.status] || STATUS_BADGE.draft;
 
   const bestTime = post.scheduled_at || post.published_at;
@@ -79,7 +80,7 @@ export default function PostDrawer({ post, isOpen, onClose, onEdit, onDelete, on
           background: platform.color + '10',
           position: 'sticky', top: 0, zIndex: 1,
         }}>
-          <span style={{ fontSize: 28 }}>{platform.icon}</span>
+          <SocialPlatformIcon platform={post.platform} size={28} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>
               {platform.label}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useClientSummary, useTimeseries, usePosts, useDateRange, useOAuthStatus } from '../hooks/useData';
+import { useClientSummary, useTimeseries, usePosts, useDateRange, useOAuthStatus, useLookups } from '../hooks/useData';
 import { PLATFORMS, fmt } from '../services/platforms';
 import { exportPDF } from '../services/exportPDF';
 import StatCard from '../components/ui/StatCard';
@@ -8,7 +8,8 @@ import PlatformTabs from '../components/ui/PlatformTabs';
 import DateRangePicker from '../components/ui/DateRangePicker';
 import { ImpressionsChart, EngagementChart, VideoViewsChart, PlatformCompareChart } from '../components/charts/Charts';
 import { clientsAPI } from '../services/api';
-import { Eye, Radio, MousePointer2, Heart, Play, UserPlus, Globe, Phone, RefreshCw, Loader2, FileText, Share2 } from 'lucide-react';
+import { Eye, Radio, MousePointer2, Heart, Play, UserPlus, Globe, Phone, RefreshCw, Loader2, FileText, Share2, Clock, TrendingDown, Timer, Mail, ThumbsDown, Video, MessageCircle, Navigation } from 'lucide-react';
+import GMBWidget from '../components/ui/GMBWidget';
 import GoalTracker from '../components/ui/GoalTracker';
 import AlertBell from '../components/ui/AlertBell';
 import AIInsightCard from '../components/ui/AIInsightCard';
@@ -18,9 +19,11 @@ import OnboardingChecklist from '../components/ui/OnboardingChecklist';
 import ROICalculatorPage from './ROICalculatorPage';
 import CalendarPage from './CalendarPage';
 import { useUpcomingPosts } from '../hooks/useCalendar';
+import PageHeader from '../components/layout/PageHeader';
+import SegmentedTabs from '../components/ui/SegmentedTabs';
 import { NavLink } from 'react-router-dom';
-import { PLATFORMS as PLATS } from '../services/platforms';
 import { format, parseISO } from 'date-fns';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
 
 export default function ClientDashboard({ clientId: propClientId }) {
   const { user }                   = useAuth();
@@ -35,6 +38,17 @@ export default function ClientDashboard({ clientId: propClientId }) {
   const { data: timeseries, loading: tsLoading }                        = useTimeseries(clientId, range, platform);
   const { posts }                                                        = usePosts(clientId, platform, range);
   const { status: oauthStatus }                                          = useOAuthStatus(clientId);
+  const { lookups }                                                      = useLookups();
+
+  const platformLabelMap = (lookups.platforms || []).reduce((acc, item) => {
+    acc[item.key] = item.label;
+    return acc;
+  }, {});
+
+  const platformMeta = (key) => ({
+    label: platformLabelMap[key] || PLATFORMS[key]?.label || key,
+    color: PLATFORMS[key]?.color || '#64748b',
+  });
 
   const totals     = summary?.totals      || {};
   const byPlatform = summary?.by_platform || [];
@@ -68,59 +82,47 @@ export default function ClientDashboard({ clientId: propClientId }) {
   };
 
   return (
-    <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>{client.company || 'Dashboard'}</h1>
-          <p style={styles.subtitle}>Social Media Analytics</p>
-        </div>
-        <div style={styles.headerActions}>
-          <AlertBell clientId={clientId} />
-          <button onClick={handleSync} disabled={syncing} style={styles.syncBtn}>
-            <span style={styles.btnInner}>
-              {syncing
-                ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Syncing…</>
-                : <><RefreshCw size={16} /> Sync Now</>
-              }
-            </span>
-          </button>
-          <button onClick={() => setShareOpen(true)} style={styles.shareBtn}>
-            <span style={styles.btnInner}><Share2 size={16} /> Share Report</span>
-          </button>
-          <button onClick={handleExportPDF} style={styles.pdfBtn}>
-            <span style={styles.btnInner}><FileText size={16} /> Export PDF</span>
-          </button>
-        </div>
-      </div>
+    <div className="app-page app-page--content app-page--xl">
+      <PageHeader
+        title={client.company || 'Dashboard'}
+        subtitle="Social Media Analytics"
+        actions={(
+          <div style={styles.headerActions}>
+            <AlertBell clientId={clientId} />
+            <button onClick={handleSync} disabled={syncing} style={styles.syncBtn}>
+              <span style={styles.btnInner}>
+                {syncing
+                  ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Syncing…</>
+                  : <><RefreshCw size={16} /> Sync Now</>
+                }
+              </span>
+            </button>
+            <button onClick={() => setShareOpen(true)} style={styles.shareBtn}>
+              <span style={styles.btnInner}><Share2 size={16} /> Share Report</span>
+            </button>
+            <button onClick={handleExportPDF} style={styles.pdfBtn}>
+              <span style={styles.btnInner}><FileText size={16} /> Export PDF</span>
+            </button>
+          </div>
+        )}
+      />
 
       {shareOpen && (
         <ShareReportModal clientId={clientId} onClose={() => setShareOpen(false)} />
       )}
 
       {/* View Toggle */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {[
-          { key: 'analytics', label: '📊 Analytics' },
-          { key: 'roi',       label: '📈 ROI Calculator' },
-          { key: 'content',   label: '📝 Content Calculator' },
-        ].map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveView(tab.key)}
-            style={{
-              padding: '8px 20px', borderRadius: 20, fontSize: 13, fontWeight: 600,
-              border: '1.5px solid',
-              borderColor: activeView === tab.key ? '#2563EB' : '#E2E8F0',
-              background:  activeView === tab.key ? '#2563EB' : '#fff',
-              color:       activeView === tab.key ? '#fff' : '#64748B',
-              cursor: 'pointer', transition: 'all .15s',
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs
+        items={[
+          { id: 'analytics', label: 'Analytics' },
+          { id: 'roi', label: 'ROI Calculator' },
+          { id: 'content', label: 'Content Calculator' },
+        ]}
+        active={activeView}
+        onChange={setActiveView}
+        compact
+        style={{ marginBottom: 20 }}
+      />
 
       {activeView === 'roi' && <ROICalculatorPage clientId={clientId} />}
 
@@ -132,14 +134,53 @@ export default function ClientDashboard({ clientId: propClientId }) {
             <div style={styles.primaryColumn}>
               {/* KPI Cards */}
               <div style={styles.cards}>
-                <StatCard label="Impressions"    value={totals.total_impressions}    icon={Eye}           color="#00d7ff" />
-                <StatCard label="Reach"          value={totals.total_reach}          icon={Radio}         color="#22c55e" />
-                <StatCard label="Clicks"         value={totals.total_clicks}         icon={MousePointer2} color="#00d7ff" />
-                <StatCard label="Likes"          value={totals.total_likes}          icon={Heart}         color="#ef4444" />
-                <StatCard label="Video Views"    value={totals.total_video_views}    icon={Play}          color="#f59e0b" />
-                <StatCard label="Followers"      value={totals.total_followers}      icon={UserPlus}      color="#8b5cf6" />
-                <StatCard label="Website Clicks" value={totals.total_website_clicks} icon={Globe}         color="#0891b2" />
-                <StatCard label="Phone Calls"    value={totals.total_phone_calls}    icon={Phone}         color="#059669" />
+                {platform === 'youtube' ? (
+                  <>
+                    <StatCard label="Video Views"      value={totals.total_video_views}                                                       icon={Play}         color="#ff0000" />
+                    <StatCard label="Watch Time (min)" value={totals.total_watch_time_minutes}                                                 icon={Clock}        color="#f59e0b" />
+                    <StatCard label="Avg View (sec)"   value={totals.avg_view_duration != null ? Math.round(totals.avg_view_duration) : null}  icon={Timer}        color="#8b5cf6" />
+                    <StatCard label="Likes"            value={totals.total_likes}                                                              icon={Heart}        color="#ef4444" />
+                    <StatCard label="Comments"         value={totals.total_comments}                                                           icon={MessageCircle} color="#22c55e" />
+                    <StatCard label="Shares"           value={totals.total_shares}                                                             icon={Share2}       color="#0891b2" />
+                    <StatCard label="Subscribers"      value={totals.total_followers}                                                          icon={UserPlus}     color="#8b5cf6" />
+                    <StatCard label="Unsubs"           value={totals.total_subscribers_lost}                                                   icon={TrendingDown} color="#94a3b8" />
+                  </>
+                ) : platform === 'facebook' ? (
+                  <>
+                    <StatCard label="Impressions"     value={totals.total_impressions}          icon={Eye}          color="#1877f2" />
+                    <StatCard label="Reach"           value={totals.total_reach}                icon={Radio}        color="#22c55e" />
+                    <StatCard label="Engagements"     value={totals.total_likes}                icon={Heart}        color="#ef4444" />
+                    <StatCard label="Page Views"      value={totals.total_profile_views}        icon={MousePointer2} color="#00d7ff" />
+                    <StatCard label="Followers"       value={totals.total_followers}            icon={UserPlus}     color="#8b5cf6" />
+                    <StatCard label="Unfollows"       value={totals.total_followers_lost}       icon={TrendingDown} color="#94a3b8" />
+                    <StatCard label="Video Views"     value={totals.total_fb_video_views}       icon={Video}        color="#f59e0b" />
+                    <StatCard label="Neg. Feedback"   value={totals.total_negative_feedback}    icon={ThumbsDown}   color="#dc2626" />
+                  </>
+                ) : platform === 'instagram' ? (
+                  <>
+                    <StatCard label="Impressions"      value={totals.total_impressions}          icon={Eye}          color="#e1306c" />
+                    <StatCard label="Reach"            value={totals.total_reach}                icon={Radio}        color="#22c55e" />
+                    <StatCard label="Interactions"     value={totals.total_total_interactions}   icon={Heart}        color="#ef4444" />
+                    <StatCard label="Accounts Engaged" value={totals.total_accounts_engaged}     icon={UserPlus}     color="#8b5cf6" />
+                    <StatCard label="Profile Views"    value={totals.total_profile_views}        icon={MousePointer2} color="#00d7ff" />
+                    <StatCard label="Website Clicks"   value={totals.total_website_clicks}       icon={Globe}        color="#0891b2" />
+                    <StatCard label="Email Clicks"     value={totals.total_email_contacts}       icon={Mail}         color="#f59e0b" />
+                    <StatCard label="Phone Clicks"     value={totals.total_phone_call_clicks}    icon={Phone}        color="#059669" />
+                    <StatCard label="Direction Clicks" value={totals.total_direction_clicks}     icon={Navigation}   color="#6366f1" />
+                    <StatCard label="Unfollows"        value={totals.total_ig_followers_lost}    icon={TrendingDown} color="#94a3b8" />
+                  </>
+                ) : (
+                  <>
+                    <StatCard label="Impressions"    value={totals.total_impressions}    icon={Eye}           color="#00d7ff" />
+                    <StatCard label="Reach"          value={totals.total_reach}          icon={Radio}         color="#22c55e" />
+                    <StatCard label="Clicks"         value={totals.total_clicks}         icon={MousePointer2} color="#00d7ff" />
+                    <StatCard label="Likes"          value={totals.total_likes}          icon={Heart}         color="#ef4444" />
+                    <StatCard label="Video Views"    value={totals.total_video_views}    icon={Play}          color="#f59e0b" />
+                    <StatCard label="Followers"      value={totals.total_followers}      icon={UserPlus}      color="#8b5cf6" />
+                    <StatCard label="Website Clicks" value={totals.total_website_clicks} icon={Globe}         color="#0891b2" />
+                    <StatCard label="Phone Calls"    value={totals.total_phone_calls}    icon={Phone}         color="#059669" />
+                  </>
+                )}
               </div>
 
               {/* Charts */}
@@ -191,6 +232,10 @@ export default function ClientDashboard({ clientId: propClientId }) {
             </div>
           </div>
 
+          {connectedPlatforms.includes('google_my_business') && (
+            <GMBWidget clientId={clientId} />
+          )}
+
           <div style={styles.reportingSection}>
             <div style={styles.filterPanel}>
               <div style={styles.topBar}>
@@ -204,6 +249,7 @@ export default function ClientDashboard({ clientId: propClientId }) {
                 selected={platform}
                 onChange={setPlatform}
                 connected={connectedPlatforms}
+                platforms={lookups.platforms || []}
               />
 
               <div style={styles.summaryStrip}>
@@ -218,7 +264,7 @@ export default function ClientDashboard({ clientId: propClientId }) {
                 <div style={styles.summaryCard}>
                   <span style={styles.summaryLabel}>Platform View</span>
                   <strong style={styles.summaryValue}>
-                    {platform === 'all' ? 'All Platforms' : (PLATFORMS[platform]?.label || platform)}
+                    {platform === 'all' ? 'All Platforms' : platformLabelMap[platform] || PLATFORMS[platform]?.label || platform}
                   </strong>
                 </div>
                 <div style={styles.summaryCard}>
@@ -244,8 +290,11 @@ export default function ClientDashboard({ clientId: propClientId }) {
                       {byPlatform.map(p => (
                         <tr key={p.platform} style={styles.tr}>
                           <td style={styles.td}>
-                            <span style={{ color: PLATFORMS[p.platform]?.color }}>
-                              {PLATFORMS[p.platform]?.icon} {PLATFORMS[p.platform]?.label || p.platform}
+                            <span style={{ color: platformMeta(p.platform).color }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                <SocialPlatformIcon platform={p.platform} size={15} />
+                                {platformMeta(p.platform).label}
+                              </span>
                             </span>
                           </td>
                           <td style={styles.td}>{fmt(p.impressions)}</td>
@@ -283,7 +332,10 @@ export default function ClientDashboard({ clientId: propClientId }) {
                             </a>
                           </td>
                           <td style={styles.td}>
-                            {PLATFORMS[p.platform]?.icon} {PLATFORMS[p.platform]?.label}
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              <SocialPlatformIcon platform={p.platform} size={15} />
+                              {PLATFORMS[p.platform]?.label}
+                            </span>
                           </td>
                           <td style={{ ...styles.td, color: '#00d7ff', fontWeight: 500 }}>
                             {p.account_name ? `@${p.account_name}` : '—'}
@@ -332,7 +384,7 @@ function UpcomingPostsWidget({ clientId }) {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {shown.map(post => {
-          const p = PLATS[post.platform] || { color: '#64748B', icon: '🔗', label: post.platform };
+          const p = PLATS[post.platform] || { color: '#64748B', label: post.platform };
           const timeStr = post.scheduled_at
             ? format(parseISO(post.scheduled_at), 'MMM d · h:mm a')
             : '';
@@ -342,7 +394,9 @@ function UpcomingPostsWidget({ clientId }) {
               padding: '8px 10px', borderRadius: 8,
               background: '#f0f4f9', border: `1px solid ${p.color}30`,
             }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>{p.icon}</span>
+              <span style={{ fontSize: 18, flexShrink: 0, display: 'inline-flex' }}>
+                <SocialPlatformIcon platform={post.platform} size={18} />
+              </span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontSize: 12, color: '#374151',
@@ -361,7 +415,6 @@ function UpcomingPostsWidget({ clientId }) {
 }
 
 const styles = {
-  page: { padding: '28px 32px 40px', maxWidth: 1480, margin: '0 auto' },
   header: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
     gap: 20, marginBottom: 24, flexWrap: 'wrap',
@@ -409,7 +462,7 @@ const styles = {
   },
   shareBtn: {
     padding: '10px 18px', borderRadius: 10, border: 'none',
-    background: '#00d7ff', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 13,
+    background: '#00d7ff', color: '#0f172a', cursor: 'pointer', fontWeight: 600, fontSize: 13,
   },
   pdfBtn: {
     padding: '10px 18px', borderRadius: 10, border: 'none',

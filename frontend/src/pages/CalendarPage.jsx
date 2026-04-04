@@ -15,6 +15,7 @@ import PostFormDrawer     from '../components/calendar/PostFormDrawer';
 import CalendarStats      from '../components/calendar/CalendarStats';
 import UpcomingPosts      from '../components/calendar/UpcomingPosts';
 import PageHeader         from '../components/layout/PageHeader';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
 
 // ── Inject animation keyframes once ──────────────────────────────────────────
 const STYLE_ID = 'cal-keyframes';
@@ -87,7 +88,7 @@ function ListView({ postsByDate, onPostClick, onEditPost, onDeletePost, onResche
             </span>
           </div>
           {posts.map(post => {
-            const p     = PLATFORMS[post.platform] || { color: '#64748B', icon: '🔗', label: post.platform };
+            const p     = PLATFORMS[post.platform] || { color: '#64748B', label: post.platform };
             const badge = STATUS_BADGE[post.status] || STATUS_BADGE.draft;
             const timeStr = (post.scheduled_at || post.published_at)
               ? format(parseISO(post.scheduled_at || post.published_at), 'h:mm a')
@@ -107,7 +108,7 @@ function ListView({ postsByDate, onPostClick, onEditPost, onDeletePost, onResche
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 18, flexShrink: 0,
                 }}>
-                  {p.icon}
+                  <SocialPlatformIcon platform={post.platform} size={18} />
                 </div>
 
                 {/* Content */}
@@ -304,23 +305,42 @@ export default function CalendarPage({ clientId: propClientId }) {
   // ── No client selected (admin only) ──
   if (showClientSelector && !clientId) {
     return (
-      <div style={{ padding: 40, maxWidth: 500, margin: '60px auto', textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Content Calendar</h2>
-        <p style={{ color: '#64748B', fontSize: 14, marginBottom: 24 }}>
-          Select a user to view their content calendar.
-        </p>
-        <select
-          onChange={e => setSelectedClientId(e.target.value ? parseInt(e.target.value) : null)}
-          onBlur={e => updateSearch({ client: e.target.value || null })}
-          style={{
-            width: '100%', padding: '10px 14px', borderRadius: 8,
-            border: '1px solid #D1D5DB', fontSize: 14, background: '#fff',
-          }}
-        >
-          <option value="">— Select a user —</option>
-          {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
-        </select>
+      <div style={{
+        padding: '28px 32px 40px',
+        background: '#f0f4f9',
+        minHeight: '100vh',
+        width: '100%',
+        maxWidth: '100%',
+        overflowX: 'hidden',
+        boxSizing: 'border-box',
+      }}>
+        <div style={{ maxWidth: 1480, margin: '0 auto' }}>
+          <PageHeader
+            title="Content Calendar"
+            subtitle="Plan, review, and measure your scheduled content."
+            actions={(
+              <select
+                value=""
+                onChange={e => {
+                  const nextClientId = e.target.value ? parseInt(e.target.value, 10) : null;
+                  setSelectedClientId(nextClientId);
+                  updateSearch({ client: nextClientId });
+                }}
+                style={adminClientSelectStyle}
+              >
+                <option value="">All Users</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
+              </select>
+            )}
+          />
+          <div style={{ padding: 40, maxWidth: 500, margin: '60px auto', textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Content Calendar</h2>
+            <p style={{ color: '#64748B', fontSize: 14, marginBottom: 0 }}>
+              Select a user from the top-right dropdown to view their content calendar.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -342,12 +362,7 @@ export default function CalendarPage({ clientId: propClientId }) {
         <PageHeader
           title="Content Calendar"
           subtitle="Plan, review, and measure your scheduled content."
-        />
-
-        {/* Admin client selector banner */}
-        {showClientSelector && (
-          <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 13, color: '#64748B', fontWeight: 600 }}>Viewing calendar for:</span>
+          actions={showClientSelector ? (
             <select
               value={clientId || ''}
               onChange={e => {
@@ -355,15 +370,13 @@ export default function CalendarPage({ clientId: propClientId }) {
                 setSelectedClientId(nextClientId);
                 updateSearch({ client: nextClientId });
               }}
-              style={{
-                padding: '6px 12px', borderRadius: 8, border: '1px solid #E2E8F0',
-                fontSize: 13, background: '#fff', color: '#0f172a', fontWeight: 600,
-              }}
+              style={adminClientSelectStyle}
             >
+              <option value="">All Users</option>
               {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
             </select>
-          </div>
-        )}
+          ) : null}
+        />
 
         {/* Top bar */}
         <div style={{
@@ -409,7 +422,7 @@ export default function CalendarPage({ clientId: propClientId }) {
           flex: '999 1 420px',
           minWidth: 0,
         }}>
-          {[{ key: 'all', label: 'All', icon: '🔘', color: '#00d7ff' },
+          {[{ key: 'all', label: 'All', color: '#00d7ff' },
             ...PLATFORM_LIST.map(k => ({ key: k, ...PLATFORMS[k] }))
           ].map(p => (
             <button
@@ -425,7 +438,10 @@ export default function CalendarPage({ clientId: propClientId }) {
                   : '1px solid #E2E8F0',
               }}
             >
-              {p.icon} {p.label?.split(' ')[0] || 'All'}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                {p.key === 'all' ? null : <SocialPlatformIcon platform={p.key} size={14} />}
+                {p.label?.split(' ')[0] || 'All'}
+              </span>
             </button>
           ))}
         </div>
@@ -570,4 +586,16 @@ const navBtnStyle = {
   background: '#fff', border: '1px solid #E2E8F0',
   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
   color: '#374151', transition: 'background 0.15s',
+};
+
+const adminClientSelectStyle = {
+  padding: '8px 14px',
+  borderRadius: 10,
+  border: '1.5px solid #dbe5f3',
+  fontSize: 13,
+  color: '#1e293b',
+  background: '#fff',
+  outline: 'none',
+  minWidth: 200,
+  fontWeight: 600,
 };

@@ -3,6 +3,7 @@ import { useSyncLogs } from '../hooks/useData';
 import { PLATFORMS } from '../services/platforms';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import PageHeader from '../components/layout/PageHeader';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
 
 const STATUSES = ['all', 'success', 'failed', 'running', 'pending'];
 
@@ -23,14 +24,14 @@ export default function SyncLogsPage() {
   });
 
   return (
-    <div style={styles.page}>
+    <div className="app-page app-page--wide">
       <PageHeader
         title="Sync Logs"
         subtitle={`${filtered.length} of ${logs.length} record${logs.length !== 1 ? 's' : ''}`}
       />
 
       {/* Filter bar */}
-      <div style={styles.filterBar}>
+      <div className="app-surface app-surface--compact" style={styles.filterBar}>
         <select value={filterClient} onChange={e => setFilterClient(e.target.value)} style={styles.select}>
           <option value="">All Users</option>
           {clientNames.map(n => <option key={n} value={n}>{n}</option>)}
@@ -39,7 +40,7 @@ export default function SyncLogsPage() {
         <select value={filterPlatform} onChange={e => setFilterPlatform(e.target.value)} style={styles.select}>
           <option value="all">All Platforms</option>
           {Object.entries(PLATFORMS).map(([k, v]) => (
-            <option key={k} value={k}>{v.icon} {v.label}</option>
+            <option key={k} value={k}>{v.label}</option>
           ))}
         </select>
 
@@ -59,7 +60,7 @@ export default function SyncLogsPage() {
         )}
       </div>
 
-      <div style={styles.tableWrap}>
+      <div className="app-surface app-surface--panel" style={styles.tableWrap}>
         {loading ? (
           <div style={styles.center}>Loading logs…</div>
         ) : filtered.length === 0 ? (
@@ -81,7 +82,10 @@ export default function SyncLogsPage() {
                   <tr key={l.id} style={styles.tr}>
                     <td style={{ ...styles.td, fontWeight: 600 }}>{l.client_name || '—'}</td>
                     <td style={styles.td}>
-                      {PLATFORMS[l.platform]?.icon} {PLATFORMS[l.platform]?.label || l.platform}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <SocialPlatformIcon platform={l.platform} size={15} />
+                        {PLATFORMS[l.platform]?.label || l.platform}
+                      </span>
                     </td>
                     <td style={styles.td}>
                       <span style={badge(l.status)}>{l.status}</span>
@@ -137,7 +141,6 @@ function badge(status) {
 }
 
 const styles = {
-  page:      { padding: '28px 32px', maxWidth: 1400, margin: '0 auto' },
   filterBar: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 },
   select: {
     padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb',
@@ -147,10 +150,7 @@ const styles = {
     padding: '8px 14px', borderRadius: 8, border: '1.5px solid #fca5a5',
     background: '#fff7f7', color: '#dc2626', cursor: 'pointer', fontSize: 12, fontWeight: 600,
   },
-  tableWrap: {
-    background: '#fff', borderRadius: 14, padding: 24,
-    boxShadow: '0 1px 6px rgba(0,0,0,.07)', overflowX: 'auto',
-  },
+  tableWrap: { boxShadow: '0 1px 6px rgba(0,0,0,.07)', overflowX: 'auto' },
   table:     { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
   th: {
     textAlign: 'left', padding: '10px 12px', background: '#f0f4f9',

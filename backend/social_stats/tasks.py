@@ -40,10 +40,35 @@ def sync_facebook(self, client_id, days=30):
         cred  = PlatformCredential.objects.get(client_id=client_id, platform='facebook', is_active=True)
         since, until = _date_range(days)
 
+        metrics_to_fetch = ','.join([
+            'page_impressions',
+            'page_impressions_unique',
+            'page_post_engagements',
+            'page_views_total',
+            'page_fan_adds',
+            'page_fan_removes',
+            'page_consumptions',
+            'page_negative_feedback',
+            'page_video_views',
+            'page_video_view_time',
+        ])
+
         insights = requests.get(
             f"https://graph.facebook.com/v18.0/{cred.page_id}/insights",
             params={
-                'metric': 'page_impressions,page_impressions_unique,page_post_engagements,page_views_total,page_fan_adds,page_consumptions',
+                'metric': metrics_to_fetch,
+                'period': 'day',
+                'since':  since.isoformat(),
+                'until':  (until + timedelta(days=1)).isoformat(),
+                'access_token': cred.access_token,
+            }, timeout=15
+        ).json()
+
+        # Fetch reactions breakdown separately (returns dict per day)
+        reactions_resp = requests.get(
+            f"https://graph.facebook.com/v18.0/{cred.page_id}/insights",
+            params={
+                'metric': 'page_actions_post_reactions_total',
                 'period': 'day',
                 'since':  since.isoformat(),
                 'until':  (until + timedelta(days=1)).isoformat(),
@@ -58,14 +83,37 @@ def sync_facebook(self, client_id, days=30):
             'page_post_engagements':   'likes',
             'page_views_total':        'profile_views',
             'page_fan_adds':           'followers',
+            'page_fan_removes':        'followers_lost',
             'page_consumptions':       'clicks',
+            'page_negative_feedback':  'negative_feedback',
+            'page_video_views':        'fb_video_views',
+            'page_video_view_time':    'fb_video_watch_time',
         }
         for m in insights.get('data', []):
             key = metric_map.get(m['name'])
             if not key: continue
             for v in m.get('values', []):
                 day = v['end_time'][:10]
-                daily.setdefault(day, {})[key] = v['value']
+                val = v.get('value', 0)
+                # page_video_view_time comes in ms → convert to seconds
+                if m['name'] == 'page_video_view_time' and val:
+                    val = int(val / 1000)
+                daily.setdefault(day, {})[key] = val if isinstance(val, (int, float)) else 0
+
+        # Merge reactions
+        for m in reactions_resp.get('data', []):
+            for v in m.get('values', []):
+                day = v['end_time'][:10]
+                val = v.get('value', {})
+                if isinstance(val, dict) and val:
+                    daily.setdefault(day, {})['reactions'] = {
+                        'like':  val.get('like', 0),
+                        'love':  val.get('love', 0),
+                        'haha':  val.get('haha', 0),
+                        'wow':   val.get('wow', 0),
+                        'sad':   val.get('sad', 0),
+                        'angry': val.get('angry', 0),
+                    }
 
         count = 0
         for day_str, vals in daily.items():
@@ -92,10 +140,35 @@ def sync_instagram(self, client_id, days=30):
         cred  = PlatformCredential.objects.get(client_id=client_id, platform='instagram', is_active=True)
         since, until = _date_range(days)
 
+        ig_metrics = ','.join([
+            'impressions',
+            'reach',
+            'profile_views',
+            'website_clicks',
+            'follower_count',
+            'accounts_engaged',
+            'total_interactions',
+            'email_contacts',
+            'phone_call_clicks',
+            'direction_clicks',
+        ])
+
         insights = requests.get(
             f"https://graph.facebook.com/v18.0/{cred.instagram_account_id}/insights",
             params={
-                'metric': 'impressions,reach,profile_views,website_clicks,follower_count',
+                'metric': ig_metrics,
+                'period': 'day',
+                'since':  since.isoformat(),
+                'until':  (until + timedelta(days=1)).isoformat(),
+                'access_token': cred.access_token,
+            }, timeout=15
+        ).json()
+
+        # Fetch follows/unfollows separately (lifetime metric, use day period)
+        follows_resp = requests.get(
+            f"https://graph.facebook.com/v18.0/{cred.instagram_account_id}/insights",
+            params={
+                'metric': 'follows_and_unfollows',
                 'period': 'day',
                 'since':  since.isoformat(),
                 'until':  (until + timedelta(days=1)).isoformat(),
@@ -108,18 +181,32 @@ def sync_instagram(self, client_id, days=30):
             name = m['name']
             for v in m.get('values', []):
                 day = v['end_time'][:10]
-                daily.setdefault(day, {})[name] = v['value']
+                daily.setdefault(day, {})[name] = v.get('value', 0)
+
+        # Merge follows/unfollows — value is a dict {follows: N, unfollows: N}
+        for m in follows_resp.get('data', []):
+            for v in m.get('values', []):
+                day = v['end_time'][:10]
+                val = v.get('value', {})
+                if isinstance(val, dict):
+                    daily.setdefault(day, {})['ig_followers_lost'] = val.get('unfollows', 0)
 
         count = 0
         for day_str, vals in daily.items():
             DailyMetric.objects.update_or_create(
                 client_id=client_id, platform='instagram', date=day_str,
                 defaults={
-                    'impressions':   vals.get('impressions', 0),
-                    'reach':         vals.get('reach', 0),
-                    'profile_views': vals.get('profile_views', 0),
-                    'website_clicks':vals.get('website_clicks', 0),
-                    'followers':     vals.get('follower_count', 0),
+                    'impressions':       vals.get('impressions', 0),
+                    'reach':             vals.get('reach', 0),
+                    'profile_views':     vals.get('profile_views', 0),
+                    'website_clicks':    vals.get('website_clicks', 0),
+                    'followers':         vals.get('follower_count', 0),
+                    'accounts_engaged':  vals.get('accounts_engaged', 0),
+                    'total_interactions':vals.get('total_interactions', 0),
+                    'email_contacts':    vals.get('email_contacts', 0),
+                    'phone_call_clicks': vals.get('phone_call_clicks', 0),
+                    'direction_clicks':  vals.get('direction_clicks', 0),
+                    'ig_followers_lost': vals.get('ig_followers_lost', 0),
                 }
             )
             count += 1
@@ -189,13 +276,16 @@ def sync_youtube(self, client_id, days=30):
                 'ids':        f'channel=={cred.channel_id}',
                 'startDate':   since.isoformat(),
                 'endDate':     until.isoformat(),
-                'metrics':    'views,estimatedMinutesWatched,subscribersGained,subscribersLost,likes,comments,shares,impressions,impressionClickThroughRate,averageViewDuration',
+                'metrics':    'views,estimatedMinutesWatched,subscribersGained,subscribersLost,likes,comments,shares,averageViewDuration',
                 'dimensions': 'day',
                 'sort':       'day',
             },
             headers={'Authorization': f'Bearer {cred.access_token}'},
             timeout=15
         ).json()
+
+        if 'error' in analytics:
+            raise Exception(f"YouTube API error: {analytics['error'].get('message', analytics['error'])}")
 
         rows    = analytics.get('rows', [])
         headers = [h['name'] for h in analytics.get('columnHeaders', [])]
@@ -206,13 +296,14 @@ def sync_youtube(self, client_id, days=30):
             DailyMetric.objects.update_or_create(
                 client_id=client_id, platform='youtube', date=data['day'],
                 defaults={
-                    'video_views': int(data.get('views', 0)),
-                    'impressions': int(data.get('impressions', 0)),
-                    'likes':       int(data.get('likes', 0)),
-                    'comments':    int(data.get('comments', 0)),
-                    'shares':      int(data.get('shares', 0)),
-                    'followers':   int(data.get('subscribersGained', 0)),
-                    'ctr':         float(data.get('impressionClickThroughRate', 0)),
+                    'video_views':        int(data.get('views', 0)),
+                    'watch_time_minutes': int(data.get('estimatedMinutesWatched', 0)),
+                    'avg_view_duration':  float(data.get('averageViewDuration', 0)),
+                    'likes':              int(data.get('likes', 0)),
+                    'comments':           int(data.get('comments', 0)),
+                    'shares':             int(data.get('shares', 0)),
+                    'followers':          int(data.get('subscribersGained', 0)),
+                    'subscribers_lost':   int(data.get('subscribersLost', 0)),
                 }
             )
             count += 1
@@ -279,68 +370,202 @@ def sync_linkedin(self, client_id, days=30):
 # ── Google My Business ────────────────────────────────────────────────────────
 @shared_task(bind=True, max_retries=3, default_retry_delay=300)
 def sync_gmb(self, client_id, days=30):
-    from .models import PlatformCredential, DailyMetric, SyncLog
+    from .models import PlatformCredential, DailyMetric, SyncLog, GMBBusinessInfo, GMBReview
     log = SyncLog.objects.create(platform='google_my_business', client_id=client_id, status='running')
     try:
-        cred  = PlatformCredential.objects.get(client_id=client_id, platform='google_my_business', is_active=True)
+        cred = PlatformCredential.objects.get(client_id=client_id, platform='google_my_business', is_active=True)
         if cred.is_expired:
             _refresh_google_token(cred)
 
-        since, until = _date_range(days)
+        token   = cred.access_token
+        headers = {'Authorization': f'Bearer {token}'}
+        count   = 0
 
-        resp = requests.post(
-            f'https://businessprofileperformance.googleapis.com/v1/{cred.gmb_location_id}:fetchMultiDailyMetricsTimeSeries',
-            json={
-                'dailyMetrics': [
-                    'BUSINESS_IMPRESSIONS_DESKTOP_MAPS',
-                    'BUSINESS_IMPRESSIONS_MOBILE_MAPS',
-                    'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH',
-                    'BUSINESS_IMPRESSIONS_MOBILE_SEARCH',
-                    'WEBSITE_CLICKS',
-                    'CALL_CLICKS',
-                    'BUSINESS_DIRECTION_REQUESTS',
-                    'BUSINESS_CONVERSATIONS',
-                ],
-                'dailyRange': {
-                    'startDate': {'year': since.year, 'month': since.month, 'day': since.day},
-                    'endDate':   {'year': until.year, 'month': until.month, 'day': until.day},
-                }
-            },
-            headers={'Authorization': f'Bearer {cred.access_token}'},
-            timeout=15
-        ).json()
-
-        daily = {}
-        for series in resp.get('multiDailyMetricTimeSeries', []):
-            metric_name = series.get('dailyMetric', '')
-            for entry in series.get('dailyMetricTimeSeries', {}).get('datedValues', []):
-                d   = entry['date']
-                day = f"{d['year']}-{d['month']:02d}-{d['day']:02d}"
-                val = int(entry.get('value', 0) or 0)
-                daily.setdefault(day, {})
-
-                if 'IMPRESSIONS' in metric_name:
-                    daily[day]['impressions'] = daily[day].get('impressions', 0) + val
-                elif metric_name == 'WEBSITE_CLICKS':
-                    daily[day]['website_clicks'] = val
-                elif metric_name == 'CALL_CLICKS':
-                    daily[day]['phone_calls'] = val
-                elif metric_name == 'BUSINESS_DIRECTION_REQUESTS':
-                    daily[day]['direction_requests'] = val
-                elif metric_name == 'BUSINESS_CONVERSATIONS':
-                    daily[day]['clicks'] = val
-
-        count = 0
-        for day_str, vals in daily.items():
-            DailyMetric.objects.update_or_create(
-                client_id=client_id, platform='google_my_business', date=day_str,
-                defaults=vals
+        # ── 1. Business Information API ───────────────────────────────────────
+        # Fetch full business details (hours, categories, address, photos)
+        if cred.gmb_location_id:
+            biz_resp = requests.get(
+                f'https://mybusinessbusinessinformation.googleapis.com/v1/{cred.gmb_location_id}',
+                params={'readMask': 'name,title,storefrontAddress,websiteUri,phoneNumbers,categories,regularHours,specialHours,profile,openInfo,metadata,relationship'},
+                headers=headers, timeout=15
             )
-            count += 1
+            if biz_resp.status_code == 200:
+                biz = biz_resp.json()
+                addr_obj  = biz.get('storefrontAddress', {})
+                address   = ', '.join(filter(None, [
+                    ' '.join(addr_obj.get('addressLines', [])),
+                    addr_obj.get('locality', ''),
+                    addr_obj.get('administrativeArea', ''),
+                    addr_obj.get('postalCode', ''),
+                    addr_obj.get('regionCode', ''),
+                ]))
+                phone = ''
+                phones = biz.get('phoneNumbers', {})
+                if phones.get('primaryPhone'):
+                    phone = phones['primaryPhone']
+
+                cats = biz.get('categories', {})
+                primary_cat = cats.get('primaryCategory', {}).get('displayName', '')
+                add_cats    = [c.get('displayName', '') for c in cats.get('additionalCategories', [])]
+
+                hours_raw = biz.get('regularHours', {}).get('periods', [])
+                hours = {}
+                for period in hours_raw:
+                    day = period.get('openDay', '')
+                    hours.setdefault(day, []).append({
+                        'open':  f"{period.get('openTime', {}).get('hours', 0):02d}:{period.get('openTime', {}).get('minutes', 0):02d}",
+                        'close': f"{period.get('closeTime', {}).get('hours', 0):02d}:{period.get('closeTime', {}).get('minutes', 0):02d}",
+                    })
+
+                open_info    = biz.get('openInfo', {})
+                is_open      = open_info.get('status') != 'CLOSED_PERMANENTLY'
+                profile_desc = biz.get('profile', {}).get('description', '')
+                meta         = biz.get('metadata', {})
+                maps_url     = meta.get('mapsUri', '')
+                place_id     = meta.get('placeId', '')
+
+                GMBBusinessInfo.objects.update_or_create(
+                    client_id=client_id,
+                    defaults={
+                        'business_name':        biz.get('title', ''),
+                        'address':              address,
+                        'phone':                phone,
+                        'website':              biz.get('websiteUri', ''),
+                        'category':             primary_cat,
+                        'additional_categories': add_cats,
+                        'description':          profile_desc,
+                        'is_open':              is_open,
+                        'regular_hours':        hours,
+                        'maps_url':             maps_url,
+                        'place_id':             place_id,
+                    }
+                )
+
+        # ── 2. Account Management API — fetch account verification status ─────
+        if cred.gmb_account_id:
+            acc_resp = requests.get(
+                f'https://mybusinessaccountmanagement.googleapis.com/v1/{cred.gmb_account_id}',
+                headers=headers, timeout=10
+            )
+            if acc_resp.status_code == 200:
+                acc = acc_resp.json()
+                is_verified = acc.get('verificationState') == 'VERIFIED'
+                GMBBusinessInfo.objects.filter(client_id=client_id).update(is_verified=is_verified)
+
+        # ── 3. Reviews (via Account Management API) ───────────────────────────
+        if cred.gmb_location_id:
+            reviews_resp = requests.get(
+                f'https://mybusinessaccountmanagement.googleapis.com/v1/{cred.gmb_location_id}/reviews',
+                params={'pageSize': 50},
+                headers=headers, timeout=15
+            )
+            if reviews_resp.status_code == 200:
+                reviews_data  = reviews_resp.json()
+                reviews_list  = reviews_data.get('reviews', [])
+                avg_rating    = float(reviews_data.get('averageRating', 0) or 0)
+                total_reviews = int(reviews_data.get('totalReviewCount', 0) or 0)
+
+                for rev in reviews_list:
+                    reviewer  = rev.get('reviewer', {})
+                    reply     = rev.get('reviewReply', {})
+                    rating_map = {'ONE': 1, 'TWO': 2, 'THREE': 3, 'FOUR': 4, 'FIVE': 5}
+                    rating_val = rating_map.get(rev.get('starRating', 'FIVE'), 5)
+
+                    from dateutil.parser import parse as parse_dt
+                    pub_at = None
+                    if rev.get('createTime'):
+                        try: pub_at = parse_dt(rev['createTime'])
+                        except Exception: pass
+
+                    reply_at = None
+                    if reply.get('updateTime'):
+                        try: reply_at = parse_dt(reply['updateTime'])
+                        except Exception: pass
+
+                    GMBReview.objects.update_or_create(
+                        review_id=rev.get('reviewId', rev.get('name', '')),
+                        defaults={
+                            'client_id':       client_id,
+                            'reviewer_name':   reviewer.get('displayName', ''),
+                            'reviewer_photo':  reviewer.get('profilePhotoUrl', ''),
+                            'rating':          rating_val,
+                            'comment':         rev.get('comment', ''),
+                            'owner_reply':     reply.get('comment', ''),
+                            'reply_updated_at': reply_at,
+                            'published_at':    pub_at,
+                        }
+                    )
+
+                # Update aggregate stats on GMBBusinessInfo
+                GMBBusinessInfo.objects.filter(client_id=client_id).update(
+                    avg_rating=avg_rating,
+                    total_reviews=total_reviews,
+                )
+
+        # ── 4. Business Profile Performance API — extended daily metrics ──────
+        since, until = _date_range(days)
+        if cred.gmb_location_id:
+            perf_resp = requests.post(
+                f'https://businessprofileperformance.googleapis.com/v1/{cred.gmb_location_id}:fetchMultiDailyMetricsTimeSeries',
+                json={
+                    'dailyMetrics': [
+                        'BUSINESS_IMPRESSIONS_DESKTOP_MAPS',
+                        'BUSINESS_IMPRESSIONS_MOBILE_MAPS',
+                        'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH',
+                        'BUSINESS_IMPRESSIONS_MOBILE_SEARCH',
+                        'WEBSITE_CLICKS',
+                        'CALL_CLICKS',
+                        'BUSINESS_DIRECTION_REQUESTS',
+                        'BUSINESS_CONVERSATIONS',
+                    ],
+                    'dailyRange': {
+                        'startDate': {'year': since.year, 'month': since.month, 'day': since.day},
+                        'endDate':   {'year': until.year, 'month': until.month, 'day': until.day},
+                    }
+                },
+                headers=headers, timeout=15
+            ).json()
+
+            daily = {}
+            for series in perf_resp.get('multiDailyMetricTimeSeries', []):
+                metric_name = series.get('dailyMetric', '')
+                for entry in series.get('dailyMetricTimeSeries', {}).get('datedValues', []):
+                    d   = entry['date']
+                    day = f"{d['year']}-{d['month']:02d}-{d['day']:02d}"
+                    val = int(entry.get('value', 0) or 0)
+                    daily.setdefault(day, {
+                        'impressions': 0, 'maps_impressions': 0, 'search_impressions': 0,
+                        'website_clicks': 0, 'phone_calls': 0, 'direction_requests': 0,
+                        'business_conversations': 0,
+                    })
+
+                    if 'MAPS' in metric_name:
+                        daily[day]['maps_impressions'] += val
+                        daily[day]['impressions'] += val
+                    elif 'SEARCH' in metric_name:
+                        daily[day]['search_impressions'] += val
+                        daily[day]['impressions'] += val
+                    elif metric_name == 'WEBSITE_CLICKS':
+                        daily[day]['website_clicks'] = val
+                    elif metric_name == 'CALL_CLICKS':
+                        daily[day]['phone_calls'] = val
+                    elif metric_name == 'BUSINESS_DIRECTION_REQUESTS':
+                        daily[day]['direction_requests'] = val
+                    elif metric_name == 'BUSINESS_CONVERSATIONS':
+                        daily[day]['business_conversations'] = val
+                        daily[day]['clicks'] = val
+
+            for day_str, vals in daily.items():
+                DailyMetric.objects.update_or_create(
+                    client_id=client_id, platform='google_my_business', date=day_str,
+                    defaults=vals
+                )
+                count += 1
 
         log.status = 'success'; log.records_synced = count
     except Exception as e:
         log.status = 'failed'; log.error_message = str(e)
+        logger.error("sync_gmb failed for client %s: %s", client_id, e)
         raise self.retry(exc=e)
     finally:
         log.finished_at = timezone.now(); log.save()

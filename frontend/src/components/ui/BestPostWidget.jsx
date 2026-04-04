@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Trophy, ExternalLink, TrendingUp, TrendingDown, ImageOff, Play } from 'lucide-react';
 import { topPostsAPI } from '../../services/api';
 import { PLATFORMS, fmt } from '../../services/platforms';
+import SocialPlatformIcon from './SocialPlatformIcon';
+import SegmentedTabs from './SegmentedTabs';
 // Inject keyframe once
 if (typeof document !== 'undefined' && !document.getElementById('best-post-styles')) {
   const s = document.createElement('style');
@@ -99,7 +101,7 @@ function PostCard({ entry, animKey }) {
             <div style={{ ...thumbImg, display: 'flex', alignItems: 'center', justifyContent: 'center', background: platform.bg || '#f1f5f9' }}>
               {post.post_type?.includes('video') || post.video_views > 0
                 ? <Play size={26} style={{ color: platform.color || '#94a3b8' }} />
-                : <span style={{ fontSize: 28 }}>{platform.icon || '📄'}</span>
+                : <SocialPlatformIcon platform={entry?.platform} size={28} />
               }
             </div>
           )}
@@ -201,27 +203,20 @@ export default function BestPostWidget({ clientId, week }) {
       </div>
 
       {/* Platform Tabs */}
-      <div style={tabRow}>
-        {posts.map(entry => {
-          const p   = PLATFORMS[entry.platform] || {};
-          const sel = entry.platform === activeTab;
-          return (
-            <button
-              key={entry.platform}
-              onClick={() => handleTab(entry.platform)}
-              style={{
-                ...tabBtn,
-                borderColor:  sel ? (p.color || '#6366f1') : 'transparent',
-                background:   sel ? (p.bg || '#f0f4ff') : 'transparent',
-                color:        sel ? (p.color || '#1e293b') : '#64748b',
-                fontWeight:   sel ? 700 : 500,
-              }}
-            >
-              {p.icon} {p.label || entry.platform}
-            </button>
-          );
+      <SegmentedTabs
+        items={posts.map((entry) => {
+          const p = PLATFORMS[entry.platform] || {};
+          return {
+            id: entry.platform,
+            label: p.label || entry.platform,
+            icon: <SocialPlatformIcon platform={entry.platform} size={14} />,
+          };
         })}
-      </div>
+        active={activeTab}
+        onChange={handleTab}
+        compact
+        style={tabRow}
+      />
 
       {loading ? (
         <div style={skeleton}>
@@ -255,14 +250,7 @@ const headerIcon = {
 const headerTitle = { margin: 0, fontSize: 16, fontWeight: 800, color: '#1e293b', letterSpacing: '-0.02em' };
 const headerSub   = { margin: '3px 0 0', fontSize: 12, color: '#94a3b8' };
 
-const tabRow = { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 };
-const tabBtn = {
-  padding: '9px 16px',
-  borderRadius: 999,
-  fontSize: 13,
-  border: '1.5px solid',
-  cursor: 'pointer', transition: 'all .15s',
-};
+const tabRow = { marginBottom: 18 };
 
 const cardBody  = { };
 const cardInner = {

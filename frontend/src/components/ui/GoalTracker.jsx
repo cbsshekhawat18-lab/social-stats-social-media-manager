@@ -1,6 +1,7 @@
 import { useGoalProgress } from '../../hooks/useData';
 import { PLATFORMS } from '../../services/platforms';
 import { Target } from 'lucide-react';
+import SocialPlatformIcon from './SocialPlatformIcon';
 
 const METRIC_LABELS = {
   impressions:    'Impressions',
@@ -61,7 +62,12 @@ export default function GoalTracker({ clientId, month, year }) {
               <div style={styles.cardTop}>
                 <div style={styles.meta}>
                   <span style={styles.platformLabel}>
-                    {platform ? `${platform.icon} ${platform.label}` : 'All Platforms'}
+                    {platform ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <SocialPlatformIcon platform={g.platform} size={14} />
+                        {platform.label}
+                      </span>
+                    ) : 'All Platforms'}
                   </span>
                   <span style={styles.metricLabel}>{METRIC_LABELS[g.metric] || g.metric}</span>
                 </div>

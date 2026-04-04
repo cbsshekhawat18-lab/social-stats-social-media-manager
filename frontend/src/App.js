@@ -31,6 +31,13 @@ import TermsOfServicePage  from './pages/TermsOfServicePage';
 import DataDeletionPage    from './pages/DataDeletionPage';
 import logoStatoxBig from './assets/logo_statox_big.png';
 
+const shellMainStyle = {
+  marginLeft: 260,
+  flex: 1,
+  minHeight: '100vh',
+  background: 'linear-gradient(180deg, #f6fdff 0%, #f3fbff 32%, #f8fbff 68%, #f5f9ff 100%)',
+};
+
 // ── Protected route wrapper ───────────────────────────────────────────────────
 function Protected({ children, roles }) {
   const { user, loading } = useAuth();
@@ -61,7 +68,7 @@ function AdminLayout() {
       />
       <main
         className="main-content"
-        style={{ marginLeft: 260, flex: 1, minHeight: '100vh', background: '#f0f4f9' }}
+        style={shellMainStyle}
       >
         <Routes>
           <Route index                     element={<AdminOverview />} />
@@ -99,15 +106,53 @@ function AdminClientView() {
   );
 }
 
+// ── Onboarding reminder banner ────────────────────────────────────────────────
+function OnboardingBanner() {
+  const { user } = useAuth();
+  const [dismissed, setDismissed] = useState(
+    () => sessionStorage.getItem('onboarding_banner_dismissed') === 'true'
+  );
+
+  if (!user || user.onboarding_complete || dismissed) return null;
+
+  const handleDismiss = () => {
+    sessionStorage.setItem('onboarding_banner_dismissed', 'true');
+    setDismissed(true);
+  };
+
+  return (
+    <div style={{
+      background: 'linear-gradient(90deg, #00d7ff 0%, #0099bb 100%)',
+      color: '#fff',
+      padding: '10px 20px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      fontSize: 13,
+      fontWeight: 600,
+      zIndex: 100,
+    }}>
+      <span>
+        🚀 Complete your profile setup to unlock all features.{' '}
+        <a href="/dashboard/onboarding" style={{ color: '#fff', textDecoration: 'underline' }}>
+          Complete setup →
+        </a>
+      </span>
+      <button
+        onClick={handleDismiss}
+        style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 0 }}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 // ── Client layout with sidebar ────────────────────────────────────────────────
 function ClientLayout() {
   const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Redirect to onboarding if not complete (except when already on onboarding page)
-  if (user && user.role === 'client' && !user.onboarding_complete && !window.location.pathname.includes('/onboarding')) {
-    return <Navigate to="/dashboard/onboarding" replace />;
-  }
 
   return (
     <div style={{ display: 'flex' }}>
@@ -118,8 +163,9 @@ function ClientLayout() {
       />
       <main
         className="main-content"
-        style={{ marginLeft: 260, flex: 1, minHeight: '100vh', background: '#f0f4f9' }}
+        style={shellMainStyle}
       >
+        <OnboardingBanner />
         <Routes>
           <Route index           element={<ClientDashboard clientId={user?.client_id} />} />
           <Route path="posts"    element={<MyPostsPage />} />

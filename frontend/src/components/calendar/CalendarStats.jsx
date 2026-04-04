@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { PLATFORMS } from '../../services/platforms';
 import HeatmapCalendar from './HeatmapCalendar';
+import SocialPlatformIcon from '../ui/SocialPlatformIcon';
 
 const PLATFORM_COLORS = Object.fromEntries(
   Object.entries(PLATFORMS).map(([k, v]) => [k, v.color])
@@ -66,7 +67,7 @@ export default function CalendarStats({ stats, month, year, postsByDate }) {
     name:  PLATFORMS[k]?.label || k,
     value: v,
     color: PLATFORM_COLORS[k] || '#64748B',
-    icon:  PLATFORMS[k]?.icon || '🔗',
+    key: k,
   }));
 
   // Day of week bar data
@@ -133,7 +134,10 @@ export default function CalendarStats({ stats, month, year, postsByDate }) {
               {platformData.map(p => (
                 <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color, display: 'inline-block' }} />
-                  <span style={{ color: '#374151' }}>{p.icon} {p.name}: <strong>{p.value}</strong></span>
+                  <span style={{ color: '#374151', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <SocialPlatformIcon platform={p.key} size={14} />
+                    {p.name}: <strong>{p.value}</strong>
+                  </span>
                 </div>
               ))}
             </div>
@@ -197,11 +201,11 @@ export default function CalendarStats({ stats, month, year, postsByDate }) {
           <div style={{ color: '#94A3B8', fontSize: 13 }}>No published posts yet.</div>
         ) : (() => {
           const bp = stats.best_performing_post;
-          const p  = PLATFORMS[bp.platform] || { color: '#64748B', icon: '🔗', label: bp.platform };
+          const p  = PLATFORMS[bp.platform] || { color: '#64748B', label: bp.platform };
           return (
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <span style={{ fontSize: 22 }}>{p.icon}</span>
+                <SocialPlatformIcon platform={bp.platform} size={22} />
                 <div>
                   <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{p.label}</div>
                   {bp.published_at && (

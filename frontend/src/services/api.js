@@ -69,9 +69,9 @@ export const oauthAPI = {
   status:     (clientId)           => api.get(`/oauth/status/${clientId}/`),
   disconnect: (clientId, platform) => api.delete(`/oauth/disconnect/${clientId}/${platform}/`),
   // Connect URLs (redirect browser directly)
-  facebookUrl: (clientId) => `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/oauth/facebook/start/${clientId}/`,
-  googleUrl:   (clientId) => `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/oauth/google/start/${clientId}/`,
-  linkedinUrl: (clientId) => `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/oauth/linkedin/start/${clientId}/`,
+  facebookUrl: (clientId)           => `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/oauth/facebook/start/${clientId}/`,
+  googleUrl:   (clientId, platform) => `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/oauth/google/start/${clientId}/?platform=${platform || 'all'}`,
+  linkedinUrl: (clientId)           => `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/oauth/linkedin/start/${clientId}/`,
 };
 
 // ── Overview ──────────────────────────────────────────
@@ -147,6 +147,12 @@ export const calendarAPI = {
   suggestTimes: (params)   => api.get('/calendar/suggest-times/',       { params }),
 };
 
+// ── GMB Business Info & Reviews ───────────────────────
+export const gmbAPI = {
+  info:    (clientId)         => api.get(`/gmb/info/${clientId}/`),
+  reviews: (clientId, params) => api.get(`/gmb/reviews/${clientId}/`, { params }),
+};
+
 // ── Onboarding ────────────────────────────────────────
 export const onboardingAPI = {
   list:   (params) => api.get('/onboarding/', { params }),
@@ -170,6 +176,14 @@ const publicApi = axios.create({
 export const publicReportAPI = {
   get:    (token)          => publicApi.get(`/public/report/${token}/`),
   verify: (token, password) => publicApi.post(`/public/report/${token}/verify/`, { password }),
+};
+
+export const lookupsAPI = {
+  get: () => publicApi.get('/public/lookups/'),
+};
+
+export const contentAPI = {
+  getPublic: (key) => publicApi.get(`/public/content/${key}/`),
 };
 
 // ── Management (superadmin only) ──────────────────────

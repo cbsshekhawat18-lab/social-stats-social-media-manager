@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { alertsAPI } from '../services/api';
+import { formatTimeAgo } from '../services/formatters';
 import { AlertCircle, CheckCircle, RefreshCw, Bell, BellOff, ChevronDown } from 'lucide-react';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
+import PageHeader from '../components/layout/PageHeader';
+import SegmentedTabs from '../components/ui/SegmentedTabs';
 
 const ALERT_TYPE_META = {
   token_expired:      { label: 'Token Expired',        color: '#dc2626', bg: '#fef2f2', icon: '🔑' },
@@ -10,19 +14,6 @@ const ALERT_TYPE_META = {
   goal_at_risk:       { label: 'Goal At Risk',          color: '#9333ea', bg: '#faf5ff', icon: '🎯' },
   follower_milestone: { label: 'Follower Milestone',    color: '#00d7ff', bg: '#e6fbff', icon: '🎉' },
 };
-
-const PLATFORM_ICONS = {
-  facebook: '📘', instagram: '📸', youtube: '▶️', linkedin: '💼',
-  google_my_business: '🏢',
-};
-
-function timeAgo(dateStr) {
-  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (diff < 60)     return `${diff}s ago`;
-  if (diff < 3600)   return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400)  return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
 
 export default function AlertsPage() {
   const [alerts, setAlerts]         = useState([]);
@@ -68,32 +59,27 @@ export default function AlertsPage() {
   }, {});
 
   return (
-    <div style={{ padding: '32px 36px', maxWidth: 900, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#0f172a' }}>
-            Alerts
-          </h1>
-          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 14 }}>
-            {unreadCount > 0
-              ? `${unreadCount} unread alert${unreadCount > 1 ? 's' : ''} across all users`
-              : 'All caught up — no unread alerts'}
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={fetchAlerts} style={btnSecondary}>
-            <RefreshCw size={14} />
-            Refresh
-          </button>
-          {unreadCount > 0 && (
-            <button onClick={handleMarkAllRead} disabled={marking} style={btnPrimary}>
-              <CheckCircle size={14} />
-              {marking ? 'Marking…' : 'Mark All Read'}
+    <div className="app-page app-page--md">
+      <PageHeader
+        title="Alerts"
+        subtitle={unreadCount > 0
+          ? `${unreadCount} unread alert${unreadCount > 1 ? 's' : ''} across all users`
+          : 'All caught up — no unread alerts'}
+        actions={(
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={fetchAlerts} style={btnSecondary}>
+              <RefreshCw size={14} />
+              Refresh
             </button>
-          )}
-        </div>
-      </div>
+            {unreadCount > 0 && (
+              <button onClick={handleMarkAllRead} disabled={marking} style={btnPrimary}>
+                <CheckCircle size={14} />
+                {marking ? 'Marking…' : 'Mark All Read'}
+              </button>
+            )}
+          </div>
+        )}
+      />
 
       {/* Summary chips */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
@@ -126,25 +112,17 @@ export default function AlertsPage() {
       </div>
 
       {/* Read filter */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {['unread', 'read', 'all'].map(f => (
-          <button
-            key={f}
-            onClick={() => setFilterRead(f)}
-            style={{
-              padding: '6px 16px', borderRadius: 8, border: '1.5px solid',
-              cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
-              background:  filterRead === f ? '#00d7ff' : '#fff',
-              borderColor: filterRead === f ? '#00d7ff' : '#e2e8f0',
-              color:       filterRead === f ? '#0f172a' : '#64748b',
-            }}
-          >
-            {f === 'unread' ? <><Bell size={12} style={{ verticalAlign: 'middle', marginRight: 5 }} />Unread</> :
-             f === 'read'   ? <><BellOff size={12} style={{ verticalAlign: 'middle', marginRight: 5 }} />Read</> :
-             'All'}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs
+        items={[
+          { id: 'unread', label: 'Unread', icon: <Bell size={12} /> },
+          { id: 'read', label: 'Read', icon: <BellOff size={12} /> },
+          { id: 'all', label: 'All' },
+        ]}
+        active={filterRead}
+        onChange={setFilterRead}
+        compact
+        style={{ marginBottom: 20 }}
+      />
 
       {/* Alert list */}
       {loading ? (
@@ -198,8 +176,9 @@ export default function AlertsPage() {
                       {meta.label}
                     </span>
                     {alert.platform && (
-                      <span style={{ fontSize: 12, color: '#64748b' }}>
-                        {PLATFORM_ICONS[alert.platform] || '📱'} {alert.platform}
+                      <span style={{ fontSize: 12, color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                        <SocialPlatformIcon platform={alert.platform} size={13} />
+                        {alert.platform}
                       </span>
                     )}
                     {!alert.is_read && (
@@ -216,7 +195,7 @@ export default function AlertsPage() {
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: '#94a3b8' }}>
                     <span>🏢 {alert.client_name}</span>
-                    <span>🕐 {timeAgo(alert.created_at)}</span>
+                    <span>🕐 {formatTimeAgo(alert.created_at)}</span>
                   </div>
                 </div>
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { oauthAPI } from '../../services/api';
 import { PLATFORMS } from '../../services/platforms';
 import { Lightbulb, Zap } from 'lucide-react';
+import SocialPlatformIcon from './SocialPlatformIcon';
 
 export default function ConnectedAccounts({ clientId, status, onRefresh }) {
   const [loading, setLoading] = useState({});
@@ -14,8 +15,8 @@ export default function ConnectedAccounts({ clientId, status, onRefresh }) {
     const urlMap = {
       facebook:           oauthAPI.facebookUrl(clientId),
       instagram:          oauthAPI.facebookUrl(clientId), // same flow
-      youtube:            oauthAPI.googleUrl(clientId),
-      google_my_business: oauthAPI.googleUrl(clientId),   // same flow
+      youtube:            oauthAPI.googleUrl(clientId, 'youtube'),
+      google_my_business: oauthAPI.googleUrl(clientId, 'google_my_business'),
       linkedin:           oauthAPI.linkedinUrl(clientId),
     };
     // Redirect browser to OAuth start
@@ -33,7 +34,7 @@ export default function ConnectedAccounts({ clientId, status, onRefresh }) {
     }
   };
 
-  const platformOrder = ['facebook','instagram','youtube','linkedin','google_my_business'];
+  const platformOrder = ['facebook','instagram','linkedin','youtube','google_my_business'];
 
   return (
     <div>
@@ -51,19 +52,18 @@ export default function ConnectedAccounts({ clientId, status, onRefresh }) {
           const conn   = active || expired;
 
           // Instagram is always connected via Facebook; only show note (no separate button)
-          const ytConnected  = (status['youtube']  || {}).status === 'active';
           const fbConnected  = (status['facebook'] || {}).status === 'active';
           const groupNote = key === 'instagram' && fbConnected && conn
             ? <span style={styles.groupNoteInner}><Zap size={13} style={{ flexShrink: 0 }} /> Connected via Facebook</span>
-            : key === 'google_my_business' && ytConnected && conn
-            ? <span style={styles.groupNoteInner}><Zap size={13} style={{ flexShrink: 0 }} /> Connected via Google</span>
             : null;
 
           return (
             <div key={key} style={{ ...styles.card, borderLeft: `4px solid ${p.color}` }}>
               <div style={styles.cardTop}>
                 <div style={styles.platformInfo}>
-                  <span style={styles.platformIcon}>{p.icon}</span>
+                  <span style={styles.platformIcon}>
+                    <SocialPlatformIcon platform={key} size={28} />
+                  </span>
                   <div>
                     <div style={styles.platformName}>{p.label}</div>
                     {s.account_name && (

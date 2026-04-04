@@ -83,7 +83,7 @@ const demoPublishedPosts = [
 ];
 
 const demoScheduledOffsets = [1, 3, 5, 8, 10];
-const demoScheduledPlatforms = ['instagram', 'facebook', 'linkedin', 'youtube', 'google_my_business'];
+const demoScheduledPlatforms = ['facebook', 'instagram', 'linkedin', 'youtube', 'google_my_business'];
 
 export function getDemoClientSummary() {
   const byPlatformMap = {};

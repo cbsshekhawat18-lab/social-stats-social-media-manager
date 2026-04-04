@@ -13,12 +13,13 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.db.models import F
 from django.utils import timezone
 
-from .models import Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep, ensure_client_profile
+from .models import Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep, SiteContent, LookupCollection, ensure_client_profile, GMBBusinessInfo, GMBReview
 from .serializers import (
     ClientSerializer, PlatformCredentialSerializer,
     DailyMetricSerializer, PostMetricSerializer, SyncLogSerializer, UserSerializer, ClientGoalSerializer,
     AlertSerializer, AIInsightSerializer, WeeklyTopPostSerializer, SharedReportSerializer,
-    OnboardingStepSerializer,
+    OnboardingStepSerializer, SiteContentSerializer, LookupCollectionSerializer,
+    GMBBusinessInfoSerializer, GMBReviewSerializer,
 )
 
 
@@ -109,6 +110,21 @@ def check_client_access(request, client_id):
         return False
 
 
+def _silent_token_refresh(client_id):
+    """Silently refresh any expired OAuth tokens for a client. Fire-and-forget."""
+    try:
+        from .oauth_views import _refresh_google_token, _refresh_facebook_token
+        creds = PlatformCredential.objects.filter(client_id=client_id, is_active=True)
+        for cred in creds:
+            if cred.is_expired and cred.refresh_token:
+                if cred.platform in ('youtube', 'google_my_business'):
+                    _refresh_google_token(cred)
+                elif cred.platform in ('facebook', 'instagram'):
+                    _refresh_facebook_token(cred)
+    except Exception:
+        pass  # Never block the /me response
+
+
 # ── Me endpoint ───────────────────────────────────────────────────────────────
 @api_view(['GET'])
 def me(request):
@@ -121,6 +137,9 @@ def me(request):
         data = UserSerializer(user).data
         data['permissions'] = PermissionChecker.get_user_permissions(profile)
         data['onboarding_complete'] = profile.client.onboarding_complete if profile.client else False
+        # Silently refresh any expired platform tokens on every page load
+        if profile.client_id:
+            _silent_token_refresh(profile.client_id)
         if profile.role == 'client' and profile.client:
             try:
                 cfg = profile.client.page_config
@@ -197,6 +216,21 @@ class ClientViewSet(viewsets.ModelViewSet):
             total_website_clicks=Sum('website_clicks'),
             total_phone_calls=Sum('phone_calls'),
             total_direction_requests=Sum('direction_requests'),
+            total_watch_time_minutes=Sum('watch_time_minutes'),
+            total_subscribers_lost=Sum('subscribers_lost'),
+            avg_view_duration=Avg('avg_view_duration'),
+            # Facebook
+            total_followers_lost=Sum('followers_lost'),
+            total_negative_feedback=Sum('negative_feedback'),
+            total_fb_video_views=Sum('fb_video_views'),
+            total_fb_video_watch_time=Sum('fb_video_watch_time'),
+            # Instagram
+            total_accounts_engaged=Sum('accounts_engaged'),
+            total_total_interactions=Sum('total_interactions'),
+            total_email_contacts=Sum('email_contacts'),
+            total_phone_call_clicks=Sum('phone_call_clicks'),
+            total_direction_clicks=Sum('direction_clicks'),
+            total_ig_followers_lost=Sum('ig_followers_lost'),
             avg_ctr=Avg('ctr'),
             avg_engagement=Avg('engagement_rate'),
         )
@@ -876,3 +910,66 @@ class OverviewView(APIView):
             'by_platform':   by_platform,
             'recent_syncs':  SyncLogSerializer(recent_syncs, many=True).data,
         })
+
+
+class PublicSiteContentView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request, key):
+        item = SiteContent.objects.filter(key=key, is_public=True).first()
+        if not item:
+            return Response({'error': 'Content not found'}, status=404)
+        return Response(SiteContentSerializer(item).data)
+
+
+class PublicLookupView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        collections = LookupCollection.objects.filter(is_public=True).prefetch_related('items')
+        data = {}
+        for collection in collections:
+            serialized = LookupCollectionSerializer(collection).data
+            data[collection.key] = serialized['items']
+        return Response(data)
+
+
+# ── GMB Business Info ─────────────────────────────────────────────────────────
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def gmb_info(request, client_id):
+    profile = request.user.profile
+    # Only allow access to own client or staff/admin
+    if profile.role == 'client' and profile.client_id != client_id:
+        return Response({'error': 'Forbidden'}, status=403)
+    try:
+        info = GMBBusinessInfo.objects.get(client_id=client_id)
+        return Response(GMBBusinessInfoSerializer(info).data)
+    except GMBBusinessInfo.DoesNotExist:
+        return Response({}, status=200)
+
+
+# ── GMB Reviews ───────────────────────────────────────────────────────────────
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def gmb_reviews(request, client_id):
+    profile = request.user.profile
+    if profile.role == 'client' and profile.client_id != client_id:
+        return Response({'error': 'Forbidden'}, status=403)
+    qs = GMBReview.objects.filter(client_id=client_id).order_by('-published_at')
+    # Optional pagination via ?page=1&page_size=20
+    try:
+        page_size = int(request.query_params.get('page_size', 20))
+        page      = int(request.query_params.get('page', 1))
+    except ValueError:
+        page_size, page = 20, 1
+    total  = qs.count()
+    offset = (page - 1) * page_size
+    items  = qs[offset:offset + page_size]
+    return Response({
+        'count':   total,
+        'page':    page,
+        'results': GMBReviewSerializer(items, many=True).data,
+    })

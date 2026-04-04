@@ -7,7 +7,8 @@ from .views import (
     SyncLogViewSet, GoalViewSet, AlertViewSet, AIInsightViewSet, WeeklyTopPostViewSet,
     SharedReportViewSet, public_report, public_report_verify,
     OnboardingViewSet,
-    OverviewView, create_client_user,
+    OverviewView, PublicSiteContentView, PublicLookupView, create_client_user,
+    gmb_info, gmb_reviews,
 )
 from .roi_views import ROISettingsView, ROICalculateView, ROIReportView, ROILiveView
 from .calendar_views import (
@@ -92,6 +93,8 @@ urlpatterns = [
     # Public report (no auth)
     path('public/report/<uuid:token>/',        public_report,        name='public_report'),
     path('public/report/<uuid:token>/verify/', public_report_verify, name='public_report_verify'),
+    path('public/content/<slug:key>/',         PublicSiteContentView.as_view(), name='public_site_content'),
+    path('public/lookups/',                    PublicLookupView.as_view(),      name='public_lookups'),
 
     # Calendar
     path('calendar/suggest-times/', SuggestTimesView.as_view(), name='calendar_suggest_times'),
@@ -121,6 +124,10 @@ urlpatterns = [
     path('ai/hashtags/',                          hashtag_view,   name='ai_hashtags'),
     path('ai/hashtags/<int:pk>/save-set/',         save_set,       name='ai_hashtags_save_set'),
     path('ai/hashtags/saved-sets/',                get_saved_sets, name='ai_hashtags_saved_sets'),
+
+    # GMB Business Info & Reviews
+    path('gmb/info/<int:client_id>/',             gmb_info,    name='gmb_info'),
+    path('gmb/reviews/<int:client_id>/',          gmb_reviews, name='gmb_reviews'),
 
     # REST API
     path('', include(router.urls)),

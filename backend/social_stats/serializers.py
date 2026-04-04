@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep, Competitor, ONBOARDING_STEP_DESCRIPTIONS, ROISettings, ROIReport
+from .models import Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep, Competitor, ONBOARDING_STEP_DESCRIPTIONS, ROISettings, ROIReport, SiteContent, LookupCollection, LookupItem, GMBBusinessInfo, GMBReview
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -210,3 +210,45 @@ class ROIReportSerializer(serializers.ModelSerializer):
         model  = ROIReport
         fields = '__all__'
         read_only_fields = ['generated_at']
+
+
+class SiteContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteContent
+        fields = ['key', 'title', 'effective_date', 'last_updated', 'content', 'is_public', 'updated_at']
+
+
+class LookupItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LookupItem
+        fields = ['key', 'label', 'value', 'parent_key', 'sort_order', 'metadata']
+
+
+class LookupCollectionSerializer(serializers.ModelSerializer):
+    items = LookupItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = LookupCollection
+        fields = ['key', 'title', 'items']
+
+
+class GMBBusinessInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = GMBBusinessInfo
+        fields = [
+            'id', 'client', 'business_name', 'address', 'phone', 'website',
+            'category', 'additional_categories', 'description', 'opening_date',
+            'is_verified', 'is_open', 'regular_hours', 'special_hours',
+            'profile_photo_url', 'cover_photo_url', 'maps_url', 'place_id',
+            'latitude', 'longitude', 'avg_rating', 'total_reviews', 'synced_at',
+        ]
+
+
+class GMBReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = GMBReview
+        fields = [
+            'id', 'client', 'review_id', 'reviewer_name', 'reviewer_photo',
+            'rating', 'comment', 'owner_reply', 'reply_updated_at',
+            'published_at', 'synced_at',
+        ]

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { clientsAPI, oauthAPI, overviewAPI, syncLogsAPI, goalsAPI, alertsAPI } from '../services/api';
+import { clientsAPI, oauthAPI, overviewAPI, syncLogsAPI, goalsAPI, alertsAPI, lookupsAPI } from '../services/api';
+import { PLATFORM_LIST } from '../services/platforms';
 import { format, subDays } from 'date-fns';
 
 export function useDateRange(defaultDays = 30) {
@@ -212,4 +213,32 @@ export function useAlerts(clientId) {
   const unreadCount = alerts.filter(a => !a.is_read).length;
 
   return { alerts, loading, unreadCount, markRead, markAllRead, refetch: fetch };
+}
+
+export function useLookups() {
+  const [lookups, setLookups] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const fetch = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await lookupsAPI.get();
+      const data = res.data || {};
+
+      if (Array.isArray(data.platforms)) {
+        data.platforms = data.platforms
+          .filter(item => PLATFORM_LIST.includes(item.key))
+          .sort((a, b) => PLATFORM_LIST.indexOf(a.key) - PLATFORM_LIST.indexOf(b.key));
+      }
+
+      setLookups(data);
+    } catch (e) {
+      console.error('Failed to load lookups:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetch(); }, [fetch]);
+  return { lookups, loading, refetch: fetch };
 }

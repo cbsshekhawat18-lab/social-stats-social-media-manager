@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Link2, Copy, Check, X, Lock, Calendar, Layers, Clock, Share2, Trash2, Eye } from 'lucide-react';
 import { sharedReportsAPI } from '../../services/api';
 import { PLATFORMS } from '../../services/platforms';
+import SocialPlatformIcon from './SocialPlatformIcon';
 
 const ALL_PLATFORMS = Object.keys(PLATFORMS);
 
@@ -162,7 +163,10 @@ export default function ShareReportModal({ clientId, onClose }) {
                       borderColor: sel ? (pl?.color || '#6366f1') : '#e5e7eb',
                     }}
                   >
-                    {pl?.icon} {pl?.label || p}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <SocialPlatformIcon platform={p} size={14} />
+                      {pl?.label || p}
+                    </span>
                   </button>
                 );
               })}

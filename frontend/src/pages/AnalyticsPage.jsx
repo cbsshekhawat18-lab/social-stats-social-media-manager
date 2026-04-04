@@ -8,14 +8,16 @@ import { overviewAPI, clientsAPI } from '../services/api';
 import { useClients, useDateRange } from '../hooks/useData';
 import { TrendingUp, TrendingDown, Minus, RefreshCw, Users, Eye, MousePointer, Play, UserPlus } from 'lucide-react';
 import DateRangePicker from '../components/ui/DateRangePicker';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
+import PageHeader from '../components/layout/PageHeader';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PLATFORM_META = {
-  facebook:           { label: 'Facebook',           color: '#1877F2', icon: '📘', lightBg: '#EBF5FF' },
-  instagram:          { label: 'Instagram',          color: '#E1306C', icon: '📸', lightBg: '#FFF0F5' },
-  youtube:            { label: 'YouTube',            color: '#FF0000', icon: '▶️',  lightBg: '#FFF5F5' },
-  linkedin:           { label: 'LinkedIn',           color: '#0A66C2', icon: '💼', lightBg: '#EEF4FF' },
-  google_my_business: { label: 'Google My Business', color: '#34A853', icon: '🏢', lightBg: '#F0FFF4' },
+  facebook:           { label: 'Facebook',           color: '#1877F2', lightBg: '#EBF5FF' },
+  instagram:          { label: 'Instagram',          color: '#E1306C', lightBg: '#FFF0F5' },
+  youtube:            { label: 'YouTube',            color: '#FF0000', lightBg: '#FFF5F5' },
+  linkedin:           { label: 'LinkedIn',           color: '#0A66C2', lightBg: '#EEF4FF' },
+  google_my_business: { label: 'Google My Business', color: '#34A853', lightBg: '#F0FFF4' },
 };
 
 const METRIC_META = {
@@ -193,7 +195,6 @@ export default function AnalyticsPage() {
     ...p,
     label: PLATFORM_META[p.platform]?.label || p.platform,
     color: PLATFORM_META[p.platform]?.color || '#00d7ff',
-    icon:  PLATFORM_META[p.platform]?.icon  || '📱',
   }));
 
   // Aggregate totals from overview platform data
@@ -242,53 +243,44 @@ export default function AnalyticsPage() {
 
   return (
     <div style={{ padding: '32px 36px', background: '#f0f4f9', minHeight: '100vh' }}>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 16 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#0f172a' }}>Analytics</h1>
-          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 14 }}>
-            {isClientSelected
-              ? `Viewing ${selectedClientName} — ${range.since} to ${range.until}`
-              : `All clients overview — ${range.since} to ${range.until}`}
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Date range */}
-          <DateRangePicker range={range} onChange={setRange} />
-
-          {/* Client filter */}
-          <select
-            value={selectedClientId}
-            onChange={e => setSelectedClientId(e.target.value)}
-            style={selectStyle}
-          >
-            <option value="all">All Users</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
-          </select>
-
-          {/* Platform filter (only when client selected) */}
-          {isClientSelected && (
+      <PageHeader
+        title="Analytics"
+        subtitle={isClientSelected
+          ? `Viewing ${selectedClientName} — ${range.since} to ${range.until}`
+          : `All clients overview — ${range.since} to ${range.until}`}
+        actions={(
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            <DateRangePicker range={range} onChange={setRange} />
             <select
-              value={selectedPlatform}
-              onChange={e => setSelectedPlatform(e.target.value)}
+              value={selectedClientId}
+              onChange={e => setSelectedClientId(e.target.value)}
               style={selectStyle}
             >
-              <option value="all">All Platforms</option>
-              {Object.entries(PLATFORM_META).map(([k, v]) => (
-                <option key={k} value={k}>{v.icon} {v.label}</option>
-              ))}
+              <option value="all">All Users</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.company}</option>)}
             </select>
-          )}
-
-          <button
-            onClick={fetchOverview}
-            style={{ ...btnSecondary, padding: '8px 12px' }}
-            title="Refresh"
-          >
-            <RefreshCw size={14} />
-          </button>
-        </div>
-      </div>
+            {isClientSelected && (
+              <select
+                value={selectedPlatform}
+                onChange={e => setSelectedPlatform(e.target.value)}
+                style={selectStyle}
+              >
+                <option value="all">All Platforms</option>
+                {Object.entries(PLATFORM_META).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+            )}
+            <button
+              onClick={fetchOverview}
+              style={{ ...btnSecondary, padding: '8px 12px' }}
+              title="Refresh"
+            >
+              <RefreshCw size={14} />
+            </button>
+          </div>
+        )}
+      />
 
       {/* ── KPI Cards ──────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -566,9 +558,8 @@ export default function AnalyticsPage() {
                             width: 32, height: 32, borderRadius: 8, display: 'flex',
                             alignItems: 'center', justifyContent: 'center',
                             background: PLATFORM_META[p.platform]?.lightBg || '#e6fbff',
-                            fontSize: 16,
                           }}>
-                            {p.icon}
+                            <SocialPlatformIcon platform={p.platform} size={16} />
                           </div>
                           <div>
                             <div style={{ fontWeight: 700, color: '#0f172a' }}>{p.label}</div>

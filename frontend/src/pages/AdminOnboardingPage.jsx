@@ -67,7 +67,7 @@ export default function AdminOnboardingPage() {
   }
 
   return (
-    <div style={styles.page}>
+    <div className="app-page app-page--content app-page--lg">
       <PageHeader
         title="Onboarding"
         subtitle="Track setup progress across all clients and complete steps from one place."
@@ -166,7 +166,6 @@ export default function AdminOnboardingPage() {
 }
 
 const styles = {
-  page: { padding: '28px 32px 40px', maxWidth: 1320, margin: '0 auto' },
   emptyState: {
     background: '#fff',
     borderRadius: 16,

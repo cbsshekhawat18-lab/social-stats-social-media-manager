@@ -1,25 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { sharedReportsAPI, roiAPI } from '../services/api';
 import { useClients } from '../hooks/useData';
+import { formatTimeAgo } from '../services/formatters';
 import {
   Link2, Copy, Eye, Trash2, Check, Lock, ExternalLink,
   FileText, BarChart3, TrendingUp, RefreshCw, Plus,
 } from 'lucide-react';
 import ShareReportModal from '../components/ui/ShareReportModal';
-
-const PLATFORM_ICONS = {
-  facebook: '📘', instagram: '📸', youtube: '▶️',
-  linkedin: '💼', google_my_business: '🏢',
-};
-
-function timeAgo(dateStr) {
-  if (!dateStr) return '—';
-  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-  if (diff < 60)    return `${diff}s ago`;
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
+import { getPlatformLabel } from '../services/platforms';
+import PageHeader from '../components/layout/PageHeader';
+import SegmentedTabs from '../components/ui/SegmentedTabs';
 
 function buildShareUrl(report) {
   if (report?.share_url) return report.share_url;
@@ -118,11 +108,11 @@ function SharedLinksPanel({ clientFilter }) {
                   <div style={{ fontSize: 12, color: '#64748b', display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                     <span>📅 {link.date_from} → {link.date_until}</span>
                     <span>
-                      {(link.platforms || []).map(p => PLATFORM_ICONS[p] || '📱').join(' ')}
+                      {(link.platforms || []).map(p => getPlatformLabel(p, { short: true })).join(', ')}
                       {link.platforms?.length === 0 && 'All platforms'}
                     </span>
                     <span><Eye size={10} style={{ verticalAlign: 'middle' }} /> {link.view_count} views</span>
-                    <span>Created {timeAgo(link.created_at)}</span>
+                    <span>Created {formatTimeAgo(link.created_at)}</span>
                     {link.expires_at && (
                       <span style={{ color: link.is_expired ? '#dc2626' : '#64748b' }}>
                         Expires {new Date(link.expires_at).toLocaleDateString()}
@@ -300,57 +290,38 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div style={{ padding: '32px 36px', maxWidth: 1100, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#0f172a' }}>
-            Reports
-          </h1>
-          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 14 }}>
-            Manage shared client report links and monthly ROI summaries
-          </p>
-        </div>
-        {/* Client filter */}
-        <select
-          value={clientFilter}
-          onChange={e => setClientFilter(e.target.value)}
-          style={{ ...selectStyle, minWidth: 200 }}
-        >
-          <option value="">All clients</option>
-          {clients.map(c => (
-            <option key={c.id} value={c.id}>{c.company}</option>
-          ))}
-        </select>
-      </div>
+    <div className="app-page app-page--md">
+      <PageHeader
+        title="Reports"
+        subtitle="Manage shared client report links and monthly ROI summaries"
+        actions={(
+          <select
+            value={clientFilter}
+            onChange={e => setClientFilter(e.target.value)}
+            style={{ ...selectStyle, minWidth: 200 }}
+          >
+            <option value="">All clients</option>
+            {clients.map(c => (
+              <option key={c.id} value={c.id}>{c.company}</option>
+            ))}
+          </select>
+        )}
+      />
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: '#f0f4f9', borderRadius: 12, padding: 4, width: 'fit-content' }}>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 7,
-              padding: '8px 18px', borderRadius: 9, border: 'none', cursor: 'pointer',
-              fontSize: 13, fontWeight: 700, transition: 'all 0.15s',
-              background: activeTab === tab.id ? '#fff' : 'transparent',
-              color:      activeTab === tab.id ? '#0f172a' : '#64748b',
-              boxShadow:  activeTab === tab.id ? '0 1px 6px rgba(0,0,0,0.08)' : 'none',
-            }}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs
+        items={tabs}
+        active={activeTab}
+        onChange={setActiveTab}
+        compact
+        style={{ marginBottom: 24 }}
+      />
 
       {/* Panel */}
-      <div style={{
-        background: '#fff', borderRadius: 16,
-        border: '1px solid #e2e8f0', padding: '24px 28px',
-        boxShadow: '0 1px 8px rgba(0,0,0,0.04)',
-      }}>
+      <div
+        className="app-surface app-surface--panel"
+        style={{ padding: '24px 28px', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}
+      >
         {activeTab === 'shared' && (
           <SharedLinksPanel clientFilter={clientFilter || undefined} />
         )}

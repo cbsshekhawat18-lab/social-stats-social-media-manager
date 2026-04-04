@@ -1,5 +1,6 @@
 import { format, parseISO, isToday, isTomorrow } from 'date-fns';
 import { PLATFORMS } from '../../services/platforms';
+import SocialPlatformIcon from '../ui/SocialPlatformIcon';
 
 function relativeDay(dateStr) {
   const d = parseISO(dateStr);
@@ -25,7 +26,7 @@ export default function UpcomingPosts({ posts }) {
       paddingBottom: 4,
     }}>
       {posts.map(post => {
-        const p = PLATFORMS[post.platform] || { color: '#64748B', icon: '🔗', label: post.platform };
+        const p = PLATFORMS[post.platform] || { color: '#64748B', label: post.platform };
         const timeStr = post.scheduled_at
           ? format(parseISO(post.scheduled_at), 'h:mm a')
           : '';
@@ -43,7 +44,7 @@ export default function UpcomingPosts({ posts }) {
             padding: '10px 12px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <span style={{ fontSize: 18 }}>{p.icon}</span>
+              <SocialPlatformIcon platform={post.platform} size={18} />
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a' }}>{dayStr}</div>
                 <div style={{ fontSize: 10, color: '#64748B' }}>{timeStr}</div>

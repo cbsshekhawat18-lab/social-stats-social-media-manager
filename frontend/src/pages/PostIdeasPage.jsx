@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { useClients } from '../hooks/useData';
+import { useClients, useLookups } from '../hooks/useData';
 import { postIdeasAPI } from '../services/api';
+import SocialPlatformIcon from '../components/ui/SocialPlatformIcon';
+import PageHeader from '../components/layout/PageHeader';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer,
@@ -30,11 +32,11 @@ const BUSINESS_TYPES = [
 ];
 
 const PLATFORMS = [
-  { value: 'instagram',          label: 'Instagram',  icon: '📸' },
-  { value: 'facebook',           label: 'Facebook',   icon: '👍' },
-  { value: 'linkedin',           label: 'LinkedIn',   icon: '💼' },
-  { value: 'youtube',            label: 'YouTube',    icon: '▶️' },
-  { value: 'google_my_business', label: 'GMB',        icon: '📍' },
+  { value: 'facebook',           label: 'Facebook' },
+  { value: 'instagram',          label: 'Instagram' },
+  { value: 'linkedin',           label: 'LinkedIn' },
+  { value: 'youtube',            label: 'YouTube' },
+  { value: 'google_my_business', label: 'GMB' },
 ];
 
 const POSTS_PER_WEEK_OPTIONS = [
@@ -74,7 +76,15 @@ function classifyPostType(pt, topic) {
 export default function PostIdeasPage({ clientId: propClientId = null }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
+  const { lookups } = useLookups();
   const { clients } = useClients();
+
+  const businessTypeOptions = lookups.business_types?.map(item => ({ value: item.key, label: item.label })) || BUSINESS_TYPES;
+  const monthOptions = lookups.months?.map((item, index) => ({
+    value: Number(item.key) || index + 1,
+    label: item.label || String(item.key),
+  })) || MONTHS.map((label, index) => ({ value: index + 1, label }));
+  const platformOptions = lookups.platforms?.map(item => ({ value: item.key, label: item.label })) || PLATFORMS;
   const isAdmin  = user?.role === 'superadmin' || user?.role === 'staff';
   const showClientSelector = isAdmin && !propClientId;
   const queryClientId = searchParams.get('client');
@@ -93,7 +103,7 @@ export default function PostIdeasPage({ clientId: propClientId = null }) {
     location:        '',
     target_audience: '',
     upcoming_events: '',
-    platforms:       ['instagram', 'facebook'],
+    platforms:       ['facebook', 'instagram'],
     posts_per_week:  5,
   });
 
@@ -340,59 +350,44 @@ export default function PostIdeasPage({ clientId: propClientId = null }) {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <h1 style={styles.title}>✨ Post Ideas Generator</h1>
-          <p style={styles.subtitle}>AI-powered content calendar for the full month</p>
-        </div>
-        {step === 'results' && (
-          <button onClick={() => { setStep('form'); setError(''); }} style={styles.newBtn}>
-            + New Calendar
-          </button>
+    <div className="app-page app-page--wide">
+      <PageHeader
+        title="Post Ideas Generator"
+        subtitle="AI-powered content calendar for the full month"
+        actions={(
+          <div style={styles.pageHeaderActions}>
+            {showClientSelector && (
+              <select
+                value={clientId || ''}
+                onChange={e => {
+                  const nextClientId = e.target.value ? parseInt(e.target.value, 10) : null;
+                  setSelectedClientId(nextClientId);
+                  updateSearch({ client: nextClientId });
+                }}
+                style={styles.clientBannerSelect}
+              >
+                <option value="">All Users</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>{c.company}</option>
+                ))}
+              </select>
+            )}
+            {step === 'results' && (
+              <button onClick={() => { setStep('form'); setError(''); }} style={styles.newBtn}>
+                + New Calendar
+              </button>
+            )}
+          </div>
         )}
-      </div>
+      />
 
       {showClientSelector && !clientId && (
         <div style={styles.clientEmptyState}>
           <div style={styles.clientEmptyIcon}>💡</div>
           <h2 style={styles.clientEmptyTitle}>Post Ideas Generator</h2>
           <p style={styles.clientEmptyText}>
-            Select a user to generate post ideas and monthly content calendars.
+            Select a user from the top-right dropdown to generate post ideas and monthly content calendars.
           </p>
-          <select
-            onChange={e => {
-              const nextClientId = e.target.value ? parseInt(e.target.value, 10) : null;
-              setSelectedClientId(nextClientId);
-              updateSearch({ client: nextClientId });
-            }}
-            style={styles.clientEmptySelect}
-          >
-            <option value="">- Select a user -</option>
-            {clients.map(c => (
-              <option key={c.id} value={c.id}>{c.company}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {showClientSelector && clientId && (
-        <div style={styles.clientBanner}>
-          <span style={styles.clientBannerLabel}>Generating ideas for:</span>
-          <select
-            value={clientId || ''}
-            onChange={e => {
-              const nextClientId = e.target.value ? parseInt(e.target.value, 10) : null;
-              setSelectedClientId(nextClientId);
-              updateSearch({ client: nextClientId });
-            }}
-            style={styles.clientBannerSelect}
-          >
-            {clients.map(c => (
-              <option key={c.id} value={c.id}>{c.company}</option>
-            ))}
-          </select>
         </div>
       )}
 
@@ -402,6 +397,9 @@ export default function PostIdeasPage({ clientId: propClientId = null }) {
           setForm={setForm}
           isAdmin={isAdmin}
           error={error}
+          businessTypeOptions={businessTypeOptions}
+          monthOptions={monthOptions}
+          platformOptions={platformOptions}
           onGenerate={handleGenerate}
           history={history}
           onLoadHistory={loadFromHistory}
@@ -423,6 +421,7 @@ export default function PostIdeasPage({ clientId: propClientId = null }) {
           contentMix={contentMix}
           platformMix={platformMix}
           mixColors={MIX_COLORS}
+          platformOptions={platformOptions}
           editingIdea={editingIdea}
           setEditingIdea={setEditingIdea}
           saving={saving}
@@ -442,7 +441,7 @@ export default function PostIdeasPage({ clientId: propClientId = null }) {
 
 // ── Setup Form ────────────────────────────────────────────────────────────────
 
-function SetupForm({ form, setForm, isAdmin, error, onGenerate, history, onLoadHistory, togglePlatform }) {
+function SetupForm({ form, setForm, isAdmin, error, businessTypeOptions, monthOptions, platformOptions, onGenerate, history, onLoadHistory, togglePlatform }) {
   const now = new Date();
 
   const yearOptions = [now.getFullYear(), now.getFullYear() + 1];
@@ -463,7 +462,7 @@ function SetupForm({ form, setForm, isAdmin, error, onGenerate, history, onLoadH
               style={styles.select}
             >
               <option value="">Select type…</option>
-              {BUSINESS_TYPES.map(bt => (
+              {businessTypeOptions.map(bt => (
                 <option key={bt.value} value={bt.value}>{bt.label}</option>
               ))}
             </select>
@@ -501,8 +500,8 @@ function SetupForm({ form, setForm, isAdmin, error, onGenerate, history, onLoadH
               onChange={e => setForm(f => ({ ...f, month: Number(e.target.value) }))}
               style={styles.select}
             >
-              {MONTHS.map((m, i) => (
-                <option key={m} value={i + 1}>{m}</option>
+              {monthOptions.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
               ))}
             </select>
           </div>
@@ -523,7 +522,7 @@ function SetupForm({ form, setForm, isAdmin, error, onGenerate, history, onLoadH
           <div style={{ ...styles.formField, gridColumn: '1 / -1' }}>
             <label style={styles.label}>Platforms *</label>
             <div style={styles.platformGrid}>
-              {PLATFORMS.map(p => {
+              {platformOptions.map(p => {
                 const sel = form.platforms.includes(p.value);
                 return (
                   <button
@@ -535,7 +534,9 @@ function SetupForm({ form, setForm, isAdmin, error, onGenerate, history, onLoadH
                       ...(sel ? styles.platformBtnSel : {}),
                     }}
                   >
-                    <span style={styles.platformIcon}>{p.icon}</span>
+                    <span style={styles.platformIcon}>
+                      <SocialPlatformIcon platform={p.value} size={18} />
+                    </span>
                     <span>{p.label}</span>
                   </button>
                 );
@@ -654,6 +655,7 @@ function ResultsView({
   ideaSet, datedIdeas,
   approvedCount, addedCount, totalIdeas,
   contentMix, platformMix, mixColors,
+  platformOptions,
   editingIdea, saving, calMsg,
   onApproveAll, onAddAllToCalendar, onAddToCalendar,
   onToggleApprove, onStartEdit, onCommitEdit, onRegenerate,
@@ -696,6 +698,7 @@ function ResultsView({
             <IdeaCard
               key={idea.id}
               idea={idea}
+              platformOptions={platformOptions}
               editingIdea={editingIdea}
               saving={saving}
               onToggleApprove={onToggleApprove}
@@ -805,14 +808,13 @@ function ResultsView({
 
 // ── Idea card ─────────────────────────────────────────────────────────────────
 
-function IdeaCard({ idea, editingIdea, saving, onToggleApprove, onAddToCalendar, onStartEdit, onCommitEdit, setEditingIdea }) {
+function IdeaCard({ idea, platformOptions, editingIdea, saving, onToggleApprove, onAddToCalendar, onStartEdit, onCommitEdit, setEditingIdea }) {
   const [captionOpen, setCaptionOpen] = useState(false);
   const isEditingTopic    = editingIdea?.id === idea.id && editingIdea?.field === 'topic';
   const isEditingCaption  = editingIdea?.id === idea.id && editingIdea?.field === 'caption_hint';
 
   const platformColor = PLATFORM_COLORS[idea.platform] || '#00d7ff';
-  const platformLabel = PLATFORMS.find(p => p.value === idea.platform)?.label || idea.platform;
-  const platformIcon  = PLATFORMS.find(p => p.value === idea.platform)?.icon || '📱';
+  const platformLabel = platformOptions.find(p => p.value === idea.platform)?.label || idea.platform;
 
   let cardBorder = '1px solid #e2e8f0';
   if (idea.is_added_to_calendar) cardBorder = '2px solid #00d7ff';
@@ -829,7 +831,10 @@ function IdeaCard({ idea, editingIdea, saving, onToggleApprove, onAddToCalendar,
           )}
         </div>
         <div style={{ ...styles.platformPill, background: platformColor }}>
-          {platformIcon} {platformLabel}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <SocialPlatformIcon platform={idea.platform} size={15} />
+            {platformLabel}
+          </span>
         </div>
         <div style={{ ...styles.typePill, background: '#f0f4f9', color: '#475569' }}>
           {idea.post_type}
@@ -957,11 +962,6 @@ function IdeaCard({ idea, editingIdea, saving, onToggleApprove, onAddToCalendar,
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = {
-  page: {
-    padding: '32px 36px',
-    maxWidth: 1400,
-    margin: '0 auto',
-  },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -982,33 +982,29 @@ const styles = {
   newBtn: {
     padding: '10px 20px',
     background: '#00d7ff',
-    color: '#fff',
+    color: '#0f172a',
     border: 'none',
     borderRadius: 10,
     fontWeight: 700,
     fontSize: 14,
     cursor: 'pointer',
   },
-  clientBanner: {
-    marginBottom: 20,
+  pageHeaderActions: {
     display: 'flex',
     alignItems: 'center',
     gap: 12,
     flexWrap: 'wrap',
   },
-  clientBannerLabel: {
-    fontSize: 13,
-    color: '#64748b',
-    fontWeight: 600,
-  },
   clientBannerSelect: {
-    padding: '8px 12px',
-    borderRadius: 8,
-    border: '1px solid #e2e8f0',
+    padding: '9px 14px',
+    borderRadius: 10,
+    border: '1.5px solid #dbe5f3',
     fontSize: 13,
     background: '#fff',
-    color: '#0f172a',
+    color: '#1e293b',
     fontWeight: 600,
+    outline: 'none',
+    minWidth: 200,
   },
   clientEmptyState: {
     maxWidth: 520,
@@ -1036,17 +1032,6 @@ const styles = {
     fontSize: 14,
     lineHeight: 1.5,
   },
-  clientEmptySelect: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: 10,
-    border: '1.5px solid #e5e7eb',
-    fontSize: 14,
-    background: '#fff',
-    color: '#0f172a',
-    outline: 'none',
-  },
-
   // Form
   formPage: {
     display: 'flex',
@@ -1173,7 +1158,7 @@ const styles = {
     width: '100%',
     padding: '16px',
     background: '#00d7ff',
-    color: '#fff',
+    color: '#0f172a',
     border: 'none',
     borderRadius: 12,
     fontSize: 16,
@@ -1618,7 +1603,7 @@ const styles = {
     borderRadius: 10,
     border: 'none',
     background: '#00d7ff',
-    color: '#fff',
+    color: '#0f172a',
     fontSize: 12,
     fontWeight: 700,
     cursor: 'pointer',

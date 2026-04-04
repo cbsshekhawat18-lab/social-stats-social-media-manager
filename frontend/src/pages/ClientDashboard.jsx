@@ -111,6 +111,11 @@ export default function ClientDashboard({ clientId: propClientId }) {
         <ShareReportModal clientId={clientId} onClose={() => setShareOpen(false)} />
       )}
 
+      {/* Client Hero Card */}
+      {!sumLoading && client.company && (
+        <ClientHeroCard client={client} />
+      )}
+
       {/* View Toggle */}
       <SegmentedTabs
         items={[
@@ -130,6 +135,37 @@ export default function ClientDashboard({ clientId: propClientId }) {
 
       {activeView === 'analytics' && (
         <>
+          {/* Top Control Bar */}
+          <div style={styles.controlBar}>
+            <div style={styles.controlTop}>
+              <DateRangePicker range={range} onChange={setRange} />
+              <div style={styles.quickStats}>
+                <div style={styles.qStat}>
+                  <span style={styles.qStatNum}>{connectedCount}</span>
+                  <span style={styles.qStatLabel}>Connected</span>
+                </div>
+                <div style={styles.qStatDivider} />
+                <div style={styles.qStat}>
+                  <span style={styles.qStatNum}>{posts.length}</span>
+                  <span style={styles.qStatLabel}>Posts</span>
+                </div>
+                <div style={styles.qStatDivider} />
+                <div style={styles.qStat}>
+                  <span style={{ ...styles.qStatNum, color: hasAnalytics ? '#22c55e' : '#f59e0b', fontSize: 11 }}>
+                    {hasAnalytics ? '● Live' : '● Waiting'}
+                  </span>
+                  <span style={styles.qStatLabel}>Data</span>
+                </div>
+              </div>
+            </div>
+            <PlatformTabs
+              selected={platform}
+              onChange={setPlatform}
+              connected={connectedPlatforms}
+              platforms={lookups.platforms || []}
+            />
+          </div>
+
           <div style={styles.analyticsLayout}>
             <div style={styles.primaryColumn}>
               {/* KPI Cards */}
@@ -237,43 +273,6 @@ export default function ClientDashboard({ clientId: propClientId }) {
           )}
 
           <div style={styles.reportingSection}>
-            <div style={styles.filterPanel}>
-              <div style={styles.topBar}>
-                <div style={styles.controls}>
-                  <DateRangePicker range={range} onChange={setRange} />
-                </div>
-               
-              </div>
-
-              <PlatformTabs
-                selected={platform}
-                onChange={setPlatform}
-                connected={connectedPlatforms}
-                platforms={lookups.platforms || []}
-              />
-
-              <div style={styles.summaryStrip}>
-                <div style={styles.summaryCard}>
-                  <span style={styles.summaryLabel}>Connected Platforms</span>
-                  <strong style={styles.summaryValue}>{connectedCount}</strong>
-                </div>
-                <div style={styles.summaryCard}>
-                  <span style={styles.summaryLabel}>Total Posts</span>
-                  <strong style={styles.summaryValue}>{posts.length}</strong>
-                </div>
-                <div style={styles.summaryCard}>
-                  <span style={styles.summaryLabel}>Platform View</span>
-                  <strong style={styles.summaryValue}>
-                    {platform === 'all' ? 'All Platforms' : platformLabelMap[platform] || PLATFORMS[platform]?.label || platform}
-                  </strong>
-                </div>
-                <div style={styles.summaryCard}>
-                  <span style={styles.summaryLabel}>Data Status</span>
-                  <strong style={styles.summaryValue}>{hasAnalytics ? 'Active' : 'Waiting'}</strong>
-                </div>
-              </div>
-            </div>
-
             {byPlatform.length > 0 && platform === 'all' && (
               <div style={styles.tableWrap}>
                 <h3 style={styles.tableTitle}>Platform Breakdown</h3>
@@ -361,6 +360,167 @@ export default function ClientDashboard({ clientId: propClientId }) {
   );
 }
 
+const TONE_COLORS = {
+  professional: '#0891b2', casual: '#f59e0b', funny: '#f97316',
+  inspirational: '#8b5cf6', urgent: '#ef4444', friendly: '#22c55e',
+};
+
+
+function heroChip(color) {
+  return {
+    display: 'inline-flex', alignItems: 'center', gap: 4,
+    padding: '3px 10px', borderRadius: 20,
+    background: `${color}18`, border: `1px solid ${color}35`,
+    color, fontSize: 11, fontWeight: 600,
+  };
+}
+
+function ClientHeroCard({ client }) {
+  const [expanded, setExpanded] = useState(false);
+  const initials = (client.company || 'C')
+    .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  const hasBrandInfo = !!(client.brand_description || client.usp || client.target_audience || client.target_locations?.length > 0);
+
+  const hasAnyInfo = !!(
+    client.business_category || client.business_location || client.brand_tone ||
+    client.email || client.phone || client.website || client.whatsapp_number || hasBrandInfo
+  );
+
+  if (!hasAnyInfo) return null;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {/* Profile info strip — same bg as page, no card */}
+      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
+        {/* Avatar */}
+        {client.logo ? (
+          <img src={client.logo} alt={client.company} style={{
+            width: 40, height: 40, borderRadius: 10, objectFit: 'cover',
+            border: '1px solid #e2e8f0', flexShrink: 0,
+          }} />
+        ) : (
+          <div style={{
+            width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+            background: 'linear-gradient(135deg, #00d7ff 0%, #0099bb 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 14, fontWeight: 800, color: '#0f172a',
+          }}>{initials}</div>
+        )}
+
+        {/* Business chips */}
+        {client.business_category && <span style={heroChip('#0891b2')}>🏢 {client.business_category}</span>}
+        {client.business_location  && <span style={heroChip('#16a34a')}>📍 {client.business_location}</span>}
+        {client.brand_tone && (
+          <span style={heroChip(TONE_COLORS[client.brand_tone] || '#f59e0b')}>
+            🎨 {client.brand_tone.charAt(0).toUpperCase() + client.brand_tone.slice(1)}
+          </span>
+        )}
+        {client.gender && !['unspecified','all'].includes(client.gender) && (
+          <span style={heroChip('#7c3aed')}>👥 {client.gender.charAt(0).toUpperCase() + client.gender.slice(1)}</span>
+        )}
+        {(client.target_locations || []).slice(0, 2).map(loc => (
+          <span key={loc} style={heroChip('#d97706')}>🌍 {loc}</span>
+        ))}
+
+        {/* Divider */}
+        {(client.email || client.phone || client.website || client.whatsapp_number) && (
+          <span style={{ width: 1, height: 18, background: '#e2e8f0', flexShrink: 0 }} />
+        )}
+
+        {/* Contact links inline */}
+        {client.email && (
+          <a href={`mailto:${client.email}`} style={contactLink}>
+            <Mail size={12} /> {client.email}
+          </a>
+        )}
+        {client.phone && (
+          <a href={`tel:${client.phone}`} style={contactLink}>
+            <Phone size={12} /> {client.phone}
+          </a>
+        )}
+        {client.whatsapp_number && (
+          <span style={contactLink}>💬 {client.whatsapp_number}</span>
+        )}
+        {client.website && (
+          <a href={client.website} target="_blank" rel="noreferrer" style={contactLink}>
+            <Globe size={12} /> {client.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+          </a>
+        )}
+        {client.gmb_url && (
+          <a href={client.gmb_url} target="_blank" rel="noreferrer" style={contactLink}>
+            📍 Google Business
+          </a>
+        )}
+
+        {/* Brand info toggle */}
+        {hasBrandInfo && (
+          <button onClick={() => setExpanded(e => !e)} style={{
+            marginLeft: 'auto', background: 'none', border: '1px solid #e2e8f0',
+            borderRadius: 8, cursor: 'pointer', color: '#64748b',
+            fontSize: 11, fontWeight: 600, padding: '4px 10px',
+          }}>
+            {expanded ? 'Hide Profile ▲' : 'Brand Profile ▼'}
+          </button>
+        )}
+      </div>
+
+      {/* Brand Info (expandable) */}
+      {hasBrandInfo && expanded && (
+        <div style={{
+          background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14,
+          padding: '16px 20px', marginBottom: 4,
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12,
+        }}>
+          {client.brand_description && (
+            <div style={brandInfoBox}>
+              <span style={brandInfoLabel}>About</span>
+              <p style={brandInfoText}>{client.brand_description}</p>
+            </div>
+          )}
+          {client.usp && (
+            <div style={brandInfoBox}>
+              <span style={brandInfoLabel}>Unique Selling Points</span>
+              <p style={brandInfoText}>{client.usp}</p>
+            </div>
+          )}
+          {client.target_audience && (
+            <div style={brandInfoBox}>
+              <span style={brandInfoLabel}>Target Audience</span>
+              <p style={brandInfoText}>{client.target_audience}</p>
+            </div>
+          )}
+          {(client.business_subcategories || []).length > 0 && (
+            <div style={brandInfoBox}>
+              <span style={brandInfoLabel}>Subcategories</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 4 }}>
+                {client.business_subcategories.map(s => (
+                  <span key={s} style={heroChip('#64748b')}>{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const contactLink = {
+  display: 'inline-flex', alignItems: 'center', gap: 4,
+  color: '#64748b', fontSize: 12, textDecoration: 'none',
+};
+
+const brandInfoBox = {
+  background: '#f8fafc', borderRadius: 10,
+  padding: '10px 14px', border: '1px solid #e2e8f0',
+};
+const brandInfoLabel = {
+  display: 'block', fontSize: 10, fontWeight: 700, color: '#94a3b8',
+  textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 5,
+};
+const brandInfoText = { margin: 0, fontSize: 12, color: '#374151', lineHeight: 1.6 };
+
 function UpcomingPostsWidget({ clientId }) {
   const { upcoming, loading } = useUpcomingPosts(clientId);
   if (loading || !upcoming.length) return null;
@@ -415,6 +575,22 @@ function UpcomingPostsWidget({ clientId }) {
 }
 
 const styles = {
+  controlBar: {
+    background: '#fff', border: '1px solid #e2e8f0', borderRadius: 18,
+    padding: '16px 18px', marginBottom: 20,
+    boxShadow: '0 1px 6px rgba(15,23,42,.05)',
+  },
+  controlTop: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    gap: 16, marginBottom: 14, flexWrap: 'wrap',
+  },
+  quickStats: {
+    display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0,
+  },
+  qStat: { textAlign: 'center' },
+  qStatNum: { display: 'block', fontSize: 16, fontWeight: 800, color: '#0f172a' },
+  qStatLabel: { display: 'block', fontSize: 10, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.06em' },
+  qStatDivider: { width: 1, height: 28, background: '#e2e8f0' },
   header: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
     gap: 20, marginBottom: 24, flexWrap: 'wrap',

@@ -21,13 +21,7 @@ export default function PlatformTabs({ selected, onChange, connected = [], platf
       id: p.key,
       label: p.label,
       disabled: !isConn,
-      icon: p.key === 'all' ? (
-        <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' }}>
-          All
-        </span>
-      ) : (
-        <SocialPlatformIcon platform={p.key} size={15} />
-      ),
+      icon: p.key === 'all' ? null : <SocialPlatformIcon platform={p.key} size={15} />,
       trailing: isConn && p.key !== 'all'
         ? <span style={{ ...styles.connDot, background: p.color }} />
         : !isConn

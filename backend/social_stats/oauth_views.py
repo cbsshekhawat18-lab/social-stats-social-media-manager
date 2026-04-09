@@ -107,6 +107,26 @@ def facebook_consumer_callback(request):
     if 'error' in token_resp:
         return _settings_redirect(client_id, '?error=facebook_consumer_token')
 
+    consumer_token = token_resp.get('access_token', '')
+    expires_in     = token_resp.get('expires_in', 5184000)
+    expires_at     = timezone.now() + timedelta(seconds=expires_in)
+
+    # Fetch user's name so account_name shows something meaningful
+    me_resp = requests.get(
+        'https://graph.facebook.com/v18.0/me',
+        params={'fields': 'name', 'access_token': consumer_token},
+        timeout=10
+    ).json()
+    display_name = me_resp.get('name', 'Facebook User')
+
+    # Save consumer token so "Connected Accounts" shows Facebook as connected
+    _save_credential(client_id, 'facebook', {
+        'access_token':  consumer_token,
+        'refresh_token': consumer_token,
+        'expires_at':    expires_at,
+        'page_name':     display_name,
+    })
+
     # ── Step 2: Business app (uncomment after Meta App Review approval) ────────
     # biz_state = f"{client_id}:{secrets.token_urlsafe(16)}"
     # request.session['oauth_state']     = biz_state

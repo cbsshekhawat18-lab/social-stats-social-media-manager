@@ -107,23 +107,26 @@ def facebook_consumer_callback(request):
     if 'error' in token_resp:
         return _settings_redirect(client_id, '?error=facebook_consumer_token')
 
-    # Step 2: now redirect to Business app for page permissions
-    biz_state = f"{client_id}:{secrets.token_urlsafe(16)}"
-    request.session['oauth_state']     = biz_state
-    request.session['oauth_client_id'] = str(client_id)
+    # ── Step 2: Business app (uncomment after Meta App Review approval) ────────
+    # biz_state = f"{client_id}:{secrets.token_urlsafe(16)}"
+    # request.session['oauth_state']     = biz_state
+    # request.session['oauth_client_id'] = str(client_id)
+    # params = {
+    #     'client_id':     settings.META_APP_ID,
+    #     'redirect_uri':  settings.META_REDIRECT_URI,
+    #     'scope':         ','.join([
+    #         'pages_show_list',
+    #         'pages_read_engagement',
+    #         'pages_manage_metadata',
+    #     ]),
+    #     'response_type': 'code',
+    #     'state':          biz_state,
+    # }
+    # return redirect(f"https://www.facebook.com/dialog/oauth?{urlencode(params)}")
+    # ──────────────────────────────────────────────────────────────────────────
 
-    params = {
-        'client_id':     settings.META_APP_ID,
-        'redirect_uri':  settings.META_REDIRECT_URI,
-        'scope':         ','.join([
-            'pages_show_list',
-            'pages_read_engagement',
-            'pages_manage_metadata',
-        ]),
-        'response_type': 'code',
-        'state':          biz_state,
-    }
-    return redirect(f"https://www.facebook.com/dialog/oauth?{urlencode(params)}")
+    # For now: consumer login complete, redirect back to settings
+    return _settings_redirect(client_id, '?connected=facebook')
 
 
 @api_view(['GET'])

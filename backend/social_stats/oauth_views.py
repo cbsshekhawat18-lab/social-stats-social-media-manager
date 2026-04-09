@@ -64,7 +64,7 @@ def facebook_oauth_start(request, client_id):
     params = {
         'client_id':     FACEBOOK_CONSUMER_APP_ID,
         'redirect_uri':  FACEBOOK_CONSUMER_REDIRECT,
-        'scope':         'public_profile,email',
+        'scope':         'public_profile,email,pages_show_list,pages_read_engagement,instagram_basic',
         'response_type': 'code',
         'state':          state,
     }
@@ -114,21 +114,79 @@ def facebook_consumer_callback(request):
     expires_in     = token_resp.get('expires_in', 5184000)
     expires_at     = timezone.now() + timedelta(seconds=expires_in)
 
-    # Fetch user's name so account_name shows something meaningful
-    me_resp = requests.get(
-        'https://graph.facebook.com/v18.0/me',
-        params={'fields': 'name', 'access_token': consumer_token},
+    # Extend to long-lived token (60 days)
+    long_resp = requests.get(
+        'https://graph.facebook.com/v18.0/oauth/access_token',
+        params={
+            'grant_type':        'fb_exchange_token',
+            'client_id':         FACEBOOK_CONSUMER_APP_ID,
+            'client_secret':     _facebook_consumer_secret(),
+            'fb_exchange_token': consumer_token,
+        }, timeout=10
+    ).json()
+    long_token = long_resp.get('access_token', consumer_token)
+    ll_expires_in = long_resp.get('expires_in', expires_in)
+    expires_at = timezone.now() + timedelta(seconds=ll_expires_in)
+
+    # Fetch pages this user manages
+    pages_resp = requests.get(
+        'https://graph.facebook.com/v18.0/me/accounts',
+        params={'access_token': long_token, 'fields': 'id,name,access_token'},
         timeout=10
     ).json()
-    display_name = me_resp.get('name', 'Facebook User')
+    pages = pages_resp.get('data', [])
 
-    # Save consumer token so "Connected Accounts" shows Facebook as connected
-    _save_credential(client_id, 'facebook', {
-        'access_token':  consumer_token,
-        'refresh_token': consumer_token,
-        'expires_at':    expires_at,
-        'page_name':     display_name,
-    })
+    logger.info("FB consumer pages for client %s: %s", client_id, [p.get('name') for p in pages])
+
+    if pages:
+        page       = pages[0]
+        page_id    = page['id']
+        page_name  = page.get('name', 'Facebook Page')
+        page_token = page.get('access_token', long_token)
+
+        _save_credential(client_id, 'facebook', {
+            'access_token':  page_token,
+            'refresh_token': long_token,
+            'expires_at':    expires_at,
+            'page_id':       page_id,
+            'page_name':     page_name,
+        })
+
+        # Try to get linked Instagram Business Account
+        ig_resp = requests.get(
+            f'https://graph.facebook.com/v18.0/{page_id}',
+            params={'fields': 'instagram_business_account', 'access_token': page_token},
+            timeout=10
+        ).json()
+        ig_id = ig_resp.get('instagram_business_account', {}).get('id', '')
+        if ig_id:
+            ig_info = requests.get(
+                f'https://graph.facebook.com/v18.0/{ig_id}',
+                params={'fields': 'name,username', 'access_token': page_token},
+                timeout=10
+            ).json()
+            _save_credential(client_id, 'instagram', {
+                'access_token':         page_token,
+                'refresh_token':        long_token,
+                'expires_at':           expires_at,
+                'page_id':              page_id,
+                'page_name':            ig_info.get('username', page_name),
+                'instagram_account_id': ig_id,
+            })
+    else:
+        # No pages found — save user identity token so UI shows connected
+        me_resp = requests.get(
+            'https://graph.facebook.com/v18.0/me',
+            params={'fields': 'name', 'access_token': long_token},
+            timeout=10
+        ).json()
+        _save_credential(client_id, 'facebook', {
+            'access_token':  long_token,
+            'refresh_token': long_token,
+            'expires_at':    expires_at,
+            'page_name':     me_resp.get('name', 'Facebook User'),
+        })
+        logger.warning("FB: no pages found for client %s — saved user token only", client_id)
 
     # ── Step 2: Business app (uncomment after Meta App Review approval) ────────
     # biz_state = f"{client_id}:{secrets.token_urlsafe(16)}"

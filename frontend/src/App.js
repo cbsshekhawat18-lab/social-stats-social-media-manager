@@ -22,6 +22,7 @@ import ReportsPage from './pages/ReportsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import ManagementPage from './pages/ManagementPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
+import OAuthCallbackPage from './pages/OAuthCallbackPage';
 import CaptionWriterPage   from './pages/CaptionWriterPage';
 import PostIdeasPage       from './pages/PostIdeasPage';
 import PrivacyPolicyPage   from './pages/PrivacyPolicyPage';
@@ -209,7 +210,8 @@ export default function App() {
         <Routes>
           <Route path="/"       element={<RootRedirect />} />
           <Route path="/login"         element={<LoginPage />} />
-          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/auth/callback"  element={<AuthCallbackPage />} />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
           <Route path="/report/:token"    element={<PublicReportPage />} />
           <Route path="/privacy"          element={<PrivacyPolicyPage />} />
           <Route path="/terms"            element={<TermsOfServicePage />} />

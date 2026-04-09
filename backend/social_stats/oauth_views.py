@@ -36,15 +36,15 @@ def _save_credential(client_id, platform, defaults):
 
 
 def _settings_redirect(client_id, query=''):
-    """Redirect to the correct settings page based on user role."""
-    try:
-        from social_stats.models import UserProfile
-        profile = UserProfile.objects.filter(client_id=client_id).first()
-        if profile and profile.role == 'client':
-            return redirect(f"{settings.FRONTEND_URL}/dashboard/settings{query}")
-    except Exception:
-        pass
-    return redirect(f"{settings.FRONTEND_URL}/admin/client/{client_id}/settings{query}")
+    """
+    Redirect through /oauth/callback so the frontend can route correctly
+    based on the logged-in user's role (admin vs client).
+    query is either '?connected=xxx' or '?error=xxx'.
+    """
+    sep = '&' if query else '?'
+    return redirect(
+        f"{settings.FRONTEND_URL}/oauth/callback{query}{sep}client_id={client_id}"
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════

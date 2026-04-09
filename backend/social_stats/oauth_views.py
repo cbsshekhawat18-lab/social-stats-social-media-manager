@@ -20,6 +20,14 @@ from rest_framework.response import Response
 from .models import PlatformCredential, Client
 from django.contrib.auth.models import User
 
+# ── Consumer app (public_profile + email only) ────────────────────────────────
+# App ID is public (appears in OAuth URLs). Secret comes from env.
+FACEBOOK_CONSUMER_APP_ID     = '2880231975675480'
+FACEBOOK_CONSUMER_REDIRECT   = 'https://statox.ai/api/oauth/facebook/consumer/callback/'
+
+def _facebook_consumer_secret():
+    return getattr(settings, 'FACEBOOK_SOCIAL_APP_SECRET', '') or settings.META_APP_SECRET
+
 
 def _save_credential(client_id, platform, defaults):
     PlatformCredential.objects.update_or_create(
@@ -46,26 +54,16 @@ def _settings_redirect(client_id, query=''):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def facebook_oauth_start(request, client_id):
-    """
-    Step 1: Consumer app — request public_profile + email.
-    After callback we redirect to Step 2 (Business app).
-    """
+    """Step 1: Consumer app — request public_profile + email."""
     state = f"{client_id}:{secrets.token_urlsafe(16)}"
     request.session['oauth_state']     = state
     request.session['oauth_client_id'] = str(client_id)
 
-    consumer_redirect = getattr(
-        settings, 'FACEBOOK_CONSUMER_CONNECT_REDIRECT_URI',
-        f"{settings.FRONTEND_URL.rstrip('/')}/api/oauth/facebook/consumer/callback/"
-    )
-    # Use the backend URL directly
-    consumer_redirect = f"{settings.BACKEND_URL.rstrip('/')}/api/oauth/facebook/consumer/callback/" \
-        if hasattr(settings, 'BACKEND_URL') else \
-        f"https://statox.ai/api/oauth/facebook/consumer/callback/"
+    logger.info("FB oauth start: client_id=%s app_id=%s", client_id, FACEBOOK_CONSUMER_APP_ID)
 
     params = {
-        'client_id':     getattr(settings, 'FACEBOOK_SOCIAL_APP_ID', settings.META_APP_ID),
-        'redirect_uri':  consumer_redirect,
+        'client_id':     FACEBOOK_CONSUMER_APP_ID,
+        'redirect_uri':  FACEBOOK_CONSUMER_REDIRECT,
         'scope':         'public_profile,email',
         'response_type': 'code',
         'state':          state,
@@ -89,22 +87,18 @@ def facebook_consumer_callback(request):
 
     client_id = state.split(':')[0]
 
-    consumer_redirect   = f"https://statox.ai/api/oauth/facebook/consumer/callback/"
-    consumer_app_id     = getattr(settings, 'FACEBOOK_SOCIAL_APP_ID', settings.META_APP_ID)
-    consumer_app_secret = getattr(settings, 'FACEBOOK_SOCIAL_APP_SECRET', settings.META_APP_SECRET)
-
     logger.info(
         "FB consumer callback: client_id=%s app_id=%s redirect=%s",
-        client_id, consumer_app_id, consumer_redirect
+        client_id, FACEBOOK_CONSUMER_APP_ID, FACEBOOK_CONSUMER_REDIRECT
     )
 
     # Exchange code for consumer token
     token_resp = requests.get(
         "https://graph.facebook.com/v18.0/oauth/access_token",
         params={
-            'client_id':     consumer_app_id,
-            'client_secret': consumer_app_secret,
-            'redirect_uri':  consumer_redirect,
+            'client_id':     FACEBOOK_CONSUMER_APP_ID,
+            'client_secret': _facebook_consumer_secret(),
+            'redirect_uri':  FACEBOOK_CONSUMER_REDIRECT,
             'code':          code,
         }, timeout=10
     ).json()
@@ -112,7 +106,7 @@ def facebook_consumer_callback(request):
     if 'error' in token_resp:
         logger.error(
             "FB consumer token exchange failed: app_id=%s error=%s",
-            consumer_app_id, token_resp.get('error')
+            FACEBOOK_CONSUMER_APP_ID, token_resp.get('error')
         )
         return _settings_redirect(client_id, '?error=facebook_consumer_token')
 
@@ -607,3 +601,24 @@ def oauth_disconnect(request, client_id, platform):
         client_id=client_id, platform=platform
     ).update(access_token='', refresh_token='', is_active=False)
     return Response({'message': f'{platform} disconnected'})
+
+
+@api_view(['GET'])
+def oauth_debug(request):
+    """Debug endpoint — shows current OAuth config. Superadmin only."""
+    try:
+        role = request.user.profile.role
+        if role not in ('superadmin', 'staff'):
+            return Response({'error': 'forbidden'}, status=403)
+    except Exception:
+        return Response({'error': 'forbidden'}, status=403)
+
+    secret = _facebook_consumer_secret()
+    return Response({
+        'facebook_consumer_app_id':        FACEBOOK_CONSUMER_APP_ID,
+        'facebook_consumer_redirect':      FACEBOOK_CONSUMER_REDIRECT,
+        'facebook_consumer_secret_set':    bool(secret),
+        'facebook_consumer_secret_prefix': secret[:6] + '...' if secret else '(empty)',
+        'meta_app_id':                     settings.META_APP_ID,
+        'FACEBOOK_SOCIAL_APP_SECRET_env':  bool(getattr(settings, 'FACEBOOK_SOCIAL_APP_SECRET', '')),
+    })

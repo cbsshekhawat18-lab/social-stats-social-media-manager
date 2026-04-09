@@ -19,7 +19,7 @@ from .oauth_views import (
     facebook_oauth_start, facebook_oauth_callback, facebook_consumer_callback,
     google_oauth_start, google_oauth_callback,
     linkedin_oauth_start, linkedin_oauth_callback,
-    oauth_status, oauth_disconnect,
+    oauth_status, oauth_disconnect, oauth_debug,
 )
 from .social_auth_views import (
     google_social_start, google_social_callback,
@@ -116,9 +116,10 @@ urlpatterns = [
     path('oauth/linkedin/start/<int:client_id>/',  linkedin_oauth_start,    name='li_start'),
     path('oauth/linkedin/callback/',               linkedin_oauth_callback, name='li_callback'),
 
-    # OAuth status + disconnect
+    # OAuth status + disconnect + debug
     path('oauth/status/<int:client_id>/',                       oauth_status,     name='oauth_status'),
     path('oauth/disconnect/<int:client_id>/<str:platform>/',    oauth_disconnect, name='oauth_disconnect'),
+    path('oauth/debug/',                                         oauth_debug,      name='oauth_debug'),
 
     # ROI Calculator
     path('roi/settings/<int:client_id>/', ROISettingsView.as_view(),  name='roi_settings'),

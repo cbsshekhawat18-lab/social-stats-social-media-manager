@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, isBefore } from 'date-fns';
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { PLATFORMS, PLATFORM_LIST } from '../../services/platforms';
 import { useSuggestedTimes } from '../../hooks/useCalendar';
 import SocialPlatformIcon from '../ui/SocialPlatformIcon';
@@ -137,11 +137,17 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
 
   const validateForm = (finalStatus) => {
     const nextErrors = {};
-    if (!platform) nextErrors.platform = 'Platform is required.';
-    if (!caption.trim() && !title.trim()) nextErrors.caption = 'Caption is required unless an internal title is provided.';
-    if (finalStatus === 'scheduled' && !scheduledAt) nextErrors.scheduledAt = 'Please select a scheduled date and time.';
+    if (!platform) {
+      nextErrors.platform = 'Please select a platform.';
+    }
+    if (!caption.trim() && !title.trim()) {
+      nextErrors.caption = 'Caption is required. Add a caption or at least an internal title.';
+    }
+    if (finalStatus === 'scheduled' && !scheduledAt) {
+      nextErrors.scheduledAt = 'Please pick a date and time to schedule this post.';
+    }
     if (finalStatus === 'scheduled' && scheduledAt && isBefore(new Date(scheduledAt), new Date())) {
-      nextErrors.scheduledAt = 'Past dates cannot be used for scheduling.';
+      nextErrors.scheduledAt = 'The scheduled time must be in the future.';
     }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -151,8 +157,25 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
     setError('');
     const finalStatus = forcedStatus || status;
 
+    // Auto-reveal the datetime picker when "Schedule Post" is clicked
+    if (finalStatus === 'scheduled') {
+      setStatus('scheduled');
+    }
+
     if (!validateForm(finalStatus)) {
-      setError('Please fix the highlighted fields before saving.');
+      // Build a specific summary of what's missing
+      const missing = [];
+      if (!platform) missing.push('Platform');
+      if (!caption.trim() && !title.trim()) missing.push('Caption');
+      if (finalStatus === 'scheduled' && !scheduledAt) missing.push('Scheduled Date & Time');
+      if (finalStatus === 'scheduled' && scheduledAt && isBefore(new Date(scheduledAt), new Date())) {
+        missing.push('Scheduled Date & Time (must be in the future)');
+      }
+      setError(
+        missing.length > 0
+          ? `Required field${missing.length > 1 ? 's' : ''} missing: ${missing.join(', ')}.`
+          : 'Please fix the highlighted fields before saving.'
+      );
       return;
     }
 
@@ -409,11 +432,13 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
           {/* Error */}
           {error && (
             <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 10,
               background: '#FEF2F2', border: '1px solid #FECACA',
-              borderRadius: 8, padding: '10px 14px',
-              color: '#EF4444', fontSize: 13, marginBottom: 12,
+              borderRadius: 8, padding: '12px 14px',
+              color: '#B91C1C', fontSize: 13, marginBottom: 12, lineHeight: 1.5,
             }}>
-              {error}
+              <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>{error}</span>
             </div>
           )}
         </div>
@@ -439,12 +464,13 @@ export default function PostFormDrawer({ date, post, isOpen, onClose, onSave, cl
             </button>
             <button
               onClick={() => handleSave('scheduled')}
-              disabled={saving || !scheduledAt}
+              disabled={saving}
               style={{
                 flex: 1, padding: '10px', borderRadius: 8,
                 background: '#2563EB', color: '#fff',
-                border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                opacity: (saving || !scheduledAt) ? 0.5 : 1,
+                border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
+                fontSize: 13, fontWeight: 600,
+                opacity: saving ? 0.6 : 1,
               }}
             >
               {saving ? 'Saving…' : 'Schedule Post'}

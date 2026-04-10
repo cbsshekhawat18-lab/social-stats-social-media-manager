@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,6 +19,15 @@ def _require_superadmin(request):
         return request.user.profile.role == 'superadmin'
     except Exception:
         return False
+
+
+def _agency_client_qs(request):
+    """Return a Client queryset scoped to the logged-in agency (superadmin)."""
+    return Client.objects.filter(
+        Q(userprofile__isnull=True) |
+        Q(userprofile__is_self_registered=False) |
+        Q(userprofile__agency=request.user)
+    ).distinct()
 
 
 # ── Staff ─────────────────────────────────────────────────────────────────────
@@ -235,10 +245,11 @@ class StaffClientsView(APIView):
             return Response({'error': 'Staff not found'}, status=404)
         add_list    = request.data.get('add', [])
         remove_list = request.data.get('remove', [])
+        agency_qs = _agency_client_qs(request)
         for item in add_list:
             cid = item.get('client_id')
             try:
-                client = Client.objects.get(id=cid)
+                client = agency_qs.get(id=cid)
                 assignment, _ = StaffClientAssignment.objects.update_or_create(
                     staff_profile=profile, client=client,
                     defaults={
@@ -253,7 +264,7 @@ class StaffClientsView(APIView):
                 pass
         for cid in remove_list:
             try:
-                client = Client.objects.get(id=cid)
+                client = agency_qs.get(id=cid)
                 StaffClientAssignment.objects.filter(staff_profile=profile, client=client).delete()
                 profile.assigned_clients.remove(client)
             except Client.DoesNotExist:
@@ -267,7 +278,7 @@ class ClientManagementListView(APIView):
     permission_classes = [IsAuthenticated, IsSuperAdminRole]
 
     def get(self, request):
-        clients = Client.objects.all().order_by('company')
+        clients = _agency_client_qs(request).order_by('company')
         data = []
         for c in clients:
             # Get the client's user profile
@@ -292,14 +303,14 @@ class ClientManagementListView(APIView):
 class ClientManagementDetailView(APIView):
     permission_classes = [IsAuthenticated, IsSuperAdminRole]
 
-    def _get_client(self, pk):
+    def _get_client(self, request, pk):
         try:
-            return Client.objects.get(id=pk)
+            return _agency_client_qs(request).get(id=pk)
         except Client.DoesNotExist:
             return None
 
     def get(self, request, pk):
-        client = self._get_client(pk)
+        client = self._get_client(request, pk)
         if not client:
             return Response({'error': 'Client not found'}, status=404)
         client_profile = UserProfile.objects.filter(client=client, role='client').first()
@@ -325,7 +336,7 @@ class ClientManagementDetailView(APIView):
         })
 
     def patch(self, request, pk):
-        client = self._get_client(pk)
+        client = self._get_client(request, pk)
         if not client:
             return Response({'error': 'Client not found'}, status=404)
         for field in ['company', 'email', 'name', 'phone', 'website', 'is_active']:
@@ -367,16 +378,16 @@ class ClientPermissionsView(APIView):
 class ClientPortalConfigView(APIView):
     permission_classes = [IsAuthenticated, IsSuperAdminRole]
 
-    def _get_or_create_config(self, pk):
+    def _get_or_create_config(self, request, pk):
         try:
-            client = Client.objects.get(id=pk)
+            client = _agency_client_qs(request).get(id=pk)
         except Client.DoesNotExist:
             return None, None
         config, _ = ClientPageConfig.objects.get_or_create(client=client)
         return client, config
 
     def get(self, request, pk):
-        client, config = self._get_or_create_config(pk)
+        client, config = self._get_or_create_config(request, pk)
         if not client:
             return Response({'error': 'Client not found'}, status=404)
         return Response({
@@ -400,7 +411,7 @@ class ClientPortalConfigView(APIView):
         })
 
     def put(self, request, pk):
-        client, config = self._get_or_create_config(pk)
+        client, config = self._get_or_create_config(request, pk)
         if not client:
             return Response({'error': 'Client not found'}, status=404)
         fields = [

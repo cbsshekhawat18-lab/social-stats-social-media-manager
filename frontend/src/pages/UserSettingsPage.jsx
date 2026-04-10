@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   User, Lock, Building2, Camera, Save, Loader2,
   Eye, EyeOff, CheckCircle, AlertTriangle, X,
-  LogOut, Shield, Mail,
+  LogOut, Shield, Mail, Trash2,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { profileAPI } from '../services/api';
@@ -54,7 +54,7 @@ export default function UserSettingsPage() {
 
         {/* Panel */}
         <div style={s.panel}>
-          {tab === 'profile'  && <ProfileTab user={user} />}
+          {tab === 'profile'  && <ProfileTab user={user} logout={logout} navigate={navigate} />}
           {tab === 'security' && <SecurityTab user={user} />}
           {tab === 'agency'   && user?.role === 'client' && (
             <AgencyTab user={user} refreshAuth={refreshAuth} navigate={navigate} />
@@ -67,7 +67,7 @@ export default function UserSettingsPage() {
 
 // ── Profile Tab ───────────────────────────────────────────────────────────────
 
-function ProfileTab({ user }) {
+function ProfileTab({ user, logout, navigate }) {
   const [firstName, setFirstName] = useState('');
   const [lastName,  setLastName]  = useState('');
   const [avatar,    setAvatar]    = useState(null);
@@ -183,9 +183,208 @@ function ProfileTab({ user }) {
           {saving ? <><Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</> : <><Save size={15} /> Save Changes</>}
         </button>
       </form>
+
+      {user?.role === 'client' && (
+        <DeleteAccountSection logout={logout} navigate={navigate} />
+      )}
     </div>
   );
 }
+
+// ── Delete Account Section (client only) ──────────────────────────────────────
+
+const DELETE_REASONS = [
+  'I no longer need this account',
+  'Privacy concerns',
+  'Switching to another platform',
+  'Too many emails / notifications',
+  'Technical issues',
+  'Other',
+];
+
+function DeleteAccountSection({ logout, navigate }) {
+  const [step,     setStep]     = useState(0); // 0=hidden 1=reason 2=confirm
+  const [reason,   setReason]   = useState('');
+  const [typed,    setTyped]    = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [error,    setError]    = useState('');
+
+  const handleDelete = async () => {
+    setError('');
+    setDeleting(true);
+    try {
+      await profileAPI.deleteAccount({ reason });
+      logout();
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Failed to delete account. Please try again.');
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div style={ds.zone}>
+      <div style={ds.zoneHeader}>
+        <Trash2 size={16} color="#dc2626" />
+        <span style={ds.zoneTitle}>Danger Zone</span>
+      </div>
+
+      <div style={ds.zoneBody}>
+        <div>
+          <p style={ds.zoneLabel}>Delete Account</p>
+          <p style={ds.zoneDesc}>Permanently delete your account and all associated data. This action cannot be undone.</p>
+        </div>
+        {step === 0 && (
+          <button onClick={() => setStep(1)} style={ds.deleteBtn}>
+            <Trash2 size={14} /> Delete Account
+          </button>
+        )}
+      </div>
+
+      {/* Step 1 — Reason */}
+      {step === 1 && (
+        <div style={ds.confirmBox}>
+          <AlertTriangle size={20} color="#dc2626" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ flex: 1 }}>
+            <p style={ds.confirmTitle}>Why are you deleting your account?</p>
+            <p style={ds.confirmDesc}>Please select a reason. This helps us improve Statox.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+              {DELETE_REASONS.map(r => (
+                <label key={r} style={ds.radioRow}>
+                  <input
+                    type="radio"
+                    name="delete_reason"
+                    value={r}
+                    checked={reason === r}
+                    onChange={() => setReason(r)}
+                    style={{ accentColor: '#dc2626', flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: 13, color: '#334155' }}>{r}</span>
+                </label>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => { if (reason) setStep(2); }}
+                disabled={!reason}
+                style={{ ...ds.nextBtn, opacity: reason ? 1 : 0.45 }}
+              >
+                Continue
+              </button>
+              <button onClick={() => { setStep(0); setReason(''); }} style={ds.cancelBtn}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Step 2 — Final confirm */}
+      {step === 2 && (
+        <div style={{ ...ds.confirmBox, borderColor: '#fca5a5', background: '#fff5f5' }}>
+          <AlertTriangle size={20} color="#dc2626" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ flex: 1 }}>
+            <p style={ds.confirmTitle}>This will permanently delete everything</p>
+            <div style={ds.warningList}>
+              {[
+                'All your analytics data and reports',
+                'All connected social media accounts',
+                'All calendar posts and schedules',
+                'Your agency connection and history',
+                'Your profile and account credentials',
+              ].map(item => (
+                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <X size={13} color="#dc2626" style={{ flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, color: '#64748b' }}>{item}</span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 13, color: '#334155', fontWeight: 600, margin: '16px 0 6px' }}>
+              Type <strong>DELETE</strong> to confirm:
+            </p>
+            <input
+              value={typed}
+              onChange={e => setTyped(e.target.value)}
+              placeholder="DELETE"
+              style={{ ...s.input, borderColor: typed === 'DELETE' ? '#fca5a5' : undefined, marginBottom: 14 }}
+            />
+            {error && <Alert type="error" msg={error} />}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={handleDelete}
+                disabled={typed !== 'DELETE' || deleting}
+                style={{ ...ds.confirmDeleteBtn, opacity: typed !== 'DELETE' ? 0.45 : 1 }}
+              >
+                {deleting
+                  ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Deleting...</>
+                  : <><Trash2 size={14} /> Permanently Delete Account</>}
+              </button>
+              <button onClick={() => { setStep(0); setReason(''); setTyped(''); setError(''); }} style={ds.cancelBtn}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const ds = {
+  zone: {
+    marginTop: 40,
+    borderTop: '1px solid #fee2e2',
+    paddingTop: 24,
+  },
+  zoneHeader: {
+    display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14,
+  },
+  zoneTitle: {
+    fontSize: 13, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.06em',
+  },
+  zoneBody: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    gap: 16, flexWrap: 'wrap',
+  },
+  zoneLabel: { margin: '0 0 4px', fontWeight: 600, fontSize: 14, color: '#0f172a' },
+  zoneDesc:  { margin: 0, fontSize: 13, color: '#64748b', maxWidth: 420 },
+  deleteBtn: {
+    display: 'inline-flex', alignItems: 'center', gap: 7, flexShrink: 0,
+    padding: '9px 18px', borderRadius: 10,
+    border: '1.5px solid #fca5a5', background: '#fef2f2',
+    color: '#dc2626', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  },
+  confirmBox: {
+    display: 'flex', gap: 14, padding: '20px 22px', borderRadius: 16,
+    background: '#fffbeb', border: '1px solid #fde68a', marginTop: 16,
+  },
+  confirmTitle: { margin: '0 0 4px', fontWeight: 700, fontSize: 14, color: '#0f172a' },
+  confirmDesc:  { margin: '0 0 14px', fontSize: 13, color: '#64748b', lineHeight: 1.5 },
+  radioRow: {
+    display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
+    padding: '8px 12px', borderRadius: 10, border: '1px solid #e5e7eb',
+    background: '#fff',
+  },
+  warningList: {
+    background: '#fef2f2', borderRadius: 12, padding: '14px 16px',
+    border: '1px solid #fecaca',
+  },
+  nextBtn: {
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    padding: '9px 20px', borderRadius: 10, border: 'none',
+    background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  },
+  cancelBtn: {
+    padding: '9px 20px', borderRadius: 10,
+    border: '1px solid #e5e7eb', background: '#fff',
+    color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+  },
+  confirmDeleteBtn: {
+    display: 'inline-flex', alignItems: 'center', gap: 7,
+    padding: '10px 20px', borderRadius: 10, border: 'none',
+    background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+  },
+};
 
 // ── Security Tab ──────────────────────────────────────────────────────────────
 

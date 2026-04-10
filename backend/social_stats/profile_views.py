@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 
-from .models import UserProfile, Notification
+from .models import UserProfile, Notification, Client, ClientInvitation
 from .social_auth_views import _make_jwt
 
 FRONTEND_URL   = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
@@ -293,6 +293,36 @@ def send_invitation_accepted_email(client_user, agency_name, agency_email):
         pass
 
 
+def _send_account_deleted_email_to_agency(agency_user, agency_name, client_name, client_email, reason):
+    """Email to agency when their client deletes their Statox account."""
+    name = agency_user.first_name or agency_user.email.split('@')[0]
+    reason_html = f'<p style="margin:8px 0 0;font-size:13px;color:#64748b;"><strong>Reason:</strong> {reason}</p>' if reason else ''
+    info = f"""<div style="background:linear-gradient(135deg,#fff5f5,#fff0f0);border:1px solid rgba(220,38,38,0.15);border-radius:14px;padding:20px 24px;margin:0 0 24px;">
+      <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.08em;">Account Deleted</p>
+      <p style="margin:0;font-size:18px;font-weight:700;color:#0f172a;">{client_name}</p>
+      <p style="margin:4px 0 0;font-size:13px;color:#64748b;">{client_email}</p>
+      {reason_html}
+    </div>"""
+    html = _email_template(
+        title        = 'A client deleted their account',
+        greeting     = f'Hi <strong style="color:#0f172a;">{name}</strong>, we\'re letting you know that a client has permanently deleted their Statox account.',
+        body_html    = '<p style="font-size:14px;color:#64748b;line-height:1.7;margin:0 0 20px;">Their account and all associated data have been permanently removed from Statox. You can no longer access their analytics or reports.</p>',
+        cta_url      = f'{FRONTEND_URL}/admin/clients',
+        cta_label    = 'View Clients',
+        note         = 'This action is permanent and cannot be undone.',
+        info_card_html = info,
+    )
+    plain = f"Hi {name},\n\n{client_name} ({client_email}) has permanently deleted their Statox account.\n\nReason: {reason or 'Not provided'}\n\nAll their data has been removed."
+    try:
+        send_mail(
+            f'{client_name} deleted their Statox account',
+            plain, FROM_EMAIL, [agency_user.email],
+            html_message=html, fail_silently=True,
+        )
+    except Exception:
+        pass
+
+
 def _send_disconnect_email_to_agency(agency_user, agency_name, client_name, client_email):
     """Email to agency when client disconnects."""
     name = agency_user.first_name or agency_user.email.split('@')[0]
@@ -319,3 +349,51 @@ def _send_disconnect_email_to_agency(agency_user, agency_name, client_name, clie
         )
     except Exception:
         pass
+
+
+# ── Delete Account ────────────────────────────────────────────────────────────
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_account(request):
+    """
+    Permanently delete a client's account and all related data.
+    Only available to client role.
+    Body: { reason: str }
+    """
+    user    = request.user
+    profile = getattr(user, 'profile', None)
+
+    if not profile or profile.role != 'client':
+        return Response({'error': 'Only client accounts can be deleted this way.'}, status=403)
+
+    reason      = (request.data.get('reason') or '').strip()
+    client      = profile.client
+    client_name = user.get_full_name() or user.email
+    client_email = user.email
+
+    # Notify connected agency before deletion
+    if profile.agency:
+        agency_user = profile.agency
+        agency_name = agency_user.get_full_name() or agency_user.email
+        try:
+            Notification.objects.create(
+                user       = agency_user,
+                notif_type = 'system',
+                title      = f'{client_name} deleted their Statox account',
+                body       = reason or 'No reason provided.',
+                data       = {'client_email': client_email, 'event': 'account_deleted'},
+            )
+            _send_account_deleted_email_to_agency(agency_user, agency_name, client_name, client_email, reason)
+        except Exception:
+            pass
+
+    # Delete Client record — all related data cascades (metrics, credentials,
+    # posts, goals, alerts, insights, ROI, calendar, captions, hashtags, etc.)
+    if client:
+        client.delete()
+
+    # Delete the Django User — cascades UserProfile, tokens, invitations
+    user.delete()
+
+    return Response({'detail': 'Your account has been permanently deleted.'}, status=200)

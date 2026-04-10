@@ -38,7 +38,7 @@ from .invitation_views import (
     list_notifications, mark_read, mark_all_read,
 )
 from .auth_views import signup, verify_email, resend_verification, password_reset_request, password_reset_confirm
-from .profile_views import user_profile, change_password, agency_info, disconnect_agency
+from .profile_views import user_profile, change_password, agency_info, disconnect_agency, delete_account
 from .caption_views import caption_view
 from .post_ideas_views import post_ideas_view, approve_all, update_idea, add_to_calendar
 from .hashtag_views import hashtag_view, save_set, get_saved_sets
@@ -69,6 +69,7 @@ urlpatterns = [
     path('profile/change-password/',      change_password,               name='change_password'),
     path('profile/agency/',               agency_info,                   name='agency_info'),
     path('profile/disconnect-agency/',    disconnect_agency,             name='disconnect_agency'),
+    path('profile/delete-account/',       delete_account,                name='delete_account'),
 
     path('auth/verify-email/',            verify_email,                  name='verify_email'),
     path('auth/resend-verification/',     resend_verification,           name='resend_verification'),

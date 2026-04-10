@@ -44,6 +44,7 @@ export const profileAPI = {
   changePassword:    (data)   => api.post('/profile/change-password/', data),
   agencyInfo:        ()       => api.get('/profile/agency/'),
   disconnectAgency:  ()       => api.post('/profile/disconnect-agency/'),
+  deleteAccount:     (data)   => api.delete('/profile/delete-account/', { data }),
 };
 
 export const authAPI = {

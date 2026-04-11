@@ -495,8 +495,14 @@ function AgencyTab({ user, refreshAuth, navigate }) {
     setError(''); setDisconnecting(true);
     try {
       const res = await profileAPI.disconnectAgency();
-      await refreshAuth(res.data.access, res.data.refresh);
-      navigate('/pending', { replace: true });
+      const updatedUser = await refreshAuth(res.data.access, res.data.refresh);
+      // If they already have a client account, go straight to dashboard.
+      // Only go to /pending if they have no client record at all.
+      if (updatedUser?.client_id) {
+        navigate('/dashboard', { replace: true });
+      } else {
+        navigate('/pending', { replace: true });
+      }
     } catch (err) {
       setError(err?.response?.data?.error || 'Failed to disconnect. Please try again.');
       setDisconnecting(false);

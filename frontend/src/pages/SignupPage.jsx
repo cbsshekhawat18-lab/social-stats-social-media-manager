@@ -207,7 +207,7 @@ export default function SignupPage() {
 
       {/* Right panel — card */}
       <section style={styles.rightPanel(isMobile)}>
-        <div style={styles.card}>
+        <div style={{ ...styles.card, ...(isMobile ? styles.cardMobile : {}) }}>
           <div style={styles.cardGlow} />
 
           {done ? (
@@ -556,17 +556,26 @@ const styles = {
   metricValue: { color: '#0f172a', fontSize: 24, fontWeight: 700, marginBottom: 6, letterSpacing: '-0.03em' },
   metricLabel: { color: '#68808a', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.12em' },
   rightPanel: (isMobile) => ({
-    flex: isMobile ? '0 0 auto' : '0 0 42%',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: isMobile ? '12px 24px 32px' : '40px 56px 40px 24px',
+    flex: isMobile ? '1' : '0 0 42%',
+    display: 'flex',
+    alignItems: isMobile ? 'flex-end' : 'center',
+    justifyContent: 'center',
+    padding: isMobile ? '0' : '40px 56px 40px 24px',
     position: 'relative', zIndex: 1,
   }),
   card: {
-    width: '100%', maxWidth: 460, position: 'relative', overflow: 'hidden',
-    borderRadius: 30, padding: '34px 32px 28px', background: CARD_BG,
+    width: '100%', maxWidth: 420, position: 'relative', overflow: 'hidden',
+    borderRadius: 24, padding: '48px 40px', background: CARD_BG,
     border: '1px solid rgba(31, 182, 207, 0.22)',
-    boxShadow: '0 24px 80px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(31, 182, 207, 0.05)',
+    boxShadow: '0 24px 80px rgba(15, 23, 42, 0.14)',
     backdropFilter: 'blur(18px)', animation: 'fadeInScale 0.35s ease forwards',
+  },
+  cardMobile: {
+    position: 'fixed', bottom: 0, left: 0, right: 0,
+    maxWidth: '100%', borderRadius: '24px 24px 0 0',
+    padding: '32px 24px',
+    boxShadow: '0 -12px 40px rgba(15, 23, 42, 0.18)',
+    animation: 'slideUp 0.3s ease forwards',
   },
   cardGlow: {
     position: 'absolute', inset: 0, borderRadius: 30,
@@ -603,7 +612,7 @@ const styles = {
   }),
   input: {
     flex: 1, background: 'transparent', border: 'none', outline: 'none',
-    color: '#0f172a', fontSize: 14, fontFamily: 'inherit',
+    color: '#0f172a', fontSize: 16, fontFamily: 'inherit',
   },
   eyeBtn: {
     background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2,
@@ -626,11 +635,12 @@ const styles = {
   checkboxLink: { color: CYAN, textDecoration: 'none', fontWeight: 600 },
   primaryButton: (isHovered) => ({
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    marginTop: 4, width: '100%', height: 52, border: 'none', borderRadius: 16,
-    background: CYAN, color: '#021418', fontSize: 15, fontWeight: 800,
+    marginTop: 4, width: '100%', minHeight: 50, height: 52, border: 'none', borderRadius: 14,
+    background: CYAN, color: '#021418', fontSize: 16, fontWeight: 800,
     letterSpacing: '0.01em', cursor: 'pointer', transition: 'all 0.18s ease',
     boxShadow: isHovered ? '0 0 28px rgba(31, 182, 207, 0.38)' : '0 10px 24px rgba(31, 182, 207, 0.18)',
     transform: isHovered ? 'translateY(-1px)' : 'translateY(0)',
+    WebkitTapHighlightColor: 'transparent',
   }),
   dividerRow: { display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0 14px' },
   dividerLine: { flex: 1, height: 1, background: 'rgba(148,163,184,0.25)' },
@@ -638,10 +648,11 @@ const styles = {
   socialRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
   socialBtn: {
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    height: 48, background: 'rgba(255,255,255,0.92)',
+    minHeight: 50, height: 48, background: 'rgba(255,255,255,0.92)',
     border: '1px solid rgba(148,163,184,0.22)', borderRadius: 14,
-    fontSize: 14, fontWeight: 600, color: '#0f172a', cursor: 'pointer',
+    fontSize: 16, fontWeight: 600, color: '#0f172a', cursor: 'pointer',
     transition: 'all 0.18s ease',
+    WebkitTapHighlightColor: 'transparent',
   },
   successIcon: {
     width: 72, height: 72, borderRadius: '50%', background: 'rgba(0, 215, 255, 0.08)',

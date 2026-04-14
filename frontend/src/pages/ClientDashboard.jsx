@@ -137,6 +137,23 @@ export default function ClientDashboard({ clientId: propClientId }) {
 
       {activeView === 'analytics' && (
         <>
+          {/* Greeting header */}
+          <div style={{
+            padding: '20px 16px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>
+                Good morning 👋
+              </div>
+              <div style={{ fontSize: 14, color: '#64748b', marginTop: 2 }}>
+                Here's your analytics overview
+              </div>
+            </div>
+          </div>
+
           {/* Control bar */}
           <div style={S.controlBar} className="db-card client-control-bar">
             <div style={S.controlTop}>
@@ -608,17 +625,20 @@ const S = {
   headerActions: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
   btnInner: { display: 'flex', alignItems: 'center', gap: 6 },
   syncBtn: {
-    padding: '9px 16px', borderRadius: 10, border: '1.5px solid #e2e8f0',
+    padding: '9px 16px', borderRadius: 12, border: '1.5px solid #e2e8f0',
     background: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: 13, color: '#374151',
+    WebkitTapHighlightColor: 'transparent',
   },
   shareBtn: {
-    padding: '9px 16px', borderRadius: 10, border: 'none',
+    padding: '9px 16px', borderRadius: 12, border: 'none',
     background: 'linear-gradient(135deg,#00d7ff,#0099bb)', color: '#fff',
     cursor: 'pointer', fontWeight: 700, fontSize: 13,
+    WebkitTapHighlightColor: 'transparent',
   },
   pdfBtn: {
-    padding: '9px 16px', borderRadius: 10, border: 'none',
+    padding: '9px 16px', borderRadius: 12, border: 'none',
     background: '#0f172a', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+    WebkitTapHighlightColor: 'transparent',
   },
 
   // Profile strip
@@ -678,8 +698,9 @@ const S = {
 
   // KPI cards
   cards: {
-    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+    display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
     gap: 12, marginBottom: 18,
+    padding: '0 16px',
   },
 
   // Charts

@@ -168,7 +168,7 @@ export default function LoginPage() {
       </section>
 
       <section style={styles.rightPanel(isMobile)}>
-        <div style={styles.card}>
+        <div style={{ ...styles.card, ...(isMobile ? styles.cardMobile : {}) }}>
           <div style={styles.cardGlow} />
           <div style={styles.cardHeader}>
             <div style={styles.cardLogoWrap}>
@@ -519,24 +519,34 @@ const styles = {
   rightPanel: (isMobile) => ({
     flex: isMobile ? '0 0 auto' : '0 0 42%',
     display: 'flex',
-    alignItems: 'center',
+    alignItems: isMobile ? 'flex-end' : 'center',
     justifyContent: 'center',
-    padding: isMobile ? '12px 24px 32px' : '40px 56px 40px 24px',
+    padding: isMobile ? '0' : '40px 56px 40px 24px',
     position: 'relative',
     zIndex: 1,
+    ...(isMobile ? { flex: 1 } : {}),
   }),
   card: {
     width: '100%',
-    maxWidth: 460,
+    maxWidth: 420,
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 30,
-    padding: '34px 32px 28px',
+    borderRadius: 24,
+    padding: '48px 40px',
     background: CARD_BG,
     border: '1px solid rgba(31, 182, 207, 0.22)',
-    boxShadow: '0 24px 80px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(31, 182, 207, 0.05)',
+    boxShadow: '0 24px 80px rgba(15, 23, 42, 0.14)',
     backdropFilter: 'blur(18px)',
     animation: 'fadeInScale 0.35s ease forwards',
+  },
+  cardMobile: {
+    position: 'fixed',
+    bottom: 0, left: 0, right: 0,
+    maxWidth: '100%',
+    borderRadius: '24px 24px 0 0',
+    padding: '32px 24px',
+    boxShadow: '0 -12px 40px rgba(15, 23, 42, 0.18)',
+    animation: 'slideUp 0.3s ease forwards',
   },
   cardGlow: {
     position: 'absolute',
@@ -614,7 +624,7 @@ const styles = {
     border: 'none',
     outline: 'none',
     color: '#0f172a',
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'inherit',
   },
   fieldError: {
@@ -653,18 +663,20 @@ const styles = {
     gap: 8,
     marginTop: 6,
     width: '100%',
+    minHeight: 50,
     height: 54,
     border: 'none',
-    borderRadius: 16,
+    borderRadius: 14,
     background: CYAN,
     color: '#021418',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 800,
     letterSpacing: '0.01em',
     cursor: 'pointer',
     transition: 'all 0.18s ease',
     boxShadow: isHovered ? '0 0 28px rgba(31, 182, 207, 0.38)' : '0 10px 24px rgba(31, 182, 207, 0.18)',
     transform: isHovered ? 'translateY(-1px)' : 'translateY(0)',
+    WebkitTapHighlightColor: 'transparent',
   }),
   dividerRow: {
     display: 'flex',
@@ -690,6 +702,7 @@ const styles = {
     gap: 10,
   }),
   socialBtn: {
+    minHeight: 50,
     height: 48,
     display: 'flex',
     alignItems: 'center',
@@ -699,10 +712,11 @@ const styles = {
     border: '1px solid rgba(148,163,184,0.22)',
     background: 'rgba(255,255,255,0.92)',
     color: '#0f172a',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 600,
     cursor: 'pointer',
     transition: 'all 0.18s ease',
+    WebkitTapHighlightColor: 'transparent',
   },
   footerRow: {
     marginTop: 20,

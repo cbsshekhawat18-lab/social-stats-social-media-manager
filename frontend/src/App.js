@@ -53,7 +53,7 @@ const shellMainStyle = {
   marginLeft: 260,
   flex: 1,
   minHeight: '100vh',
-  background: 'linear-gradient(180deg, #f6fdff 0%, #f3fbff 32%, #f8fbff 68%, #f5f9ff 100%)',
+  background: '#f6f8fc',
 };
 
 // ── Protected route wrapper ───────────────────────────────────────────────────

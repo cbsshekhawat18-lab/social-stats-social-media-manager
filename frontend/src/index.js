@@ -12,6 +12,10 @@ document.head.appendChild(fontLink);
 // ── Global styles ────────────────────────────────────────────────────────────
 const style = document.createElement('style');
 style.textContent = `
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
   *, *::before, *::after { box-sizing: border-box; }
 
   :root {
@@ -74,6 +78,7 @@ style.textContent = `
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: 'cv02','cv03','cv04','cv11';
     line-height: 1.5;
+    overscroll-behavior: none;
   }
 
   a { color: inherit; }
@@ -212,6 +217,12 @@ style.textContent = `
     transition: all 0.1s ease;
   }
 
+  /* Desktop: show sidebar, hide bottom nav and mobile header */
+  @media (min-width: 769px) {
+    .mobile-bottom-nav { display: none !important; }
+    .mobile-header { display: none !important; }
+  }
+
   /* Bottom nav: hidden on desktop, flex on mobile */
   .mobile-bottom-nav { display: none !important; }
   /* Mobile header: hidden on desktop */
@@ -277,9 +288,10 @@ style.textContent = `
     .sidebar-overlay.sidebar-open { display: block !important; }
 
     /* Content: no left margin, top padding for header, bottom for tab bar */
+    .sidebar { display: none !important; }
     .main-content {
       margin-left: 0 !important;
-      padding-top: 60px !important;
+      padding-top: 56px !important;
       padding-bottom: 80px !important;
     }
 

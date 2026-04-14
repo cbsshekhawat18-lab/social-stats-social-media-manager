@@ -876,9 +876,10 @@ const loadingStateStyle = {
 const sectionStyle = {
   background: 'linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)',
   border: '1px solid #e2e8f0',
-  borderRadius: 24,
-  padding: 24,
-  boxShadow: '0 12px 30px rgba(15,23,42,.04)',
+  borderRadius: 20,
+  padding: '20px 16px',
+  marginBottom: 12,
+  boxShadow: '0 2px 12px rgba(0,0,0,.05)',
 };
 
 const sectionHeaderStyle = {
@@ -936,13 +937,14 @@ const labelStyle = {
 
 const inputStyle = {
   padding: '12px 14px',
-  border: '1.5px solid #dbe4ee',
-  borderRadius: 16,
-  fontSize: 14,
+  border: '1.5px solid #e2e8f0',
+  borderRadius: 12,
+  fontSize: 16,
   outline: 'none',
   transition: 'border-color 0.2s, box-shadow 0.2s',
   background: 'white',
   boxSizing: 'border-box',
+  width: '100%',
 };
 
 const textareaStyle = {
@@ -950,6 +952,7 @@ const textareaStyle = {
   minHeight: 96,
   resize: 'vertical',
   fontFamily: 'inherit',
+  fontSize: 16,
 };
 
 const pillGridStyle = {
@@ -970,6 +973,7 @@ const checkboxPillStyle = {
   cursor: 'pointer',
   color: '#334155',
   fontWeight: 600,
+  WebkitTapHighlightColor: 'transparent',
 };
 
 const checkboxPillActiveStyle = {
@@ -1097,9 +1101,12 @@ const buttonStyle = {
   padding: '8px 16px',
   border: 'none',
   borderRadius: 14,
-  fontSize: 14,
+  fontSize: 15,
+  fontWeight: 700,
+  minHeight: 50,
   cursor: 'pointer',
   transition: 'all 0.2s',
   gap: 8,
   boxShadow: '0 12px 24px rgba(0,215,255,.18)',
+  WebkitTapHighlightColor: 'transparent',
 };

@@ -58,7 +58,7 @@ export default function ConnectedAccounts({ clientId, status, onRefresh }) {
             : null;
 
           return (
-            <div key={key} className="oauth-platform-card" style={{ ...styles.card, borderLeft: `4px solid ${p.color}` }}>
+            <div key={key} className="oauth-platform-card" style={styles.card}>
               <div style={styles.cardTop}>
                 <div style={styles.platformInfo}>
                   <span style={styles.platformIcon}>
@@ -123,15 +123,18 @@ export default function ConnectedAccounts({ clientId, status, onRefresh }) {
 }
 
 const styles = {
-  heading: { margin: '0 0 6px', fontSize: 20, fontWeight: 700, color: '#0f172a' },
+  heading: { margin: '0 0 6px', fontSize: 20, fontWeight: 800, color: '#0f172a' },
   sub:     { margin: '0 0 24px', color: '#64748b', fontSize: 14 },
   grid: {
-    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: 16, marginBottom: 24,
+    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+    gap: 12, marginBottom: 24,
   },
   card: {
-    background: '#fff', borderRadius: 12, padding: 20,
-    boxShadow: '0 1px 6px rgba(0,0,0,.07)',
+    background: '#fff', borderRadius: 16, padding: '16px 18px',
+    boxShadow: '0 2px 12px rgba(0,0,0,.06)',
+    border: '1px solid #f1f5f9',
+    overflow: 'hidden',
+    position: 'relative',
   },
   cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
   platformInfo: { display: 'flex', alignItems: 'center', gap: 10 },
@@ -147,16 +150,19 @@ const styles = {
   groupNote:    { fontSize: 12, color: '#2563eb', fontStyle: 'italic', marginTop: 4 },
   groupNoteInner: { display: 'flex', alignItems: 'center', gap: 4 },
   connectBtn: {
-    width: '100%', padding: '10px', borderRadius: 8, border: 'none',
-    color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+    width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+    color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14,
+    letterSpacing: '0.01em', transition: 'opacity 0.15s ease',
+    WebkitTapHighlightColor: 'transparent',
   },
   disconnectBtn: {
-    width: '100%', padding: '9px', borderRadius: 8, border: '1.5px solid #e5e7eb',
-    background: '#fff', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 13,
+    width: '100%', padding: '11px', borderRadius: 12, border: '1.5px solid #fee2e2',
+    background: '#fff5f5', color: '#dc2626', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+    WebkitTapHighlightColor: 'transparent',
   },
   helpBox: {
-    background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10,
-    padding: '14px 18px', fontSize: 13, color: '#1e40af',
+    background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 16,
+    padding: '16px 18px', fontSize: 13, color: '#1e40af',
   },
   helpTitle: { display: 'flex', alignItems: 'center' },
 };

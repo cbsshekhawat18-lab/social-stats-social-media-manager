@@ -50,8 +50,8 @@ export default function BottomNav({ onMenuOpen, alertCount = 0 }) {
             end={end}
             style={{ ...styles.tab, ...(active ? styles.tabActive : {}) }}
           >
-            <div style={styles.iconWrap}>
-              <Icon size={21} strokeWidth={active ? 2.5 : 1.8} />
+            <div style={{ ...styles.iconWrap, ...(active ? styles.iconWrapActive : {}) }}>
+              <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
               {badge ? <span style={styles.badge}>{badge > 99 ? '99+' : badge}</span> : null}
             </div>
             <span style={{ ...styles.label, ...(active ? styles.labelActive : {}) }}>
@@ -78,18 +78,17 @@ export default function BottomNav({ onMenuOpen, alertCount = 0 }) {
 const styles = {
   nav: {
     position: 'fixed',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 0, left: 0, right: 0,
     zIndex: 200,
-    height: 66,
-    background: '#ffffff',
-    borderTop: '1px solid #e2e8f0',
-    boxShadow: '0 -4px 24px rgba(15,23,42,0.08)',
+    height: 72,
+    background: 'rgba(255,255,255,0.95)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderTop: '1px solid rgba(226,232,240,0.8)',
+    boxShadow: '0 -8px 32px rgba(15,23,42,0.08)',
     display: 'flex',
     alignItems: 'stretch',
     paddingBottom: 'env(safe-area-inset-bottom)',
-    /* shown/hidden via CSS class in index.js */
   },
   tab: {
     flex: 1,
@@ -97,61 +96,56 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 4,
     border: 'none',
     background: 'transparent',
     cursor: 'pointer',
     textDecoration: 'none',
     color: '#94a3b8',
-    padding: '6px 2px 4px',
+    padding: '6px 4px 4px',
     position: 'relative',
-    transition: 'color 0.15s ease',
+    transition: 'color 0.2s ease',
     fontFamily: 'inherit',
+    WebkitTapHighlightColor: 'transparent',
   },
-  tabActive: {
-    color: '#00B8DA',
-  },
+  tabActive: { color: '#00B8DA' },
   iconWrap: {
     position: 'relative',
+    width: 44,
+    height: 30,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 12,
+    transition: 'background 0.2s ease',
+  },
+  iconWrapActive: {
+    background: 'rgba(0,204,245,0.12)',
   },
   badge: {
     position: 'absolute',
-    top: -5,
-    right: -8,
-    minWidth: 16,
-    height: 16,
+    top: -2, right: -4,
+    minWidth: 16, height: 16,
     padding: '0 4px',
     borderRadius: 999,
-    background: '#dc2626',
+    background: '#ef4444',
     color: '#fff',
-    fontSize: 9,
-    fontWeight: 800,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    fontSize: 9, fontWeight: 800,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
     border: '2px solid #fff',
   },
   label: {
-    fontSize: 10,
-    fontWeight: 600,
-    color: 'inherit',
-    letterSpacing: '0.02em',
+    fontSize: 10, fontWeight: 600,
+    color: 'inherit', letterSpacing: '0.01em',
   },
-  labelActive: {
-    fontWeight: 700,
-  },
+  labelActive: { fontWeight: 700 },
   activePill: {
     position: 'absolute',
-    top: 0,
-    left: '50%',
+    top: 0, left: '50%',
     transform: 'translateX(-50%)',
-    width: 28,
-    height: 3,
-    borderRadius: '0 0 4px 4px',
-    background: '#00CCF5',
-    boxShadow: '0 1px 6px rgba(0,204,245,0.5)',
+    width: 32, height: 3,
+    borderRadius: '0 0 6px 6px',
+    background: 'linear-gradient(90deg, #00CCF5, #00A8D8)',
+    boxShadow: '0 2px 8px rgba(0,204,245,0.5)',
   },
 };

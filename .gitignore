@@ -62,3 +62,21 @@ Thumbs.db
 
 # Misc
 *.swp
+
+# ──────────────────────────────────────────────────────────────────────
+# Internal compliance / strategy / operations documents.
+# These are intentionally NOT public. Track them in a separate private
+# repo or knowledge base if you need them under version control.
+# ──────────────────────────────────────────────────────────────────────
+COMPLIANCE_CHECKLIST.md
+DATA_INVENTORY.md
+DATA_PROCESSING_AGREEMENT.md
+GOOGLE_VERIFICATION_DOCS.md
+INCIDENT_RESPONSE.md
+INFRASTRUCTURE_HARDENING.md
+INTEGRATION_AUDIT.md
+META_REVIEW_DOCS.md
+PENTEST_RFP.md
+RISK_REGISTER.md
+SECURITY_BASELINE.md
+UI_FIXES_AUDIT.md

@@ -1,0 +1,9 @@
+
+Contact: mailto:security@statox.ai
+Contact: https://statox.ai/security
+Expires: 2026-12-31T23:59:59Z
+Preferred-Languages: en, hi
+Canonical: https://app.statox.ai/.well-known/security.txt
+Policy: https://statox.ai/security
+Encryption: https://statox.ai/.well-known/pgp-key.asc
+Hiring: https://statox.ai/careers

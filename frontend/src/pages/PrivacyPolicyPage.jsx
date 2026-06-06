@@ -15,8 +15,9 @@ export default function PrivacyPolicyPage() {
           body: (
             <>
               <p>
-                Statox is operated by <strong>Statox Technologies Pvt. Ltd.</strong>, a company registered in India
-                (CIN: U72900KA2024PTC000000), with its registered office in Bengaluru, Karnataka.
+                Statox is operated by Statox Technologies, an early-stage product team
+                building marketing tooling. For corporate / registration details, write to
+                <a href="mailto:privacy@statox.ai"> privacy@statox.ai</a>.
               </p>
               <p>
                 This policy applies to <strong>statox.ai</strong>, the Statox web app, our mobile apps, and any

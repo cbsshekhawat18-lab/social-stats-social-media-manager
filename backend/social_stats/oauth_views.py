@@ -19,17 +19,47 @@ from rest_framework.response import Response
 
 from .models import PlatformCredential, Client
 from django.contrib.auth.models import User
+from .marketplace_permissions import (
+    resolve_acting_context, check_action, deny_response, approval_pending_response,
+)
+from .activity_logger import log_activity_for_request
 
 # ── Consumer app (public_profile + email only) ────────────────────────────────
 # App ID is public (appears in OAuth URLs). Secret comes from env.
-FACEBOOK_CONSUMER_APP_ID     = '2880231975675480'
-FACEBOOK_CONSUMER_REDIRECT   = 'https://statox.ai/api/oauth/facebook/consumer/callback/'
+# Both default to the production values; override in env for self-hosted forks.
+FACEBOOK_CONSUMER_APP_ID = getattr(
+    settings, 'FACEBOOK_CONSUMER_APP_ID', '2880231975675480'
+)
+FACEBOOK_CONSUMER_REDIRECT = getattr(
+    settings, 'FACEBOOK_CONSUMER_REDIRECT_URI',
+    'https://statox.ai/api/oauth/facebook/consumer/callback/',
+)
 
 def _facebook_consumer_secret():
     return getattr(settings, 'FACEBOOK_SOCIAL_APP_SECRET', '') or settings.META_APP_SECRET
 
 
+class PlatformLimitExceeded(Exception):
+    """Raised by _save_credential when the workspace has hit its connected_platforms cap."""
+    def __init__(self, info):
+        self.info = info
+        super().__init__(info.get('reason') or 'platform limit exceeded')
+
+
 def _save_credential(client_id, platform, defaults):
+    from .usage_limits import check_limit
+    existing = PlatformCredential.objects.filter(
+        client_id=client_id, platform=platform,
+    ).first()
+    if not existing or not existing.is_active:
+        try:
+            client = Client.objects.get(pk=client_id)
+        except Client.DoesNotExist:
+            client = None
+        if client:
+            ok, reason, info = check_limit(client, 'connected_platforms')
+            if not ok:
+                raise PlatformLimitExceeded({**(info or {}), 'reason': reason})
     PlatformCredential.objects.update_or_create(
         client_id=client_id, platform=platform, defaults={**defaults, 'is_active': True}
     )
@@ -266,24 +296,32 @@ def facebook_oauth_callback(request):
         params={'access_token': long_token}, timeout=10
     ).json().get('data', [])
 
-    connected = []
+    # Log granted permissions — helps diagnose if Meta stripped a scope
+    # (e.g. instagram_manage_insights not yet approved by App Review).
+    try:
+        perms_resp = requests.get(
+            f"https://graph.facebook.com/{settings.META_API_VERSION}/me/permissions",
+            params={'access_token': long_token}, timeout=10
+        ).json()
+        granted = [p.get('permission') for p in perms_resp.get('data', []) if p.get('status') == 'granted']
+        logger.info("FB granted permissions for client %s: %s", client_id, granted)
+    except Exception as e:
+        logger.warning("FB permissions probe failed for client %s: %s", client_id, e)
 
+    if not pages:
+        logger.warning("FB callback: /me/accounts returned no pages for client %s", client_id)
+        return _settings_redirect(client_id, '?error=facebook_no_pages')
+
+    # Step 4: Probe every page for a linked Instagram Business Account.
+    # Prefer the first page that has IG linked. If none do, fall back to
+    # pages[0] for FB-only credential.
+    chosen_page = None
+    chosen_ig_id = ''
     for page in pages:
         page_id    = page['id']
         page_name  = page.get('name', '')
         page_token = page.get('access_token', long_token)
 
-        # Save Facebook credential
-        _save_credential(client_id, 'facebook', {
-            'access_token':  page_token,
-            'refresh_token': long_token,
-            'expires_at':    expires_at,
-            'page_id':       page_id,
-            'page_name':     page_name,
-        })
-        connected.append('facebook')
-
-        # Step 4: Get linked Instagram Business Account
         ig_resp = requests.get(
             f"https://graph.facebook.com/{settings.META_API_VERSION}/{page_id}",
             params={
@@ -293,23 +331,56 @@ def facebook_oauth_callback(request):
         ).json()
 
         ig_id = ig_resp.get('instagram_business_account', {}).get('id', '')
-        if ig_id:
-            # Get IG username
-            ig_info = requests.get(
-                f"https://graph.facebook.com/{settings.META_API_VERSION}/{ig_id}",
-                params={'fields': 'name,username', 'access_token': page_token}, timeout=10
-            ).json()
+        logger.info(
+            "FB page candidate: client=%s page_id=%s name=%s ig_id=%r ig_resp=%s",
+            client_id, page_id, page_name, ig_id, ig_resp
+        )
 
-            _save_credential(client_id, 'instagram', {
-                'access_token':          page_token,
-                'refresh_token':         long_token,
-                'expires_at':            expires_at,
-                'page_id':               page_id,
-                'page_name':             ig_info.get('username', page_name),
-                'instagram_account_id':  ig_id,
-            })
-            connected.append('instagram')
-        break  # Use first page only (can extend to page picker)
+        if ig_id and not chosen_page:
+            chosen_page  = page
+            chosen_ig_id = ig_id
+            break
+
+    if chosen_page is None:
+        chosen_page = pages[0]
+
+    page_id    = chosen_page['id']
+    page_name  = chosen_page.get('name', '')
+    page_token = chosen_page.get('access_token', long_token)
+
+    connected = []
+
+    # Save Facebook credential for the chosen page
+    _save_credential(client_id, 'facebook', {
+        'access_token':  page_token,
+        'refresh_token': long_token,
+        'expires_at':    expires_at,
+        'page_id':       page_id,
+        'page_name':     page_name,
+    })
+    connected.append('facebook')
+
+    # Save Instagram credential if a linked IG Business Account was found
+    if chosen_ig_id:
+        ig_info = requests.get(
+            f"https://graph.facebook.com/{settings.META_API_VERSION}/{chosen_ig_id}",
+            params={'fields': 'name,username', 'access_token': page_token}, timeout=10
+        ).json()
+
+        _save_credential(client_id, 'instagram', {
+            'access_token':          page_token,
+            'refresh_token':         long_token,
+            'expires_at':            expires_at,
+            'page_id':               page_id,
+            'page_name':             ig_info.get('username', page_name),
+            'instagram_account_id':  chosen_ig_id,
+        })
+        connected.append('instagram')
+    else:
+        logger.warning(
+            "FB callback: no page with linked Instagram for client %s (checked %d pages)",
+            client_id, len(pages)
+        )
 
     platforms = ','.join(connected)
     return _settings_redirect(client_id, f"?connected={platforms}")
@@ -518,7 +589,11 @@ def linkedin_oauth_start(request, client_id):
         'client_id':      settings.LINKEDIN_CLIENT_ID,
         'redirect_uri':   settings.LINKEDIN_REDIRECT_URI,
         'state':           state,
-        'scope':          'r_organization_social rw_organization_admin r_basicprofile openid email',
+        # OpenID Connect scopes only — these don't require LinkedIn Community
+        # Management API approval. Org-level analytics (organizationAcls /
+        # organizationPageStatistics) require approval on a dedicated LinkedIn
+        # app and will be added back once that approval is granted.
+        'scope':          'openid profile email',
     }
     return redirect(f"https://www.linkedin.com/oauth/v2/authorization?{urlencode(params)}")
 
@@ -558,31 +633,27 @@ def linkedin_oauth_callback(request):
     refresh_token = token_resp.get('refresh_token', '')
     expires_at    = timezone.now() + timedelta(seconds=expires_in)
 
-    # Get organizations the user is admin of
-    orgs_resp = requests.get(
-        'https://api.linkedin.com/v2/organizationAcls',
-        params={
-            'q':        'roleAssignee',
-            'role':     'ADMINISTRATOR',
-            'projection': '(elements*(organization~(id,localizedName)))',
-        },
+    # OpenID Connect userinfo — works with the basic OIDC scopes above and does
+    # NOT require Community Management API approval.
+    # NOTE: Org-level analytics (organizationAcls / organizationPageStatistics)
+    # require Community Management API approval on a dedicated LinkedIn app.
+    # Until that is granted, we only store the user's LinkedIn identity.
+    userinfo_resp = requests.get(
+        'https://api.linkedin.com/v2/userinfo',
         headers={'Authorization': f'Bearer {access_token}'},
         timeout=10
     ).json()
 
-    elements = orgs_resp.get('elements', [])
-    if elements:
-        org      = elements[0].get('organization~', {})
-        org_id   = str(org.get('id', ''))
-        org_name = org.get('localizedName', '')
+    user_sub  = str(userinfo_resp.get('sub', ''))
+    user_name = userinfo_resp.get('name', '') or userinfo_resp.get('given_name', '')
 
-        _save_credential(client_id, 'linkedin', {
-            'access_token':    access_token,
-            'refresh_token':   refresh_token,
-            'expires_at':      expires_at,
-            'organization_id': org_id,
-            'organization_name': org_name,
-        })
+    _save_credential(client_id, 'linkedin', {
+        'access_token':      access_token,
+        'refresh_token':     refresh_token,
+        'expires_at':        expires_at,
+        'organization_id':   user_sub,
+        'organization_name': user_name,
+    })
 
     return _settings_redirect(client_id, "?connected=linkedin")
 
@@ -659,11 +730,48 @@ def oauth_status(request, client_id):
 
 
 @api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def oauth_disconnect(request, client_id, platform):
-    """Disconnect a platform — delete stored tokens."""
+    """Disconnect a platform — delete stored tokens.
+
+    Rule #9 of the marketplace spec: end-users can ALWAYS disconnect platforms,
+    even on agency-managed workspaces. So owners and superadmins bypass the
+    permission check; agency-side actors must hold disconnect_platforms.
+    """
+    try:
+        client = Client.objects.get(pk=client_id)
+    except Client.DoesNotExist:
+        return Response({'error': 'workspace not found'}, status=404)
+
+    role, relation = resolve_acting_context(request, client)
+    if role == 'forbidden':
+        return Response({'error': 'forbidden'}, status=403)
+    if role == 'agency':
+        verdict, ctx = check_action(
+            request, client, 'disconnect_platforms',
+            action_type='disconnect_platform',
+            payload={'platform': platform},
+            target_object_type='PlatformCredential',
+            preview=f'Disconnect {platform}',
+        )
+        if verdict == 'denied':
+            return deny_response(ctx['reason'])
+        if verdict == 'approval_required':
+            return approval_pending_response(ctx['approval'])
+
     PlatformCredential.objects.filter(
         client_id=client_id, platform=platform
     ).update(access_token='', refresh_token='', is_active=False)
+
+    log_activity_for_request(
+        request, client,
+        action_type='platform_disconnected',
+        description=f'Disconnected {platform}',
+        severity='warning',
+        target_object_type='PlatformCredential',
+        metadata={'platform': platform},
+        is_reversible=False,
+    )
     return Response({'message': f'{platform} disconnected'})
 
 

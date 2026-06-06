@@ -1,285 +1,227 @@
-# 📊 SocialStats — Social Media Agency Dashboard
+# Statox AI — Marketing OS
 
-Multi-tenant social media analytics dashboard for marketing agencies.
-Automatically syncs data from Facebook, Instagram, YouTube, LinkedIn, and Google My Business.
+Statox AI is the marketing operating system for modern teams. One product unifies
+analytics, content composing, conversation inbox, ads, AI assistant, and bot
+builder across the five platforms that matter most: **Facebook**, **Instagram**,
+**YouTube**, **LinkedIn**, and **Google Business**. WhatsApp Business is a
+first-class messaging module.
+
+> **Status:** early-stage. The product is feature-complete enough to run
+> end-to-end (auth, OAuth onboarding, analytics, composer, AI features,
+> CTWA bot builder, marketplace), but customer-volume, testimonials, and
+> case studies on the marketing site are intentionally absent until we
+> onboard the first cohort of launch partners.
 
 ---
 
-## 🏗️ Tech Stack
+## What's in the box
 
-| Layer | Technology |
-|-------|-----------|
+- **Analytics** — daily-metric ingestion across 5 platforms, time-series API,
+  per-client dashboards, AI-narrated monthly reports.
+- **Composer** — one editor, per-platform formatting, brand-voice AI captions,
+  scheduling, approval flows for agency clients.
+- **Inbox** — unified conversation queue across DMs, comments, and Google
+  reviews; AI reply suggestions in your brand voice.
+- **Click-to-WhatsApp bots** — visual flow editor with conditional branches and
+  AI chat nodes; lead capture pushes to CRM.
+- **Marketplace** — two-sided agency directory where end users can find an
+  agency to manage their workspace.
+- **AI surfaces** — Cmd/Ctrl+J assistant with tool use, brand-voice training,
+  insights, forecasts.
+
+Account types:
+
+| Account | What they see |
+|---|---|
+| `superadmin` / `staff` | Full admin shell at `/admin` |
+| Agency member (`role=client`, `account_type=agency_member`) | Shared dashboard at `/dashboard` + agency-only management at `/agency/*` |
+| End user (`role=client`, `account_type=end_user`) | End-user shell at `/u` + a single workspace they own |
+
+---
+
+## Tech stack
+
+| Layer | What |
+|---|---|
 | Backend | Django 4.2 + Django REST Framework |
-| Auth | JWT (SimpleJWT) |
-| Task Queue | Celery + Redis |
-| Database | SQLite (dev) / PostgreSQL (prod) |
-| Frontend | React 18 + React Router |
+| Auth | JWT (SimpleJWT) + Argon2 hasher + django-axes brute-force protection |
+| Task queue | Celery + Redis |
+| Realtime | Django Channels (WebSockets) |
+| Database | SQLite for local dev, PostgreSQL for everything else |
+| Encryption | Fernet for OAuth tokens at rest |
+| Frontend | React 18 + React Router v6 |
+| Data fetching | TanStack Query + Zustand |
+| Animations | framer-motion |
 | Charts | Recharts |
-| PDF Export | jsPDF + html2canvas |
+| Icons | lucide-react |
 
 ---
 
-## 👤 User Roles
+## Quick start (local dev)
 
-| Role | Access |
-|------|--------|
-| **superadmin** | All clients, admin panel, create accounts |
-| **staff** | Assigned clients only |
-| **client** | Their own data only |
+You'll need: Python 3.11+, Node 18+, Redis, and an Anthropic API key for AI
+features (everything else works without external credentials).
 
----
-
-## 🚀 Quick Start
-
-### 1. Backend Setup
+### Backend
 
 ```bash
 cd backend
-
-# Install Python dependencies
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# Copy and fill in environment variables
+# Configure env
 cp .env.example .env
-# Edit .env with your API credentials
+# Edit .env — at minimum set ANTHROPIC_API_KEY if you want AI features.
 
-# Run database migrations
+# Migrate + seed
 python manage.py migrate
+python manage.py setup    # creates default superadmin (see prompt)
 
-# Create superadmin + Celery schedules
-python manage.py setup
-# Default: admin@agency.com / admin123
-
-# Start Django server
+# Run
 python manage.py runserver
 ```
 
-### 2. Frontend Setup
+### Frontend
 
 ```bash
 cd frontend
-
-# Install Node dependencies
 npm install
-
-# Copy env file
 cp .env.example .env
-
-# Start React dev server
 npm start
-# Opens at http://localhost:3000
+# http://localhost:3000
 ```
 
-### 3. Start Celery (auto-sync)
+### Celery (background sync + notifications)
 
-Open two extra terminal windows:
+In two extra terminals:
 
 ```bash
-# Terminal 1: Celery worker (processes sync tasks)
-cd backend
+# worker
+cd backend && source .venv/bin/activate
 celery -A dashboard worker -l info
 
-# Terminal 2: Celery beat (triggers scheduled syncs)
-cd backend
+# beat (scheduled tasks)
+cd backend && source .venv/bin/activate
 celery -A dashboard beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
 ```
 
-### 4. Install Redis (required for Celery)
+### Redis
 
 ```bash
 # macOS
 brew install redis && brew services start redis
 
-# Ubuntu/Debian
+# Ubuntu / Debian
 sudo apt install redis-server && sudo systemctl start redis
 
-# Windows — use WSL or Docker:
+# Docker
 docker run -d -p 6379:6379 redis
 ```
 
 ---
 
-## 🔑 Getting API Credentials
+## OAuth setup
 
-### Meta (Facebook + Instagram)
-1. Go to https://developers.facebook.com → **Create App** → Business type
-2. Add products: **Pages API** + **Instagram Graph API**
-3. Settings → Basic → copy **App ID** + **App Secret**
-4. Facebook Login → Settings → add `http://localhost:8000/api/oauth/facebook/callback/`
-5. Submit app for **App Review** (required for real users)
+To connect real social-platform accounts during local dev, you need OAuth
+credentials. Each platform requires its own app:
 
-### Google (YouTube + Google My Business)
-1. Go to https://console.cloud.google.com → New Project
-2. APIs & Services → **Enable APIs**:
-   - YouTube Data API v3
-   - YouTube Analytics API
-   - Business Profile API
-3. Credentials → **Create OAuth 2.0 Client ID** (Web Application type)
-4. Add redirect URI: `http://localhost:8000/api/oauth/google/callback/`
-5. Copy **Client ID** + **Client Secret**
+- **Meta (Facebook + Instagram)** — `https://developers.facebook.com` → Create
+  App → Business type → Pages API + Instagram Graph API. Add redirect URI
+  `http://localhost:8000/api/oauth/facebook/callback/`.
+- **Google (YouTube + Google Business)** — `https://console.cloud.google.com` →
+  enable YouTube Data API v3, YouTube Analytics API, Business Profile API. Add
+  redirect URI `http://localhost:8000/api/oauth/google/callback/`.
+- **LinkedIn** — `https://www.linkedin.com/developers` → request Marketing
+  Developer Platform. Add redirect URI
+  `http://localhost:8000/api/oauth/linkedin/callback/`.
 
-### LinkedIn
-1. Go to https://www.linkedin.com/developers → **Create App**
-2. Associate with your LinkedIn Company Page
-3. Products tab → Request **Marketing Developer Platform** (1-5 business days)
-4. Auth tab → copy **Client ID** + **Client Secret**
-5. Add redirect URI: `http://localhost:8000/api/oauth/linkedin/callback/`
+Drop the resulting `*_CLIENT_ID` / `*_CLIENT_SECRET` values into `backend/.env`.
+Without these, the connect-account flows in Settings will redirect but fail at
+the platform-consent step; everything else (composer drafts, AI features,
+preview pages) still works.
 
 ---
 
-## 👥 Adding a New Client
+## Project layout
 
-**Option 1 — Via Admin Panel (http://localhost:3000/admin):**
-1. Click **+ Add New Client**
-2. Fill in Company, Name, Email, Password
-3. Click **Create Client**
-4. The client can now log in at http://localhost:3000/login
-
-**Option 2 — Via API:**
-```bash
-POST /api/admin/create-client/
-{
-  "company": "Acme Corp",
-  "name": "John Smith",
-  "email": "john@acmecorp.com",
-  "password": "securepassword123"
-}
+```
+xperso/
+├── backend/                     Django + DRF
+│   ├── dashboard/               Project config (settings, urls, celery)
+│   └── social_stats/            Main app
+│       ├── models.py            Client, UserProfile, PlatformCredential,
+│       │                        DailyMetric, Agency, HashtagSet, UnifiedPost, …
+│       ├── views.py             REST viewsets
+│       ├── oauth_views.py       OAuth flows for the 5 platforms
+│       ├── ai/                  Prompts + context builders
+│       ├── security/            MFA, sessions, login monitor, throttles
+│       └── tasks.py             Celery sync + notification tasks
+├── frontend/
+│   └── src/
+│       ├── App.js               Routes + Protected wrapper
+│       ├── components/
+│       │   ├── shell/           AppShell, ModuleRail, TopBar, FeatureSidebar
+│       │   ├── marketing/       MarketingLayout + landing-page sections
+│       │   └── ui/              Button, Modal, Drawer, Tooltip, AccountTypeBadge…
+│       ├── pages/               Routed page components
+│       ├── hooks/               useAuth, useTheme, useRealtime, useBreakpoint
+│       ├── services/            api.js, platforms.js, queryClient
+│       └── styles/              tokens.css (design tokens), theme.js
+├── infra/                       Terraform + Nginx examples
+├── scripts/                     deploy_prod.sh, verify-backups.sh, …
+└── templates/                   Breach-notification + regulatory templates
 ```
 
 ---
 
-## 🔌 Connecting Client Accounts
-
-Once the client logs in:
-1. Go to **Connect Accounts** (Settings page)
-2. Click **Connect Facebook** → redirected to Facebook login → approve permissions
-3. Click **Connect Google** → redirected to Google login → approve permissions
-4. Click **Connect LinkedIn** → redirected to LinkedIn login → approve permissions
-5. Data starts syncing automatically
-
----
-
-## ⏰ Auto-Sync Schedule
-
-| Platform | Frequency |
-|----------|-----------|
-| Facebook | Every 6 hours |
-| Instagram | Every 6 hours |
-| YouTube | Every 12 hours |
-| LinkedIn | Every 12 hours |
-| Google My Business | Every 24 hours |
-
----
-
-## 📡 API Endpoints
-
-```
-POST   /api/auth/login/                    Login
-POST   /api/auth/refresh/                  Refresh JWT token
-GET    /api/auth/me/                       Current user info
-
-GET    /api/clients/                       List clients
-GET    /api/clients/{id}/summary/          KPI totals
-GET    /api/clients/{id}/timeseries/       Daily metrics for charts
-GET    /api/clients/{id}/posts/            Per-post metrics
-POST   /api/clients/{id}/trigger_sync/     Manual sync trigger
-GET    /api/clients/{id}/sync_status/      Sync history
-
-GET    /api/oauth/status/{client_id}/      Connection status all platforms
-GET    /api/oauth/facebook/start/{id}/     Start Facebook OAuth
-GET    /api/oauth/google/start/{id}/       Start Google OAuth
-GET    /api/oauth/linkedin/start/{id}/     Start LinkedIn OAuth
-DELETE /api/oauth/disconnect/{id}/{plat}/  Disconnect platform
-
-GET    /api/overview/                      Agency-wide totals (admin)
-GET    /api/synclogs/                      Recent sync activity
-
-POST   /api/admin/create-client/           Create client + login account
-```
-
----
-
-## 🚀 Production Deployment
+## Production deployment
 
 ```bash
-# Update .env for production
-DEBUG=False
-ALLOWED_HOSTS=yourdomain.com
-FRONTEND_URL=https://yourdomain.com
-# Use PostgreSQL instead of SQLite
-# Use real Redis server
-# Use real SMTP for email
-
-# Build React frontend
+# Build the React bundle
 cd frontend && npm run build
 
-# Run with Gunicorn
-cd backend
-gunicorn dashboard.wsgi:application --bind 0.0.0.0:8000 --workers 4
+# Production env
+# DEBUG=False
+# ALLOWED_HOSTS=yourdomain.com
+# DATABASE_URL=postgres://…
+# REDIS_URL=redis://…
+# ANTHROPIC_API_KEY=…
+# EMAIL_HOST_PASSWORD=…
+# FIELD_ENCRYPTION_KEYS=…
+# FACEBOOK_CONSUMER_REDIRECT_URI=https://yourdomain.com/api/oauth/facebook/consumer/callback/
+# FRONTEND_URL=https://yourdomain.com
 
-# Serve with Nginx (example config included below)
+# Run
+cd backend && gunicorn dashboard.wsgi:application --bind 0.0.0.0:8000 --workers 4
 ```
 
-### Nginx Config
-```nginx
-server {
-    server_name yourdomain.com;
-
-    location /api/ {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location / {
-        root /path/to/frontend/build;
-        try_files $uri $uri/ /index.html;
-    }
-}
-```
+An example Nginx config lives in `infra/nginx/`. A skeleton Terraform module
+covering VPC, RDS, KMS, and GuardDuty is at `infra/terraform/`. Both are
+starting points — adapt to your environment.
 
 ---
 
-## 📁 Project Structure
+## Contributing
 
-```
-social-dashboard/
-├── backend/
-│   ├── dashboard/              Django project config
-│   │   ├── settings.py
-│   │   ├── urls.py
-│   │   └── celery.py
-│   ├── social_stats/           Main app
-│   │   ├── models.py           Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog
-│   │   ├── views.py            REST API views (role-based access)
-│   │   ├── oauth_views.py      OAuth flows for all 5 platforms
-│   │   ├── tasks.py            Celery sync tasks
-│   │   ├── serializers.py
-│   │   ├── urls.py
-│   │   └── admin.py
-│   ├── requirements.txt
-│   └── .env.example
-└── frontend/
-    └── src/
-        ├── App.js              Routes + auth protection
-        ├── pages/
-        │   ├── LoginPage.jsx
-        │   ├── ClientDashboard.jsx   Client stats view
-        │   ├── AdminOverview.jsx     Agency admin view
-        │   └── SettingsPage.jsx      Connect accounts
-        ├── components/
-        │   ├── layout/Sidebar.jsx
-        │   ├── charts/Charts.jsx
-        │   └── ui/
-        │       ├── StatCard.jsx
-        │       ├── PlatformTabs.jsx
-        │       ├── DateRangePicker.jsx
-        │       └── ConnectedAccounts.jsx
-        ├── hooks/
-        │   ├── useAuth.js
-        │   └── useData.js
-        └── services/
-            ├── api.js
-            ├── platforms.js
-            └── exportPDF.js
-```
+Statox AI is an open codebase. PRs welcome, especially:
+
+- New platform integrations (any of the major social or messaging APIs)
+- Translations for marketing pages
+- A11y improvements
+- Test coverage in the React app
+
+The backend has 267 tests (`python manage.py test social_stats`); the frontend
+has Jest tests (`CI=true npm test`). Both should stay green.
+
+---
+
+## License
+
+[MIT](./LICENSE)
+
+---
+
+## Security
+
+For responsible disclosure, email `security@statox.ai`. Please don't open
+public issues for security reports.

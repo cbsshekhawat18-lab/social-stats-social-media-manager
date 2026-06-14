@@ -12,6 +12,11 @@ first-class messaging module.
 > case studies on the marketing site are intentionally absent until we
 > onboard the first cohort of launch partners.
 
+> **Try the demo locally:** `python manage.py migrate && python manage.py demo_setup`
+> seeds three accounts — superadmin / agency / end-user, all with password
+> `demo` — and 90 days of sample analytics so the dashboards aren't empty.
+> The `/login` page surfaces one-click sign-in buttons for each.
+
 ---
 
 ## What's in the box
@@ -73,9 +78,13 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env — at minimum set ANTHROPIC_API_KEY if you want AI features.
 
-# Migrate + seed
+# Migrate the schema
 python manage.py migrate
-python manage.py setup    # creates default superadmin (see prompt)
+
+# (Optional, but recommended for first-time evaluation)
+# Seed three demo accounts + 90 days of analytics data so the dashboards
+# aren't empty. Prints the demo credentials on stdout.
+python manage.py demo_setup
 
 # Run
 python manage.py runserver

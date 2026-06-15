@@ -148,7 +148,7 @@ export function buildSoftwareApplication({ name, description, image, ratingValue
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'INR',
-      url: `${SITE.url}/pricing`,
+      url: SITE.url,
     },
     image: image || SITE.logo,
     publisher: ORG_NODE,

@@ -9,7 +9,7 @@ description: "Open-source social media management & marketing platform — sched
 marketing platform for agencies and teams. It's an open alternative to Hootsuite,
 Buffer, and Sprout Social, built on **Django + React**.
 
-[⭐ Star the project on GitHub »](https://github.com/cbsshekhawat18/social-stats-social-media-manager)
+[⭐ Star the project on GitHub »](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager)
 
 ## What it does
 
@@ -30,7 +30,7 @@ Buffer, and Sprout Social, built on **Django + React**.
 
 Social Stats runs on Django 4.2 + Django REST Framework, Celery + Redis, Django
 Channels, PostgreSQL, and a React 18 frontend. See the
-[installation guide on GitHub](https://github.com/cbsshekhawat18/social-stats-social-media-manager#self-hosting--installation-local-dev).
+[installation guide on GitHub](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager#self-hosting--installation-local-dev).
 
 ```bash
 python manage.py migrate
@@ -38,11 +38,22 @@ python manage.py demo_setup   # demo accounts + 90 days of sample analytics
 python manage.py runserver
 ```
 
+## Guides
+
+- [Getting Started](GETTING_STARTED.md)
+- [Configuration](CONFIGURATION.md)
+- [Connect Social Accounts](CONNECT_ACCOUNTS.md)
+- [Connect WhatsApp](CONNECT_WHATSAPP.md)
+- [Going Live](GOING_LIVE.md)
+- [User Guide](USER_GUIDE.md)
+- [FAQ & Troubleshooting](FAQ_TROUBLESHOOTING.md)
+- [How it compares](COMPARISON.md)
+
 ## Links
 
-- [Source code & README](https://github.com/cbsshekhawat18/social-stats-social-media-manager)
-- [Contributing guide](https://github.com/cbsshekhawat18/social-stats-social-media-manager/blob/main/CONTRIBUTING.md)
-- [Report an issue](https://github.com/cbsshekhawat18/social-stats-social-media-manager/issues)
+- [Source code & README](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager)
+- [Contributing guide](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/CONTRIBUTING.md)
+- [Report an issue](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues)
 
 ---
 

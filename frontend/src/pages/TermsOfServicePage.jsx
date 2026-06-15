@@ -51,17 +51,16 @@ export default function TermsOfServicePage() {
         },
         {
           id: 'plans',
-          title: '3. Plans, billing, and renewal',
+          title: '3. Pricing',
           body: (
             <>
-              <p>Social Stats offers monthly and annual plans. Pricing is published at <a href="/pricing">/pricing</a>.</p>
+              <p>Social Stats is <strong>free and open source</strong> (MIT licensed). All features are
+              available at no cost — there are no paid plans, subscriptions, or payment processing.</p>
               <ul>
-                <li><strong>Free plan</strong> — limited to one account per platform; for evaluation only.</li>
-                <li><strong>Paid plans</strong> — auto-renew until canceled. Cancel anytime from <strong>Settings → Billing</strong>.</li>
-                <li><strong>Annual plans</strong> — billed once for 12 months at a discount.</li>
-                <li><strong>Taxes</strong> — GST is added to all Indian invoices. International customers handle local VAT/sales tax.</li>
+                <li><strong>No charges</strong> — the software is free to use and self-host.</li>
+                <li><strong>Your own costs</strong> — when self-hosting, you are responsible for your own
+                infrastructure and any third-party API usage (e.g. your Anthropic API key).</li>
               </ul>
-              <p>Payments are processed by <strong>Razorpay</strong>. Refunds follow our <a href="/refund">Refund Policy</a>.</p>
             </>
           ),
         },
@@ -191,7 +190,7 @@ export default function TermsOfServicePage() {
           body: (
             <>
               <p>
-                You can cancel your account anytime from <strong>Settings → Billing</strong>. We may terminate or
+                You can delete your account anytime from <strong>Settings</strong>. We may terminate or
                 suspend your account for material breach of these Terms with reasonable notice — except for severe
                 violations (e.g. spam, fraud, illegal use), where suspension may be immediate.
               </p>

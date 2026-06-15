@@ -86,7 +86,6 @@ export default function GDPRPage() {
               <ul>
                 <li><strong>AWS (Frankfurt)</strong> — primary infrastructure, EU-region storage.</li>
                 <li><strong>Anthropic</strong> — AI features (zero data retention contractually).</li>
-                <li><strong>Razorpay / Stripe</strong> — payment processing.</li>
                 <li><strong>Sentry</strong> — error monitoring.</li>
                 <li><strong>Postmark</strong> — transactional email.</li>
               </ul>

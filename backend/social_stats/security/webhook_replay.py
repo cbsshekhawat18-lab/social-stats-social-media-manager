@@ -9,9 +9,9 @@
 """
 webhook replay protection.
 
-Pinbot, Meta, Razorpay, and Google all retry webhooks on transient failures.
-Without idempotency, a retry can double-count a payment, double-credit a
-sync, double-send a notification.
+Pinbot, Meta, and Google all retry webhooks on transient failures.
+Without idempotency, a retry can double-credit a sync or double-send a
+notification.
 
 We dedupe by ``(provider, event_id)``. The provider's docs tell us where to
 read the event_id from each provider's payload; this module just owns
@@ -42,7 +42,7 @@ class WebhookEvent(models.Model):
     (replay with mutation) and we log a warning.
     """
     provider     = models.CharField(max_length=30, db_index=True)
-    # 'meta' / 'pinbot' / 'razorpay' / 'google' / 'youtube' / etc.
+    # 'meta' / 'pinbot' / 'google' / 'youtube' / etc.
     event_id     = models.CharField(max_length=200, db_index=True)
     payload_hash = models.CharField(max_length=64)  # sha256 hex
     received_at  = models.DateTimeField(auto_now_add=True, db_index=True)

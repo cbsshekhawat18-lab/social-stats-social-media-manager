@@ -23,7 +23,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from .billing_plans import get_plan, get_limit
+from .billing_plans import get_plan
 from .models import (
     AgencyClientRelation, AIUsageLog, Client, PlatformCredential,
     Subscription, UnifiedPost,
@@ -135,32 +135,12 @@ def get_usage(client: Client) -> dict:
 def check_limit(client: Client, key: str, *, increment: int = 1) -> tuple[bool, str | None, dict | None]:
     """Returns (ok, reason_if_blocked, info_dict).
 
-    `info_dict` is always populated with current/limit so callers can show
-    a useful upgrade prompt.
+    Payments were removed — the product is free and open-source, so every
+    quota is unlimited for both account types. This always allows the action.
+    `get_usage()` still reports live counts for the in-app meter.
     """
     sub = get_or_create_subscription(client)
-    limit = get_limit(sub.plan, key)
-    if limit is None:           # unlimited
-        return (True, None, {'current': None, 'limit': None, 'plan': sub.plan})
-
-    counter_fns = {
-        'connected_platforms':       _connected_platforms,
-        'posts_per_month':           lambda c: _posts_this_period(get_or_create_subscription(c)),
-        'ai_generations_per_month':  lambda c: _ai_generations_this_period(get_or_create_subscription(c)),
-        'active_relations':          _active_relations,
-    }
-    fn = counter_fns.get(key)
-    if not fn:
-        return (True, None, {'plan': sub.plan})
-
-    current = fn(client)
-    if current + increment > limit:
-        return (
-            False,
-            f'Your {sub.plan} plan allows {limit} {key.replace("_", " ")}; you have {current}.',
-            {'current': current, 'limit': limit, 'plan': sub.plan, 'key': key},
-        )
-    return (True, None, {'current': current, 'limit': limit, 'plan': sub.plan, 'key': key})
+    return (True, None, {'current': None, 'limit': None, 'plan': sub.plan})
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -194,18 +174,7 @@ def get_agency_usage(agency) -> dict:
 
 
 def check_agency_limit(agency, key: str, *, increment: int = 1) -> tuple[bool, str | None, dict | None]:
-    """Same shape as `check_limit` but for agency-side keys (managed_clients)."""
+    """Same shape as `check_limit` but for agency-side keys (managed_clients).
+    Unlimited now that payments are removed — always allows."""
     sub = get_or_create_agency_subscription(agency)
-    limit = get_limit(sub.plan, key)
-    if limit is None:
-        return (True, None, {'current': None, 'limit': None, 'plan': sub.plan})
-    if key != 'managed_clients':
-        return (True, None, {'plan': sub.plan})
-    current = _managed_clients(agency)
-    if current + increment > limit:
-        return (
-            False,
-            f'Your {sub.plan} plan allows {limit} active managed client{"s" if limit != 1 else ""}; you currently manage {current}. Upgrade to onboard more.',
-            {'current': current, 'limit': limit, 'plan': sub.plan, 'key': key},
-        )
-    return (True, None, {'current': current, 'limit': limit, 'plan': sub.plan, 'key': key})
+    return (True, None, {'current': None, 'limit': None, 'plan': sub.plan})

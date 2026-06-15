@@ -13,7 +13,7 @@
  * Use the `prefetchProps(path)` helper to get spread-friendly hover/touch
  * handlers for any <Link>:
  *
- *   <Link to="/pricing" {...prefetchProps('/pricing')}>Pricing</Link>
+ *   <Link to="/features" {...prefetchProps('/features')}>Features</Link>
  *
  * Why hover/focus/touchstart and not on render? Loading every route's chunk
  * up-front defeats the purpose of code splitting. Hover/focus is the earliest
@@ -27,7 +27,6 @@
 // (top-of-funnel marketing pages reachable from the nav) live here.
 const ROUTE_LOADERS = {
   '/':             () => import('../pages/HomePage'),
-  '/pricing':      () => import('../pages/PricingPage'),
   '/customers':    () => import('../pages/CustomersPage'),
   '/blog':         () => import('../pages/BlogIndexPage'),
   '/integrations': () => import('../pages/IntegrationsPage'),
@@ -51,7 +50,7 @@ export function prefetchRoute(path) {
 
 /**
  * Spread on a <Link> to prefetch on first hover/focus/touch:
- *   <Link to="/pricing" {...prefetchProps('/pricing')}>Pricing</Link>
+ *   <Link to="/features" {...prefetchProps('/features')}>Features</Link>
  */
 export function prefetchProps(path) {
   return {

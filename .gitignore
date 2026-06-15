@@ -16,6 +16,7 @@ backend/*.sqlite3
 # Env files (VERY IMPORTANT)
 backend/.env
 backend/.env.*
+!backend/.env.example
 
 # Logs
 backend/*.log

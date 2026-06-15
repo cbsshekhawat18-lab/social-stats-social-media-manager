@@ -296,9 +296,6 @@ function UserMenu({ user, open, onOpenChange, onLogout }) {
               <MenuRow icon={Store} label="Marketplace profile" onClick={() => {
                 onOpenChange(false); navigate('/agency/marketplace-profile');
               }} />
-              <MenuRow icon={Receipt} label="Agency billing" onClick={() => {
-                onOpenChange(false); navigate('/agency/billing');
-              }} />
             </>
           )}
           {isEndUser && (

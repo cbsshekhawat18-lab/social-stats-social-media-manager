@@ -95,12 +95,6 @@ from .review_views import (
     list_reviews, review_detail,
     respond_to_review, mark_review_helpful,
 )
-from .billing_views import (
-    billing_plans, my_subscription, billing_checkout, billing_confirm,
-    billing_cancel, billing_invoices, billing_razorpay_webhook,
-    agency_subscription, agency_billing_checkout, agency_billing_confirm,
-    agency_billing_cancel, agency_billing_invoices,
-)
 from .verification_views import (
     submit_verification, list_pending_verifications, get_verification,
     approve_verification, reject_verification,
@@ -332,22 +326,6 @@ urlpatterns = [
     path('reviews/<int:review_id>/',          review_detail,       name='review_detail'),
     path('reviews/<int:review_id>/respond/',  respond_to_review,   name='review_respond'),
     path('reviews/<int:review_id>/helpful/',  mark_review_helpful, name='review_helpful'),
-
-    # Billing ()
-    path('billing/plans/',                  billing_plans,             name='billing_plans'),
-    path('billing/subscription/',           my_subscription,           name='billing_subscription'),
-    path('billing/checkout/',               billing_checkout,          name='billing_checkout'),
-    path('billing/confirm/',                billing_confirm,           name='billing_confirm'),
-    path('billing/cancel/',                 billing_cancel,            name='billing_cancel'),
-    path('billing/invoices/',               billing_invoices,          name='billing_invoices'),
-    path('billing/webhook/razorpay/',       billing_razorpay_webhook,  name='billing_webhook_razorpay'),
-
-    # Agency billing ()
-    path('agency/<slug:slug>/billing/subscription/', agency_subscription,      name='agency_billing_subscription'),
-    path('agency/<slug:slug>/billing/checkout/',     agency_billing_checkout,  name='agency_billing_checkout'),
-    path('agency/<slug:slug>/billing/confirm/',      agency_billing_confirm,   name='agency_billing_confirm'),
-    path('agency/<slug:slug>/billing/cancel/',       agency_billing_cancel,    name='agency_billing_cancel'),
-    path('agency/<slug:slug>/billing/invoices/',     agency_billing_invoices,  name='agency_billing_invoices'),
 
     # Notification preferences — see notification_views.notification_preferences
     # registered later in this file (handles GET + PUT).

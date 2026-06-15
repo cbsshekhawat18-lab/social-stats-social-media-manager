@@ -19,10 +19,9 @@
  *   7.  AI everywhere (animated chat demo)
  *   8.  Comparison table vs Hootsuite / Sprout / Buffer (feature parity only)
  *   9.  Agency marketplace teaser
- *   10. Pricing teaser
- *   11. Capability stats band
- *   12. Final CTA (email capture)
- *   13. Footer (provided by MarketingLayout)
+ *   10. Capability stats band
+ *   11. Final CTA (email capture)
+ *   12. Footer (provided by MarketingLayout)
  *
  * Customer testimonials, fabricated case studies, and customer-count claims
  * are intentionally absent until we have real customers to feature.
@@ -79,7 +78,6 @@ export default function HomePage() {
       <AIEverywhere />
       <ComparisonSection />
       <MarketplaceTeaser />
-      <PricingTeaser />
       <StatsBand />
       <FinalCTA />
     </MarketingLayout>
@@ -896,107 +894,7 @@ function MarketplaceTeaser() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Section 12 — PRICING TEASER
-// ─────────────────────────────────────────────────────────────────────────────
-function PricingTeaser() {
-  const plans = [
-    { name: 'Free', tag: 'For end users', price: '₹0', sub: 'forever',
-      features: ['1 workspace', '3 platforms', '30 posts/mo', 'Basic AI'],
-      cta: { label: 'Sign up free', to: '/signup' } },
-    { name: 'Growth', tag: 'Most popular', price: '₹7,999', sub: '/mo',
-      features: ['25 client workspaces', 'Team of 5', 'Full AI', 'WhatsApp + Bot Builder'],
-      cta: { label: 'Start trial', to: '/signup' }, featured: true },
-    { name: 'Enterprise', tag: 'For 100+ clients', price: 'Custom', sub: '',
-      features: ['Unlimited clients', 'SSO + SLA', 'Dedicated CSM', 'Onboarding included'],
-      cta: { label: 'Talk to sales', to: '/contact' } },
-  ];
-  return (
-    <section style={{
-      padding: 'clamp(64px, 10vh, 120px) 24px',
-      background: 'var(--surface-card)',
-      borderTop: '1px solid var(--border-subtle)',
-      borderBottom: '1px solid var(--border-subtle)',
-    }}>
-      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-        <ScrollReveal>
-          <SectionHeading
-            eyebrow="Simple, transparent pricing"
-            title="Pay for what you use"
-            subtitle="Start free. Scale as you grow. Annual plans save 20%."
-            cta={{ to: '/pricing', label: 'View full pricing' }}
-          />
-        </ScrollReveal>
-
-        <div style={{
-          marginTop: 36,
-          display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16,
-          alignItems: 'stretch',
-        }} className="mkt-pricing-grid">
-          {plans.map((p, i) => (
-            <ScrollReveal key={p.name} delay={i * 0.08}>
-              <div style={{
-                padding: 28, height: '100%',
-                background: 'var(--surface-page)',
-                border: p.featured ? '2px solid #00CCF5' : '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-xl)',
-                position: 'relative',
-                boxShadow: p.featured ? '0 20px 56px rgba(0,204,245,0.18)' : 'none',
-                display: 'flex', flexDirection: 'column',
-              }}>
-                {p.featured && (
-                  <span style={{
-                    position: 'absolute', top: -12, right: 24,
-                    padding: '4px 12px',
-                    fontSize: 11, fontWeight: 700,
-                    color: '#0a0e14',
-                    background: 'linear-gradient(135deg, #00CCF5, #00A8D8)',
-                    borderRadius: 'var(--radius-pill)', letterSpacing: '0.04em',
-                  }}>POPULAR</span>
-                )}
-                <div style={{
-                  fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                  textTransform: 'uppercase', color: 'var(--text-tertiary)',
-                }}>{p.tag}</div>
-                <div style={{ marginTop: 4, fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>
-                  {p.name}
-                </div>
-                <div style={{ marginTop: 16, display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{
-                    fontSize: 36, fontWeight: 700,
-                    color: 'var(--text-primary)', letterSpacing: '-0.02em',
-                  }}>{p.price}</span>
-                  {p.sub && <span style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>{p.sub}</span>}
-                </div>
-                <ul style={{ margin: '20px 0 24px', padding: 0, listStyle: 'none', flex: 1 }}>
-                  {p.features.map((f) => (
-                    <li key={f} style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '6px 0',
-                      fontSize: 13, color: 'var(--text-secondary)',
-                    }}>
-                      <Check size={13} style={{ color: '#00CCF5' }} strokeWidth={2.5} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button as={Link} to={p.cta.to} size="md" fullWidth
-                        variant={p.featured ? 'primary' : 'secondary'}>
-                  {p.cta.label}
-                </Button>
-              </div>
-            </ScrollReveal>
-          ))}
-        </div>
-        <style>{`
-          @media (max-width: 900px) { .mkt-pricing-grid { grid-template-columns: 1fr !important; } }
-        `}</style>
-      </div>
-    </section>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Section 13 — STATS BAND
+// Section 12 — STATS BAND
 // ─────────────────────────────────────────────────────────────────────────────
 function StatsBand() {
   // Capability stats — every claim below is a feature of the product, not

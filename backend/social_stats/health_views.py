@@ -92,7 +92,6 @@ _THIRD_PARTY = [
     ('linkedin', 'LinkedIn integration'),
     ('pinbot',   'WhatsApp (Pinbot.ai)'),
     ('ai',       'Social Stats'),
-    ('razorpay', 'Billing (Razorpay)'),
 ]
 
 

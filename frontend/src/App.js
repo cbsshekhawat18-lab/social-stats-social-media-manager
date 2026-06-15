@@ -56,11 +56,9 @@ const HomePage             = lazy(() => import('./pages/HomePage'));
 const ForBusinessesPage    = lazy(() => import('./pages/ForBusinessesPage'));
 const ForAgenciesPage      = lazy(() => import('./pages/ForAgenciesPage'));
 const FeaturesPage         = lazy(() => import('./pages/FeaturesPage'));
-const PricingPage          = lazy(() => import('./pages/PricingPage'));
 const CustomersPage        = lazy(() => import('./pages/CustomersPage'));
 const AboutPage            = lazy(() => import('./pages/AboutPage'));
 const ContactPage          = lazy(() => import('./pages/ContactPage'));
-const RefundPolicyPage     = lazy(() => import('./pages/RefundPolicyPage'));
 const CookiePolicyPage     = lazy(() => import('./pages/CookiePolicyPage'));
 const GDPRPage             = lazy(() => import('./pages/GDPRPage'));
 const DPDPPage             = lazy(() => import('./pages/DPDPPage'));
@@ -89,7 +87,6 @@ const MyConnectionsPage    = lazy(() => import('./pages/end-user/MyConnectionsPa
 const MyAgencyPage         = lazy(() => import('./pages/end-user/MyAgencyPage'));
 const ActivityLogPage      = lazy(() => import('./pages/end-user/ActivityLogPage'));
 const ApprovalsPage        = lazy(() => import('./pages/end-user/ApprovalsPage'));
-const EndUserBillingPage   = lazy(() => import('./pages/end-user/EndUserBillingPage'));
 const NotificationPreferencesPage = lazy(() => import('./pages/end-user/NotificationPreferencesPage'));
 
 // ── Marketplace flows — ────────────────────────────────────
@@ -98,7 +95,6 @@ const AgencyInviteResponsePage   = lazy(() => import('./pages/marketplace/Agency
 const MarketplacePage            = lazy(() => import('./pages/marketplace/MarketplacePage'));
 const AgencyProfilePage          = lazy(() => import('./pages/marketplace/AgencyProfilePage'));
 const AgencyMarketplaceProfilePage = lazy(() => import('./pages/agency/AgencyMarketplaceProfilePage'));
-const AgencyBillingPage            = lazy(() => import('./pages/agency/AgencyBillingPage'));
 const AdminTrustQueuePage          = lazy(() => import('./pages/admin/AdminTrustQueuePage'));
 
 // ── CTWA bot builder ────────────────────────────────────────────────────────
@@ -162,7 +158,6 @@ function AdminLayout() {
 
           {/* Agency-only pages moved to /agency/*. Redirect any stale links. */}
           <Route path="marketplace-profile" element={<Navigate to="/agency/marketplace-profile" replace />} />
-          <Route path="billing"             element={<Navigate to="/agency/billing" replace />} />
 
           {/* CTWA bot builder list (full editor lives at top-level /bot-flows/:id/edit
               so it can use the entire viewport without the AppShell chrome) */}
@@ -283,10 +278,9 @@ function AgencyLayout() {
     <AppShell isAdmin={false}>
       <Suspense fallback={<LazyFallback />}>
         <Routes>
-          <Route index element={<Navigate to="billing" replace />} />
-          <Route path="billing"             element={<AgencyBillingPage />} />
+          <Route index element={<Navigate to="marketplace-profile" replace />} />
           <Route path="marketplace-profile" element={<AgencyMarketplaceProfilePage />} />
-          <Route path="*" element={<Navigate to="billing" replace />} />
+          <Route path="*" element={<Navigate to="marketplace-profile" replace />} />
         </Routes>
       </Suspense>
     </AppShell>
@@ -350,12 +344,10 @@ export default function App() {
             <Route path="/terms"            element={<TermsOfServicePage />} />
             <Route path="/data-deletion"    element={<DataDeletionPage />} />
             <Route path="/features"         element={<FeaturesPage />} />
-            <Route path="/pricing"          element={<PricingPage />} />
             <Route path="/customers"        element={<CustomersPage />} />
             <Route path="/customers/:slug"  element={<CaseStudyPage />} />
             <Route path="/about"            element={<AboutPage />} />
             <Route path="/contact"          element={<ContactPage />} />
-            <Route path="/refund"           element={<RefundPolicyPage />} />
             <Route path="/cookies"          element={<CookiePolicyPage />} />
             <Route path="/gdpr"             element={<GDPRPage />} />
             <Route path="/dpdp"             element={<DPDPPage />} />
@@ -439,7 +431,6 @@ export default function App() {
               <Route path="agency/find"   element={<MarketplacePage />} />
               <Route path="activity"      element={<ActivityLogPage />} />
               <Route path="approvals"     element={<ApprovalsPage />} />
-              <Route path="billing"       element={<EndUserBillingPage />} />
               <Route path="notifications" element={<NotificationPreferencesPage />} />
             </Route>
 

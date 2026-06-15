@@ -31,7 +31,7 @@ We have **no evidence** that the following data was accessed:
 - {{ unaffected_category_1 }}
 - {{ unaffected_category_2 }}
 
-Payment card details are tokenised by Razorpay; we never store them ourselves.
+Social Stats does not process payments or store any card/billing details.
 
 ## What we've done
 

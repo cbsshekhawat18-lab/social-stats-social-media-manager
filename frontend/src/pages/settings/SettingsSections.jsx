@@ -46,14 +46,13 @@ const NOTIF_EVENTS = [
   { id: 'mentions',         label: 'Mentions',                description: 'Someone mentioned a tracked account.' },
   { id: 'alerts',           label: 'Performance alerts',      description: 'Engagement drops or viral posts.' },
   { id: 'reports',          label: 'Scheduled reports',       description: 'Weekly + monthly report emails.' },
-  { id: 'billing',          label: 'Billing',                 description: 'Invoices, payment failures, renewals.' },
   { id: 'team',             label: 'Team activity',           description: 'New members, role changes, invitations.' },
   { id: 'token_expiry',     label: 'Token expiry',            description: 'OAuth tokens about to expire.' },
 ];
 
 const NOTIF_KEY = 'socialstats_notif_prefs';
 const NOTIF_DEFAULT = NOTIF_EVENTS.reduce((acc, e) => {
-  acc[e.id] = { in_app: true, email: e.id === 'billing' || e.id === 'token_expiry', browser: false };
+  acc[e.id] = { in_app: true, email: e.id === 'token_expiry', browser: false };
   return acc;
 }, {});
 

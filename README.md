@@ -11,10 +11,10 @@ messaging module. It's built on **Django + React** and is fully self-hostable.
 
 <!-- Badges — replace `cbsshekhawat18` with your GitHub org/username if different,
      and the repo slug if you don't use `social-stats-social-media-manager`. -->
-[![Tests](https://github.com/cbsshekhawat18/social-stats-social-media-manager/actions/workflows/tests.yml/badge.svg)](https://github.com/cbsshekhawat18/social-stats-social-media-manager/actions/workflows/tests.yml)
+[![Tests](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/actions/workflows/tests.yml/badge.svg)](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Stars](https://img.shields.io/github/stars/cbsshekhawat18/social-stats-social-media-manager?style=social)](https://github.com/cbsshekhawat18/social-stats-social-media-manager/stargazers)
-[![Last commit](https://img.shields.io/github/last-commit/cbsshekhawat18/social-stats-social-media-manager)](https://github.com/cbsshekhawat18/social-stats-social-media-manager/commits)
+[![Stars](https://img.shields.io/github/stars/cbsshekhawat18-lab/social-stats-social-media-manager?style=social)](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/cbsshekhawat18-lab/social-stats-social-media-manager)](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/commits)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
 > **Status:** early-stage. The product is feature-complete enough to run
@@ -57,6 +57,21 @@ then chains into the sample-data seeder so the dashboards aren't empty. Sign in 
 
 ---
 
+## Documentation
+
+Full guides live in [`docs/`](docs/):
+
+- [Getting Started](docs/GETTING_STARTED.md) — zero to running locally
+- [Configuration](docs/CONFIGURATION.md) — every `.env` variable explained
+- [Connect Social Accounts](docs/CONNECT_ACCOUNTS.md) — Meta, Google, LinkedIn (exact scopes & redirect URIs)
+- [Connect WhatsApp](docs/CONNECT_WHATSAPP.md) — Pinbot / WABA + webhook setup
+- [Going Live](docs/GOING_LIVE.md) — platform app-review & production checklist
+- [User Guide](docs/USER_GUIDE.md) — the three account types and every module
+- [FAQ & Troubleshooting](docs/FAQ_TROUBLESHOOTING.md) — common failures and fixes
+- [How it compares](docs/COMPARISON.md) — vs. closed-source SaaS tools
+
+---
+
 ## Features
 
 - **Social media scheduling & content calendar** — one composer with per-platform
@@ -79,6 +94,24 @@ then chains into the sample-data seeder so the dashboards aren't empty. Sign in 
 | `superadmin` / `staff` | Full admin shell at `/admin` |
 | Agency member (`role=client`, `account_type=agency_member`) | Shared dashboard at `/dashboard` + agency-only management at `/agency/*` |
 | End user (`role=client`, `account_type=end_user`) | End-user shell at `/u` + a single workspace they own |
+
+---
+
+## How it compares
+
+An honest, structural comparison vs. closed-source SaaS tools (Hootsuite, Buffer,
+Sprout Social). Social Stats is early-stage; this compares licensing/hosting and
+the feature categories it actually ships — see [docs/COMPARISON.md](docs/COMPARISON.md)
+for the full picture.
+
+| | **Social Stats** | Closed SaaS |
+|---|---|---|
+| License | **Open source (MIT)** | Proprietary |
+| Hosting | **Self-host, own your data** | Vendor cloud only |
+| Source code | **Public & forkable** | Closed |
+| Cost | **Free to self-host** | Paid subscription |
+| Platform coverage | FB, IG, YouTube, LinkedIn, Google Business + WhatsApp | Varies by plan |
+| Maturity / support | Early-stage, community | Mature, commercial SLAs |
 
 ---
 

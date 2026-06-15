@@ -165,13 +165,13 @@ function Hero({ data }) {
                     }}>
               Start free <ArrowRight size={15} />
             </Button>
-            <Button as={Link} to="/pricing" size="lg" variant="ghost"
+            <Button as={Link} to="/features" size="lg" variant="ghost"
                     style={{
                       color: '#fff',
                       background: 'rgba(255,255,255,0.06)',
                       border: '1px solid rgba(255,255,255,0.18)',
                     }}>
-              View pricing
+              Explore features
             </Button>
           </motion.div>
         </div>
@@ -419,8 +419,8 @@ function FinalCTA({ data }) {
         title={data.ctaTitle || 'Try Social Stats free'}
         subtitle={data.ctaSubtitle || 'Start in 2 minutes. No credit card. Cancel anytime.'}
         primary={{ to: '/signup', label: 'Start free' }}
-        secondary={{ to: '/pricing', label: 'View pricing' }}
-        microCopy="No credit card · Free forever · Setup in 2 minutes"
+        secondary={{ to: '/features', label: 'Explore features' }}
+        microCopy="Free & open source · Self-host · Setup in 2 minutes"
         variant="cta"
       />
     </section>

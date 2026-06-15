@@ -54,7 +54,7 @@ api.interceptors.response.use(
       // No session in storage — the user was never signed in. Let the
       // page handle the 401 itself: marketing pages ignore it and render
       // normally; <Protected> wrappers redirect to /login on their own.
-      // Auto-redirecting here would bounce visitors off /pricing / /about
+      // Auto-redirecting here would bounce visitors off /features / /about
       // before they ever see the marketing site.
       return Promise.reject(error);
     }
@@ -275,25 +275,6 @@ export const marketplaceAPI = {
 export const agencyAPI = {
   get:    (slug)        => api.get (`/agency/${slug}/`),
   update: (slug, data)  => api.put (`/agency/${slug}/`, data),
-};
-
-// ── Billing ( — end-user) ───────────────────────
-export const billingAPI = {
-  plans:        (side = 'end_user') => api.get('/billing/plans/', { params: { side } }),
-  subscription: ()                  => api.get('/billing/subscription/'),
-  checkout:     (plan)              => api.post('/billing/checkout/', { plan }),
-  confirm:      (payload)           => api.post('/billing/confirm/',  payload),
-  cancel:       ()                  => api.post('/billing/cancel/',   {}),
-  invoices:     ()                  => api.get('/billing/invoices/'),
-};
-
-// ── Agency billing () ───────────────────────────
-export const agencyBillingAPI = {
-  subscription: (slug)        => api.get (`/agency/${slug}/billing/subscription/`),
-  checkout:     (slug, plan)  => api.post(`/agency/${slug}/billing/checkout/`, { plan }),
-  confirm:      (slug, p)     => api.post(`/agency/${slug}/billing/confirm/`,  p),
-  cancel:       (slug)        => api.post(`/agency/${slug}/billing/cancel/`,   {}),
-  invoices:     (slug)        => api.get (`/agency/${slug}/billing/invoices/`),
 };
 
 // ── Reviews () ───────────────────────────────────

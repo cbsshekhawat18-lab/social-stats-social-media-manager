@@ -24,7 +24,7 @@ We respond to every report within **2 business days** with a triage acknowledgem
 
 | In scope | Out of scope |
 |---|---|
-| `*.socialstats.app` web + API | Third-party services we use (Anthropic, Pinbot, Razorpay) |
+| `*.socialstats.app` web + API | Third-party services we use (Anthropic, Pinbot) |
 | Mobile apps once they ship | DoS / volumetric attacks |
 | OAuth flows + token handling | Spam, phishing of our customers (use abuse@) |
 | Tenant-isolation bugs (IDOR, SSRF) | Self-XSS / clickjacking on logged-out marketing pages |

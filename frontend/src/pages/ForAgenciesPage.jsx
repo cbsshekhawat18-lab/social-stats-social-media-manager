@@ -36,7 +36,6 @@ export default function ForAgenciesPage() {
       <ROIBand />
       <MarketplaceExposure />
       <FeatureBlocks />
-      <PricingTeaser />
       <FinalCTA />
     </MarketingLayout>
   );
@@ -192,47 +191,6 @@ function FeatureBlocks() {
 }
 
 
-function PricingTeaser() {
-  return (
-    <section style={{ padding: '72px 32px' }}>
-      <div style={{ maxWidth: 'var(--container-lg)', margin: '0 auto' }}>
-        <h2 style={sectionH}>Pricing scales with your roster</h2>
-        <p style={sectionSub}>Each tier sets your maximum active clients. Upgrade when you outgrow it.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginTop: 32 }}>
-          {[
-            { name: 'Starter',    price: '₹2,999',  sub: '/month', features: ['Up to 5 clients', 'All marketplace features', 'Email support'] },
-            { name: 'Growth',     price: '₹7,999',  sub: '/month', highlight: true, features: ['Up to 25 clients', 'Featured marketplace listing', 'Priority support'] },
-            { name: 'Scale',      price: '₹19,999', sub: '/month', features: ['Up to 100 clients', 'White-label exports', 'Dedicated AM'] },
-            { name: 'Enterprise', price: 'Custom',  sub: '', features: ['Unlimited clients', 'SLA + custom legal', 'Dedicated infra option'] },
-          ].map((p) => (
-            <article key={p.name} style={{
-              padding: 18,
-              background: p.highlight ? 'var(--brand-primary-soft)' : 'var(--surface-card)',
-              border: `1px solid ${p.highlight ? 'var(--brand-primary)' : 'var(--border-subtle)'}`,
-              borderRadius: 'var(--radius-lg)',
-            }}>
-              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: p.highlight ? 'var(--brand-primary-hover)' : 'var(--text-tertiary)' }}>
-                {p.name}
-              </div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>
-                {p.price} <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)' }}>{p.sub}</span>
-              </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '14px 0 0', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {p.features.map((f) => (
-                  <li key={f} style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'flex', gap: 6 }}>
-                    <Check size={13} style={{ color: 'var(--success)', flexShrink: 0, marginTop: 2 }} /><span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-
 function FinalCTA() {
   return (
     <section style={{ padding: '72px 32px', background: 'var(--surface-card)', borderTop: '1px solid var(--border-subtle)' }}>
@@ -241,10 +199,10 @@ function FinalCTA() {
           See how much time you'll get back.
         </h2>
         <p style={{ margin: '8px 0 22px', fontSize: 15, color: 'var(--text-secondary)' }}>
-          14-day trial. Bring your real clients — we'll help you migrate.
+          Free and open source. Bring your real clients — self-host with no per-seat fees.
         </p>
         <Button as={Link} to="/signup" size="xl" iconRight={ArrowRight}>
-          Start free trial
+          Get started free
         </Button>
       </div>
     </section>

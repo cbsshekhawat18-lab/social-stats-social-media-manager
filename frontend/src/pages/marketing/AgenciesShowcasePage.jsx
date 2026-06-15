@@ -436,13 +436,13 @@ export default function AgenciesShowcasePage() {
               }}>
               Start free <ArrowRight size={15} />
             </Button>
-            <Button as={Link} to="/pricing" size="lg" variant="ghost"
+            <Button as={Link} to="/features" size="lg" variant="ghost"
               style={{
                 color: '#fff',
                 background: 'rgba(255,255,255,0.08)',
                 border: '1px solid rgba(255,255,255,0.18)',
               }}>
-              See pricing
+              Explore features
             </Button>
           </div>
         </div>

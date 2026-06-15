@@ -79,7 +79,6 @@ const SOLUTIONS_BY_INDUSTRY = [
 ];
 
 const SIMPLE_LINKS = [
-  { label: 'Pricing',     to: '/pricing' },
   { label: 'Customers',   to: '/customers' },
   { label: 'Resources',   to: null,
     menu: { single: [
@@ -634,7 +633,6 @@ function MarketingFooter() {
     {
       title: 'Resources',
       links: [
-        { label: 'Pricing',       to: '/pricing' },
         { label: 'Customers',     to: '/customers' },
         { label: 'Blog',          to: '/blog' },
         { label: 'Help Center',   to: '/help' },
@@ -658,7 +656,6 @@ function MarketingFooter() {
       links: [
         { label: 'Privacy',         to: '/privacy' },
         { label: 'Terms',           to: '/terms' },
-        { label: 'Refund',          to: '/refund' },
         { label: 'Cookies',         to: '/cookies' },
         { label: 'GDPR',            to: '/gdpr' },
         { label: 'DPDP',            to: '/dpdp' },

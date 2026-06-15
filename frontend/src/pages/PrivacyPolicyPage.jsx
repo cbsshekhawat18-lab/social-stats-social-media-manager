@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
           body: (
             <>
               <p>
-                Social Stats is operated by Social Stats Technologies, an early-stage product team
+                Social Stats is operated by Gigai Kripa Services, an early-stage product team
                 building marketing tooling. For corporate / registration details, write to
                 <a href="mailto:privacy@socialstats.app"> privacy@socialstats.app</a>.
               </p>
@@ -43,7 +43,7 @@ export default function PrivacyPolicyPage() {
             <>
               <p>We collect only what we need to run the product. There are four buckets:</p>
               <h3>a. Account data</h3>
-              <p>Name, email, phone (optional), password hash, organization name, role, and billing details (handled by Razorpay — we only store the last 4 digits of the card).</p>
+              <p>Name, email, phone (optional), password hash, organization name, and role. Social Stats is free and open source — we do not process payments or store any card/billing details.</p>
               <h3>b. Connected-account data</h3>
               <p>When you connect Facebook, Instagram, YouTube, Google Business, LinkedIn, or WhatsApp, we receive OAuth tokens, your platform username and ID, and access to the data scopes you authorise. Tokens are encrypted (AES-256 / Fernet) at rest.</p>
               <h3>c. Content data</h3>
@@ -99,7 +99,6 @@ export default function PrivacyPolicyPage() {
               <ul>
                 <li><strong>AWS</strong> — hosting (Mumbai region for Indian customers).</li>
                 <li><strong>Anthropic</strong> — Claude AI inference.</li>
-                <li><strong>Razorpay</strong> — payment processing.</li>
                 <li><strong>SendGrid</strong> — transactional email.</li>
                 <li><strong>Sentry</strong> — error monitoring (PII scrubbed).</li>
                 <li><strong>Pinbot.ai</strong> — WhatsApp Business API gateway.</li>
@@ -217,7 +216,7 @@ export default function PrivacyPolicyPage() {
                 <a href="mailto:privacy@socialstats.app">privacy@socialstats.app</a> or our postal address:
               </p>
               <p>
-                <strong>Social Stats Technologies Pvt. Ltd.</strong><br />
+                <strong>Gigai Kripa Services</strong><br />
                 Attn: Data Protection Officer<br />
                 Bengaluru, Karnataka, India
               </p>

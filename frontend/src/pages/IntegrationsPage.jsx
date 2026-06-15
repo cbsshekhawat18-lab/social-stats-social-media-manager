@@ -47,7 +47,6 @@ const CATEGORIES = [
   { id: 'automation',  label: 'Automation',   icon: Workflow  },
   { id: 'ai',          label: 'AI',           icon: Brain     },
   { id: 'productivity',label: 'Productivity', icon: Calendar  },
-  { id: 'billing',     label: 'Billing',      icon: CreditCard },
 ];
 
 // ── Integrations ──────────────────────────────────────────────────────
@@ -105,10 +104,6 @@ const INTEGRATIONS = [
   { slug: 'figma',      name: 'Figma',       tagline: 'Pull designs into the Composer.',      category: 'productivity',live: false,                  accent: '#F24E1E', initial: 'F' },
   { slug: 'canva',      name: 'Canva',       tagline: 'Push to Canva for design.',            category: 'productivity',live: true,                   accent: '#00C4CC', initial: 'cv' },
 
-  // Billing
-  { slug: 'razorpay',   name: 'Razorpay',    tagline: 'Indian payments + subscriptions.',     category: 'billing',     live: true,  badge: 'Built-in',accent: '#3395FF', initial: 'R' },
-  { slug: 'stripe',     name: 'Stripe',      tagline: 'Global card processing.',              category: 'billing',     live: false,                  accent: '#635BFF', initial: 'S' },
-  { slug: 'paypal',     name: 'PayPal',      tagline: 'PayPal payment links.',                category: 'billing',     live: false,                  accent: '#003087', initial: 'pp' },
 ];
 
 // Featured trio — always pinned at the top.

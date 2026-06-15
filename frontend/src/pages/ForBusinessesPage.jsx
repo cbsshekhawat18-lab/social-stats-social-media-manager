@@ -37,7 +37,6 @@ export default function ForBusinessesPage() {
       <ValueProps />
       <AgencyOptional />
       <PrivacyTrust />
-      <PricingTeaser />
       <FinalCTA />
     </MarketingLayout>
   );
@@ -192,46 +191,6 @@ function PrivacyTrust() {
           We never sell your data. We never train on your private posts. Disconnecting a platform takes one click —
           even if an agency is managing your account. Export anytime. Delete anytime.
         </p>
-      </div>
-    </section>
-  );
-}
-
-
-function PricingTeaser() {
-  return (
-    <section style={{ padding: '72px 32px' }}>
-      <div style={{ maxWidth: 'var(--container-lg)', margin: '0 auto' }}>
-        <h2 style={sectionH}>Free, until you outgrow it</h2>
-        <p style={sectionSub}>Upgrade when you want more. Never required.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginTop: 32 }}>
-          {[
-            { name: 'Free', price: '₹0', sub: 'forever', features: ['1 workspace', '3 platforms', '30 posts/month', '10 AI generations/month', '1 agency relationship'] },
-            { name: 'Pro',  price: '₹499', sub: '/month', highlight: true, features: ['5 platforms', 'Unlimited posts', 'Full AI Studio', '12 months of analytics', '3 agency relationships'] },
-            { name: 'Premium', price: '₹999', sub: '/month', features: ['All 5 platforms', 'WhatsApp campaigns', '3 years of analytics', 'Priority support', 'Unlimited agencies'] },
-          ].map((p) => (
-            <article key={p.name} style={{
-              padding: 18,
-              background: p.highlight ? 'var(--brand-primary-soft)' : 'var(--surface-card)',
-              border: `1px solid ${p.highlight ? 'var(--brand-primary)' : 'var(--border-subtle)'}`,
-              borderRadius: 'var(--radius-lg)',
-            }}>
-              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: p.highlight ? 'var(--brand-primary-hover)' : 'var(--text-tertiary)' }}>
-                {p.name}
-              </div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>
-                {p.price} <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-tertiary)' }}>{p.sub}</span>
-              </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '14px 0 0', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {p.features.map((f) => (
-                  <li key={f} style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'flex', gap: 6 }}>
-                    <Check size={13} style={{ color: 'var(--success)', flexShrink: 0, marginTop: 2 }} /><span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
       </div>
     </section>
   );

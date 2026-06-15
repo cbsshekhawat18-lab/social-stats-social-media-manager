@@ -1,3 +1,9 @@
+[project]
+name = "social-stats"
+version = "1.0.0"
+description = "Social Stats — open-source social media management & marketing platform"
+license = { text = "MIT" }
+
 # Stage 13 — Bandit static security scanner config.
 # Run:  bandit -r social_stats dashboard -c pyproject.toml
 [tool.bandit]

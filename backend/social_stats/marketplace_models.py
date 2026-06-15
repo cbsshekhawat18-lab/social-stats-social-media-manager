@@ -524,8 +524,8 @@ class AgencyInviteFromUser(models.Model):
 # ─────────────────────────────────────────────────────────────────────────────
 class Subscription(models.Model):
     """One subscription per *subject* (an end-user workspace OR an agency).
-    Exactly one of `client` / `agency` is set; the rest of the row tracks
-    plan + Razorpay state regardless of side.
+    Exactly one of `client` / `agency` is set. Retained after payments were
+    removed; all plans are now unlimited (see billing_plans.py).
     """
     PLAN_CHOICES = [
         ('eu-free',         'End-user · Free'),
@@ -557,10 +557,11 @@ class Subscription(models.Model):
     plan       = models.CharField(max_length=30, choices=PLAN_CHOICES, default='eu-free')
     status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
 
-    # Razorpay state (stubbed in dev — real values flow in via webhooks)
-    razorpay_customer_id     = models.CharField(max_length=64, blank=True)
-    razorpay_subscription_id = models.CharField(max_length=64, blank=True)
-    razorpay_plan_id         = models.CharField(max_length=64, blank=True)
+    # Legacy payment-gateway columns — retained as inert storage after payments
+    # were removed (the product is now free and open-source). Unused.
+    gateway_customer_id     = models.CharField(max_length=64, blank=True)
+    gateway_subscription_id = models.CharField(max_length=64, blank=True)
+    gateway_plan_id         = models.CharField(max_length=64, blank=True)
 
     # Billing period (server-of-record; webhooks push updates)
     current_period_start = models.DateTimeField(null=True, blank=True)
@@ -600,8 +601,8 @@ class Subscription(models.Model):
 
 
 class Invoice(models.Model):
-    """Lightweight invoice mirror. Real PDF invoices come from Razorpay; we
-    keep a row per webhook so the user can browse history without re-fetching."""
+    """Lightweight invoice mirror. Legacy/unused since payments were removed;
+    retained as inert storage so historical rows (if any) remain browsable."""
     STATUS_CHOICES = [
         ('paid',    'Paid'),
         ('failed',  'Failed'),
@@ -610,8 +611,8 @@ class Invoice(models.Model):
     ]
 
     subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name='invoices')
-    razorpay_invoice_id = models.CharField(max_length=64, blank=True)
-    razorpay_payment_id = models.CharField(max_length=64, blank=True)
+    gateway_invoice_id = models.CharField(max_length=64, blank=True)
+    gateway_payment_id = models.CharField(max_length=64, blank=True)
     amount       = models.DecimalField(max_digits=10, decimal_places=2)
     currency     = models.CharField(max_length=3, default='INR')
     status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

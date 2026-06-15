@@ -330,11 +330,6 @@ def accept_agency_invite(request, token):
     ).exists():
         return Response({'error': 'a relation with this client is already active or pending'}, status=409)
 
-    from .usage_limits import check_agency_limit
-    ok, reason, info = check_agency_limit(agency, 'managed_clients')
-    if not ok:
-        return Response({'error': reason, 'limit': info}, status=402)
-
     with transaction.atomic():
         relation = AgencyClientRelation.objects.create(
             agency=agency,

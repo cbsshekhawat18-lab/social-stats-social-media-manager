@@ -119,7 +119,6 @@ export default function CookiePolicyPage() {
                 We deliberately keep third-party cookies to a minimum. The ones we do use:
               </p>
               <ul>
-                <li><strong>Razorpay</strong> — payment processing (essential, only on billing pages).</li>
                 <li><strong>Plausible Analytics</strong> — privacy-friendly aggregate analytics (no personal data, no cross-site tracking).</li>
                 <li><strong>Sentry</strong> — error reporting (essential, no personal content).</li>
               </ul>

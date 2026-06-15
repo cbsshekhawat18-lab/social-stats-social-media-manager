@@ -2,6 +2,7 @@
   "name": "social-dashboard-frontend",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "dependencies": {
     "@tanstack/react-query": "^5.100.9",
     "axios": "^1.6.7",

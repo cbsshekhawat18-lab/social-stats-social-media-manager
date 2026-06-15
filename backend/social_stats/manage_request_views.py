@@ -209,11 +209,6 @@ def send_manage_request(request):
     ).exists():
         return Response({'error': 'A relation with this client is already active or pending.'}, status=409)
 
-    from .usage_limits import check_agency_limit
-    ok, reason, info = check_agency_limit(agency, 'managed_clients')
-    if not ok:
-        return Response({'error': reason, 'limit': info}, status=402)
-
     from datetime import timedelta as _td
     DAILY_INVITE_LIMIT = 50
     cutoff = timezone.now() - _td(hours=24)
@@ -388,11 +383,6 @@ def accept_manage_invite(request, token):
         agency=req.agency, client=workspace, status__in=('active', 'pending'),
     ).exists():
         return Response({'error': 'a relation with this agency is already active or pending'}, status=409)
-
-    from .usage_limits import check_limit
-    ok, reason, info = check_limit(workspace, 'active_relations')
-    if not ok:
-        return Response({'error': reason, 'limit': info}, status=402)
 
     data = request.data or {}
     overrides = data.get('permissions_overrides') or {}

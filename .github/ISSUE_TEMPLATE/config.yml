@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security disclosure
-    url: https://github.com/cbsshekhawat18/social-stats-social-media-manager/security/policy
+    url: https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/security/policy
     about: Please report security vulnerabilities privately — do not open a public issue. See SECURITY.md.

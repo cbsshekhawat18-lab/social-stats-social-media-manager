@@ -99,7 +99,6 @@ const FALLBACK_SERVICES = [
   { id: 'linkedin', name: 'LinkedIn integration' },
   { id: 'pinbot',   name: 'WhatsApp (Pinbot.ai)' },
   { id: 'ai',       name: 'Social Stats' },
-  { id: 'razorpay', name: 'Billing (Razorpay)' },
 ];
 
 export default function StatusPage() {

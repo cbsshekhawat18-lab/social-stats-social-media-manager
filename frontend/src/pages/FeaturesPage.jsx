@@ -275,11 +275,10 @@ export default function FeaturesPage() {
           See it in your workflow.
         </h2>
         <p style={{ margin: '12px auto 28px', maxWidth: 480, fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          14 days free. No credit card. Cancel anytime.
+          Free and open source. Self-host it or run it locally — no credit card.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Button as={Link} to="/signup" size="lg" iconRight={ArrowRight}>Start free trial</Button>
-          <Button as={Link} to="/pricing" variant="secondary" size="lg">View pricing</Button>
+          <Button as={Link} to="/signup" size="lg" iconRight={ArrowRight}>Get started free</Button>
         </div>
       </section>
     </MarketingLayout>

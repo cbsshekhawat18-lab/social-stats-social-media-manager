@@ -47,27 +47,8 @@ def _facebook_consumer_secret():
     return getattr(settings, 'FACEBOOK_SOCIAL_APP_SECRET', '') or settings.META_APP_SECRET
 
 
-class PlatformLimitExceeded(Exception):
-    """Raised by _save_credential when the workspace has hit its connected_platforms cap."""
-    def __init__(self, info):
-        self.info = info
-        super().__init__(info.get('reason') or 'platform limit exceeded')
-
-
 def _save_credential(client_id, platform, defaults):
-    from .usage_limits import check_limit
-    existing = PlatformCredential.objects.filter(
-        client_id=client_id, platform=platform,
-    ).first()
-    if not existing or not existing.is_active:
-        try:
-            client = Client.objects.get(pk=client_id)
-        except Client.DoesNotExist:
-            client = None
-        if client:
-            ok, reason, info = check_limit(client, 'connected_platforms')
-            if not ok:
-                raise PlatformLimitExceeded({**(info or {}), 'reason': reason})
+    # Connected-platform count is unlimited (free / open source) — no cap.
     PlatformCredential.objects.update_or_create(
         client_id=client_id, platform=platform, defaults={**defaults, 'is_active': True}
     )

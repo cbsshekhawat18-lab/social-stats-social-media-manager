@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useState, useRef, useEffect } from 'react';
 import { Bell, CheckCheck, AlertCircle, TrendingDown, Zap, Target, Users, X } from 'lucide-react';
 import { useAlerts } from '../../hooks/useData';

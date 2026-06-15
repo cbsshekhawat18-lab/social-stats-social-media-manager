@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
  * InvitationPage — /invitation/:token
  * Public-readable invitation. If the user isn't logged in, we stash the token
@@ -125,7 +133,7 @@ export default function InvitationPage() {
         <h1 style={titleStyle}>You've been invited</h1>
         <p style={subStyle}>
           <strong style={{ color: 'var(--text-primary)' }}>{inv.agency_name}</strong> wants to manage your
-          social media analytics on Social State.
+          social media analytics on Social Stats.
         </p>
 
         <div
@@ -213,7 +221,7 @@ export default function InvitationPage() {
 
   return (
     <AuthLayout
-      heroTitle="Join your agency on Social State."
+      heroTitle="Join your agency on Social Stats."
       heroSub="Accept the invitation to give your agency access to your social media analytics."
     >
       {content}

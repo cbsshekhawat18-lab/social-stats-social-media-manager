@@ -1,3 +1,11 @@
+# ============================================================================
+#  Social Stats — Social Media Management & Marketing Platform
+#  Author    : Chandrabhan Shekhawat
+#  Company   : Gigai Kripa Services
+#  Website   : https://gigaikripaservices.com/
+#  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+#  Released under the MIT License — see LICENSE. Keep this notice.
+# ============================================================================
 """
 Email/password signup + email verification + password reset.
 Only for client role — agency/staff are manually managed.
@@ -22,7 +30,7 @@ from .security.throttles import (
 
 
 FRONTEND_URL = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-FROM_EMAIL   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstate.ai')
+FROM_EMAIL   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app')
 
 EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 
@@ -129,7 +137,7 @@ def verify_email(request):
     profile.email_verified = True
     profile.save(update_fields=['email_verified'])
 
-    # Notify any agencies that invited this client: "Your client joined Social State"
+    # Notify any agencies that invited this client: "Your client joined Social Stats"
     try:
         from .models import ClientInvitation
         pending_invs = ClientInvitation.objects.filter(
@@ -142,9 +150,9 @@ def verify_email(request):
             _dispatch(
                 inv.invited_by,
                 event_type='client_joined',
-                title=f"{user.get_full_name() or user.email} joined Social State",
+                title=f"{user.get_full_name() or user.email} joined Social Stats",
                 body=(
-                    f"Your client {user.get_full_name() or user.email} has joined Social State. "
+                    f"Your client {user.get_full_name() or user.email} has joined Social Stats. "
                     f"You can now send them a dashboard access request."
                 ),
                 data={'client_email': user.email, 'event': 'client_joined'},
@@ -280,10 +288,10 @@ def _email_html(title, greeting, body_html, cta_url, cta_label, expiry_note, fro
         <!-- Header -->
         <tr>
           <td style="padding:32px 40px 24px;text-align:center;background:#ffffff;">
-            <img src="{frontend_url}/favicon.png" alt="Social State" width="52" height="52"
+            <img src="{frontend_url}/favicon.png" alt="Social Stats" width="52" height="52"
                  style="border-radius:14px;display:inline-block;
                         box-shadow:0 4px 16px rgba(0,215,255,0.25);margin-bottom:14px;" /><br>
-            <span style="font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-0.04em;">Social State</span>
+            <span style="font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-0.04em;">Social Stats</span>
             <span style="font-size:22px;font-weight:800;color:#00b8d9;letter-spacing:-0.04em;">.ai</span>
           </td>
         </tr>
@@ -335,7 +343,7 @@ def _email_html(title, greeting, body_html, cta_url, cta_label, expiry_note, fro
           <td style="background:linear-gradient(135deg,#f8fafc,#f0f9ff);padding:20px 40px;
                      text-align:center;border-top:1px solid rgba(0,215,255,0.1);">
             <p style="margin:0;font-size:12px;color:#94a3b8;">
-              &copy; 2026 <strong style="color:#64748b;">Social State.ai</strong> &mdash; Automation Intelligence Platform
+              &copy; 2026 <strong style="color:#64748b;">Social Stats.ai</strong> &mdash; Automation Intelligence Platform
             </p>
           </td>
         </tr>
@@ -353,13 +361,13 @@ def _send_client_joined_email(agency_user, client_user):
     client_name  = client_user.get_full_name() or client_user.email
     client_email = client_user.email
 
-    subject = f"{client_name} joined SocialState — send a dashboard access request"
+    subject = f"{client_name} joined SocialStats — send a dashboard access request"
     html = _email_html(
-        title        = 'Your client joined Social State! 🎉',
+        title        = 'Your client joined Social Stats! 🎉',
         greeting     = (
             f'Hi <strong style="color:#0f172a;">{agency_name}</strong>, '
             f'great news! <strong style="color:#0f172a;">{client_name}</strong> '
-            f'({client_email}) has just verified their email and joined Social State.'
+            f'({client_email}) has just verified their email and joined Social Stats.'
         ),
         body_html    = (
             f'<div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1px solid rgba(22,163,74,0.2);'
@@ -378,7 +386,7 @@ def _send_client_joined_email(agency_user, client_user):
     )
     plain = (
         f"Hi {agency_name},\n\n"
-        f"{client_name} ({client_email}) has joined Social State!\n\n"
+        f"{client_name} ({client_email}) has joined Social Stats!\n\n"
         f"You can now send them a dashboard access request from your Clients page:\n"
         f"{FRONTEND_URL}/admin/clients\n"
     )
@@ -392,17 +400,17 @@ def _send_verification_email(user, token):
     verify_url = f"{FRONTEND_URL}/verify-email?token={token}"
     name       = user.first_name or user.email.split('@')[0]
 
-    subject = 'Verify your Social State account'
+    subject = 'Verify your Social Stats account'
     html = _email_html(
         title      = 'Verify your email',
-        greeting   = f'Hi <strong style="color:#0f172a;">{name}</strong>, thanks for signing up! Click the button below to verify your email address and activate your Social State account.',
+        greeting   = f'Hi <strong style="color:#0f172a;">{name}</strong>, thanks for signing up! Click the button below to verify your email address and activate your Social Stats account.',
         body_html  = '',
         cta_url    = verify_url,
         cta_label  = 'Verify Email Address',
-        expiry_note= '&#128274; This link expires in <strong>24 hours</strong>. If you didn\'t create a Social State account, you can safely ignore this email.',
+        expiry_note= '&#128274; This link expires in <strong>24 hours</strong>. If you didn\'t create a Social Stats account, you can safely ignore this email.',
         frontend_url = FRONTEND_URL,
     )
-    plain = f"Hi {name},\n\nVerify your Social State account:\n{verify_url}\n\nThis link expires in 24 hours."
+    plain = f"Hi {name},\n\nVerify your Social Stats account:\n{verify_url}\n\nThis link expires in 24 hours."
 
     try:
         send_mail(subject, plain, FROM_EMAIL, [user.email], html_message=html, fail_silently=False)
@@ -414,17 +422,17 @@ def _send_reset_email(user, token):
     reset_url = f"{FRONTEND_URL}/reset-password?token={token}"
     name      = user.first_name or user.email.split('@')[0]
 
-    subject = 'Reset your Social State password'
+    subject = 'Reset your Social Stats password'
     html = _email_html(
         title      = 'Reset your password',
-        greeting   = f'Hi <strong style="color:#0f172a;">{name}</strong>, we received a request to reset your Social State password. Click the button below to set a new one.',
+        greeting   = f'Hi <strong style="color:#0f172a;">{name}</strong>, we received a request to reset your Social Stats password. Click the button below to set a new one.',
         body_html  = '',
         cta_url    = reset_url,
         cta_label  = 'Reset Password',
         expiry_note= '&#9203; This link expires in <strong>2 hours</strong>. If you didn\'t request a password reset, you can safely ignore this email.',
         frontend_url = FRONTEND_URL,
     )
-    plain = f"Hi {name},\n\nReset your Social State password:\n{reset_url}\n\nThis link expires in 2 hours."
+    plain = f"Hi {name},\n\nReset your Social Stats password:\n{reset_url}\n\nThis link expires in 2 hours."
 
     try:
         send_mail(subject, plain, FROM_EMAIL, [user.email], html_message=html, fail_silently=False)

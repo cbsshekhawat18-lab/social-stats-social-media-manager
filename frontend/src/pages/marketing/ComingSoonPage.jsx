@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
 
@@ -8,7 +16,7 @@ import Meta from '../../components/Meta';
 
 /**
  * ComingSoonPage — placeholder for /product/* and /solutions/* routes
- * that get their full content in Stages 3 + 4 of the marketing build.
+ * that get their full content in + 4 of the marketing build.
  *
  * Each route gets its own pretty placeholder so visitors who land via the
  * mega-menu don't see "404" — they see a polite "this page is shipping
@@ -23,7 +31,7 @@ const TITLES = {
   '/product/inbox':               { kind: 'product', title: 'Unified Inbox', blurb: 'Every conversation in one place.' },
   '/product/whatsapp':            { kind: 'product', title: 'WhatsApp Business', blurb: 'Campaigns + two-way chat at scale.' },
   '/product/bot-builder':         { kind: 'product', title: 'CTWA Bot Builder', blurb: 'Visual flow editor for ad funnels.' },
-  '/product/ai':                  { kind: 'product', title: 'AI Studio',     blurb: 'Social State in every corner.' },
+  '/product/ai':                  { kind: 'product', title: 'AI Studio',     blurb: 'Social Stats in every corner.' },
   '/product/ai-assistant':        { kind: 'product', title: 'AI Assistant',  blurb: 'Cmd+J — talk to your marketing data.' },
   '/product/reports':             { kind: 'product', title: 'Reports',       blurb: 'Reports that write themselves.' },
   '/product/automations':         { kind: 'product', title: 'Automations',   blurb: 'IF this happens, do that.' },

@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # ── Backend (pip) ────────────────────────────────────────────────────────
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: '04:00'
+      timezone: 'Asia/Kolkata'
+    open-pull-requests-limit: 8
+    labels: [dependencies, backend]
+    commit-message:
+      prefix: 'pip'
+      include: scope
+    groups:
+      # Group minor + patch bumps so we don't drown in PRs
+      python-minor-patch:
+        update-types: [minor, patch]
+
+  # ── Frontend (npm) ───────────────────────────────────────────────────────
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: '04:00'
+      timezone: 'Asia/Kolkata'
+    open-pull-requests-limit: 8
+    labels: [dependencies, frontend]
+    commit-message:
+      prefix: 'npm'
+      include: scope
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+    # Ignore React major bumps — coordinated upgrade required
+    ignore:
+      - dependency-name: 'react'
+        update-types: [version-update:semver-major]
+      - dependency-name: 'react-dom'
+        update-types: [version-update:semver-major]
+
+  # ── GitHub Actions versions ──────────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, ci]

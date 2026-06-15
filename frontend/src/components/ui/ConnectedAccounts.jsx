@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useState } from 'react';
 import { oauthAPI } from '../../services/api';
 import { PLATFORMS } from '../../services/platforms';
@@ -118,7 +126,7 @@ export default function ConnectedAccounts({ clientId, status, onRefresh }) {
       </div>
 
       <FacebookConnectModal
-        appName="Social State"
+        appName="Social Stats"
         open={fbConsentOpen}
         onClose={() => setFbConsentOpen(false)}
         onContinue={handleFbConsentContinue}

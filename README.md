@@ -1,10 +1,21 @@
-# Social State — Marketing OS
+# Social Stats — Open-Source Social Media Management & Marketing Platform
 
-Social State is the marketing operating system for modern teams. One product unifies
-analytics, content composing, conversation inbox, ads, AI assistant, and bot
-builder across the five platforms that matter most: **Facebook**, **Instagram**,
-**YouTube**, **LinkedIn**, and **Google Business**. WhatsApp Business is a
-first-class messaging module.
+> An open-source, self-hostable alternative to Hootsuite, Buffer & Sprout Social.
+
+**Social Stats** is an open-source **social media management** and marketing platform for
+agencies and teams. One product unifies a **social media scheduler** and **content calendar**,
+cross-platform **analytics dashboards**, a unified conversation inbox, a click-to-WhatsApp
+**bot builder**, and an **AI social media assistant** — across **Facebook**, **Instagram**,
+**YouTube**, **LinkedIn**, and **Google Business**, with WhatsApp Business as a first-class
+messaging module. It's built on **Django + React** and is fully self-hostable.
+
+<!-- Badges — replace `cbsshekhawat18` with your GitHub org/username if different,
+     and the repo slug if you don't use `social-stats-social-media-manager`. -->
+[![Tests](https://github.com/cbsshekhawat18/social-stats-social-media-manager/actions/workflows/tests.yml/badge.svg)](https://github.com/cbsshekhawat18/social-stats-social-media-manager/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Stars](https://img.shields.io/github/stars/cbsshekhawat18/social-stats-social-media-manager?style=social)](https://github.com/cbsshekhawat18/social-stats-social-media-manager/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/cbsshekhawat18/social-stats-social-media-manager)](https://github.com/cbsshekhawat18/social-stats-social-media-manager/commits)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
 > **Status:** early-stage. The product is feature-complete enough to run
 > end-to-end (auth, OAuth onboarding, analytics, composer, AI features,
@@ -12,29 +23,56 @@ first-class messaging module.
 > case studies on the marketing site are intentionally absent until we
 > onboard the first cohort of launch partners.
 
-> **Try the demo locally:** `python manage.py migrate && python manage.py demo_setup`
-> seeds three accounts — superadmin / agency / end-user, all with password
-> `demo` — and 90 days of sample analytics so the dashboards aren't empty.
-> The `/login` page surfaces one-click sign-in buttons for each.
+> ⭐ **If Social Stats is useful to you, please star the repo** — it helps other
+> people building self-hosted social tooling find the project.
 
 ---
 
-## What's in the box
+## Demo
 
-- **Analytics** — daily-metric ingestion across 5 platforms, time-series API,
-  per-client dashboards, AI-narrated monthly reports.
-- **Composer** — one editor, per-platform formatting, brand-voice AI captions,
-  scheduling, approval flows for agency clients.
-- **Inbox** — unified conversation queue across DMs, comments, and Google
-  reviews; AI reply suggestions in your brand voice.
-- **Click-to-WhatsApp bots** — visual flow editor with conditional branches and
-  AI chat nodes; lead capture pushes to CRM.
-- **Marketplace** — two-sided agency directory where end users can find an
+Spin up a fully-seeded local instance in two commands:
+
+```bash
+python manage.py migrate
+python manage.py demo_setup    # seeds 3 accounts + 90 days of sample analytics
+```
+
+`demo_setup` is idempotent and creates three accounts (password `demo` for all),
+then chains into the sample-data seeder so the dashboards aren't empty. Sign in at
+`/login`, which surfaces one-click sign-in buttons for each:
+
+| Account | Email | Password | Lands on |
+|---|---|---|---|
+| Superadmin | `admin@demo.local` | `demo` | `/admin` |
+| Agency member | `agency@demo.local` | `demo` | `/dashboard` + `/agency/*` |
+| End user | `enduser@demo.local` | `demo` | `/u` |
+
+> These are local-only demo credentials — never deploy them to a real environment.
+
+![Dashboard screenshot](docs/screenshot.png)
+
+> 📸 _Screenshot placeholder._ Capture a real shot or GIF of the analytics dashboard
+> and save it to `docs/screenshot.png` — a live screenshot dramatically increases
+> click-through and stars. (See "Add a screenshot" in `CONTRIBUTING.md`.)
+
+---
+
+## Features
+
+- **Social media scheduling & content calendar** — one composer with per-platform
+  formatting, brand-voice AI captions, scheduling, and approval flows for agency clients.
+- **Analytics dashboard** — daily-metric ingestion across 5 platforms, a time-series
+  API, per-client dashboards, and AI-narrated monthly reports.
+- **Unified inbox** — one conversation queue across DMs, comments, and Google
+  reviews, with AI reply suggestions in your brand voice.
+- **Click-to-WhatsApp bot builder** — a visual flow editor with conditional branches
+  and AI chat nodes; lead capture pushes to your CRM.
+- **Agency marketplace** — a two-sided agency directory where end users can find an
   agency to manage their workspace.
-- **AI surfaces** — Cmd/Ctrl+J assistant with tool use, brand-voice training,
-  insights, forecasts.
+- **AI assistant** — a Cmd/Ctrl+J assistant with tool use, brand-voice training,
+  insights, and forecasts (powered by Anthropic Claude).
 
-Account types:
+### Account types
 
 | Account | What they see |
 |---|---|
@@ -54,6 +92,7 @@ Account types:
 | Realtime | Django Channels (WebSockets) |
 | Database | SQLite for local dev, PostgreSQL for everything else |
 | Encryption | Fernet for OAuth tokens at rest |
+| AI | Anthropic Claude (captions, replies, insights, assistant) |
 | Frontend | React 18 + React Router v6 |
 | Data fetching | TanStack Query + Zustand |
 | Animations | framer-motion |
@@ -62,7 +101,7 @@ Account types:
 
 ---
 
-## Quick start (local dev)
+## Self-hosting / installation (local dev)
 
 You'll need: Python 3.11+, Node 18+, Redis, and an Anthropic API key for AI
 features (everything else works without external credentials).
@@ -154,7 +193,7 @@ preview pages) still works.
 ## Project layout
 
 ```
-social-state/
+social-stats/
 ├── backend/                     Django + DRF
 │   ├── dashboard/               Project config (settings, urls, celery)
 │   └── social_stats/            Main app
@@ -212,15 +251,20 @@ starting points — adapt to your environment.
 
 ## Contributing
 
-Social State is an open codebase. PRs welcome, especially:
+Social Stats is an open codebase and PRs are welcome — see
+[CONTRIBUTING.md](./CONTRIBUTING.md) and our
+[Code of Conduct](./CODE_OF_CONDUCT.md). Good areas to start:
 
 - New platform integrations (any of the major social or messaging APIs)
 - Translations for marketing pages
-- A11y improvements
+- Accessibility (a11y) improvements
 - Test coverage in the React app
 
 The backend has 267 tests (`python manage.py test social_stats`); the frontend
 has Jest tests (`CI=true npm test`). Both should stay green.
+
+⭐ **Starring the repo is the single easiest way to help** — it raises visibility
+for everyone else looking for an open-source social media management tool.
 
 ---
 
@@ -232,5 +276,5 @@ has Jest tests (`CI=true npm test`). Both should stay green.
 
 ## Security
 
-For responsible disclosure, email `security@socialstate.ai`. Please don't open
+For responsible disclosure, see [SECURITY.md](./SECURITY.md). Please don't open
 public issues for security reports.

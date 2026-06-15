@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
  * BrandVoicePage — train + preview the client's brand voice profile.
  *
@@ -154,7 +162,7 @@ export default function BrandVoicePage({ clientId: propClientId = null }) {
     <div className="app-page app-page--lg">
       <PageHeader
         title="Brand Voice"
-        subtitle="Train Social State on your past posts so every generation sounds like you"
+        subtitle="Train Social Stats on your past posts so every generation sounds like you"
         actions={(
           <Badge variant={statusInfo.variant} size="md" icon={trained ? CheckCircle : Sparkles}>
             {statusInfo.label}
@@ -243,7 +251,7 @@ export default function BrandVoicePage({ clientId: propClientId = null }) {
             size="lg" icon={Wand2} fullWidth loading={training}
             style={{ marginTop: 16 }}
           >
-            {training ? 'Social State is studying your voice…' : (trained ? 'Re-train brand voice' : 'Train brand voice')}
+            {training ? 'Social Stats is studying your voice…' : (trained ? 'Re-train brand voice' : 'Train brand voice')}
           </Button>
 
           {profile?.training_status === 'failed' && profile.training_error && (

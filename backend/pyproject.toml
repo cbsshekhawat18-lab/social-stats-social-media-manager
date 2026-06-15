@@ -1,0 +1,29 @@
+# Stage 13 — Bandit static security scanner config.
+# Run:  bandit -r social_stats dashboard -c pyproject.toml
+[tool.bandit]
+# Recurse into the apps that ship to prod. Migrations are auto-generated;
+# fixtures + tests have their own conventions.
+exclude_dirs = [
+    "tests",
+    "migrations",
+    "node_modules",
+    "build",
+    "staticfiles",
+    "media",
+    "venv",
+    ".venv",
+]
+
+# Severity level: report MEDIUM and HIGH; LOW is too noisy for an existing
+# codebase (mostly nags about random.* — non-issue when not used for crypto).
+# CI gates on HIGH only at first; tighten over time.
+skips = [
+    # B101: assert_used — pytest tests use plain asserts; we don't ship them
+    "B101",
+    # B404 / B603 / B607: subprocess usage — we shell out from media tools (ffmpeg)
+    # and admin scripts. Validated paths.
+    "B404", "B603", "B607",
+    # B311: random.* — only used for non-cryptographic randomness (sample IDs,
+    # jitter, etc.). All security-sensitive randomness uses `secrets`.
+    "B311",
+]

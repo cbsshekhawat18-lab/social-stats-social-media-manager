@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useClients } from '../hooks/useData';
@@ -754,7 +762,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                 <div>
                   <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, textAlign: 'center' }}>
                     <Loader2 size={14} style={{ animation: 'spin .8s linear infinite', verticalAlign: 'middle', marginRight: 6 }} />
-                    Social State is writing your captions…
+                    Social Stats is writing your captions…
                   </p>
                   {[1, 2, 3].map(i => (
                     <div key={i} style={{ border: '1px solid var(--border-default)', borderRadius: 16, padding: 18, marginBottom: 16 }}>
@@ -838,7 +846,7 @@ export default function CaptionWriterPage({ defaultTab = 'caption' }) {
                 <div>
                   <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, textAlign: 'center' }}>
                     <Loader2 size={14} style={{ animation: 'spin .8s linear infinite', verticalAlign: 'middle', marginRight: 6 }} />
-                    Social State is researching hashtags…
+                    Social Stats is researching hashtags…
                   </p>
                   {[1, 2, 3, 4].map(i => (
                     <div key={i} style={{ border: '1px solid var(--border-default)', borderRadius: 14, padding: 16, marginBottom: 12 }}>

@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import React from 'react';
 
 /**
@@ -21,16 +29,16 @@ const POSTS = [
   {
     slug: 'unified-marketing-os-is-here',
     title: 'The unified marketing OS is here.',
-    excerpt: 'Why we rebuilt Social State into a single platform — and what it means for your agency workflow.',
+    excerpt: 'Why we rebuilt Social Stats into a single platform — and what it means for your agency workflow.',
     category: 'Product',
     tags: ['Product', 'Strategy', 'Roadmap'],
-    author: { name: 'Aarav Mehta', role: 'CEO, Social State', initial: 'AM' },
+    author: { name: 'Aarav Mehta', role: 'CEO, Social Stats', initial: 'AM' },
     date: '2026-04-30',
     readTime: '6 min read',
     accent: 'var(--brand-primary)',
     body: [
       { type: 'lead', text: 'We set out to consolidate three years of patchwork tools into one unified platform. Here\'s what we built, what we cut, and what we learned along the way.' },
-      { type: 'p', children: <>When we started Social State in early 2024, the modern marketing agency stack looked something like this: one tool for analytics, another for scheduling, a third for messaging, a Google Sheet for reporting, a Slack channel for approvals, and a calendar app to glue it all together.</> },
+      { type: 'p', children: <>When we started Social Stats in early 2024, the modern marketing agency stack looked something like this: one tool for analytics, another for scheduling, a third for messaging, a Google Sheet for reporting, a Slack channel for approvals, and a calendar app to glue it all together.</> },
       { type: 'p', children: <>By the end of 2025 we were running 11 tools internally — for our own marketing. The irony was not lost on us. Every Monday someone would forget to copy-paste a number from one dashboard to another, and a metric would silently drift for two weeks before a senior would catch it.</> },
       { type: 'h2', text: 'What changed in this release' },
       { type: 'p', children: <>We rebuilt the visual system from the ground up. New design tokens. First-class dark mode. A 25-component library. New auth pages. New marketing site. New shell. And every existing page restyled to match.</> },
@@ -66,7 +74,7 @@ const POSTS = [
       { type: 'p', children: <>Both have problems. Option A bloats every request with copies of private content. Option B requires a training pipeline, opens questions about model retention, and gets expensive fast.</> },
       { type: 'h2', text: 'Our approach: distilled style profiles' },
       { type: 'p', children: <>We compute a <strong>brand-voice profile</strong> from your last ~50 best-performing posts. It's a structured object — vocabulary preferences, sentence shape distributions, taboo phrases, positivity calibration, formatting rules — that we store in your tenant.</> },
-      { type: 'p', children: <>At inference time we send Social State the profile, plus the prompt, plus a tiny set of 3 anchor examples chosen for similarity to the prompt. Total context: under 3 KB. The model writes in your voice without ever seeing your full archive.</> },
+      { type: 'p', children: <>At inference time we send Social Stats the profile, plus the prompt, plus a tiny set of 3 anchor examples chosen for similarity to the prompt. Total context: under 3 KB. The model writes in your voice without ever seeing your full archive.</> },
       { type: 'h2', text: 'Why this approach works' },
       { type: 'ul', items: [
         <>Our underlying AI provider's Enterprise terms guarantee no model training on your prompts (vendor disclosure in the <a href="/privacy">Privacy Policy</a>).</>,
@@ -93,7 +101,7 @@ const POSTS = [
     readTime: '12 min read',
     accent: '#22c55e',
     body: [
-      { type: 'lead', text: 'WhatsApp is no longer optional in India. Here\'s the playbook your agency clients should be running in 2026 — drawn from the top decile of accounts on Social State.' },
+      { type: 'lead', text: 'WhatsApp is no longer optional in India. Here\'s the playbook your agency clients should be running in 2026 — drawn from the top decile of accounts on Social Stats.' },
       { type: 'h2', text: '1. Stop using WhatsApp like SMS' },
       { type: 'p', children: <>The biggest pattern we see: brands send a single "broadcast" template to a list of 10K numbers and call it a campaign. Open rates: 80%+. Click rates: under 2%. Why? Because the message has nowhere to go.</> },
       { type: 'p', children: <>WhatsApp's superpower is <strong>two-way conversation</strong>. Every campaign should end in a question with a quick-reply button. Every reply should route to a human agent within 60 seconds, even if it's an out-of-hours acknowledgment.</> },
@@ -105,7 +113,7 @@ const POSTS = [
         <>That answer routes the person into a tagged segment.</>,
         <>Send your weekly drop only to that segment.</>,
       ] },
-      { type: 'p', children: <>Agencies running this flow on Social State see 30%+ click rates on weekly drops. The ones still doing list-broadcasts see 2%.</> },
+      { type: 'p', children: <>Agencies running this flow on Social Stats see 30%+ click rates on weekly drops. The ones still doing list-broadcasts see 2%.</> },
       { type: 'h2', text: '3. The four templates worth approving' },
       { type: 'ul', items: [
         <><strong>Welcome</strong> — sent on opt-in, with quick replies.</>,
@@ -115,7 +123,7 @@ const POSTS = [
       ] },
       { type: 'callout', children: <>Skip "thank you for your purchase," "have a nice day," and other ceremonial templates. They cost money per message and don't move metrics.</> },
       { type: 'h2', text: '4. Automate the boring stuff' },
-      { type: 'p', children: <>Inside Social State, set up automations for: out-of-hours acknowledgements, FAQ deflection (50% of inbound DMs are "what are your prices?" — answer with a smart flow), and second-touch follow-ups for unresponded leads after 24 hours.</> },
+      { type: 'p', children: <>Inside Social Stats, set up automations for: out-of-hours acknowledgements, FAQ deflection (50% of inbound DMs are "what are your prices?" — answer with a smart flow), and second-touch follow-ups for unresponded leads after 24 hours.</> },
       { type: 'p', children: <>The agencies in our top decile route 60% of inbound traffic through automation, and 40% to a human. The bottom decile routes 100% to a human, and humans burn out at scale.</> },
     ],
   },
@@ -132,7 +140,7 @@ const POSTS = [
     readTime: '5 min read',
     accent: '#ec4899',
     body: [
-      { type: 'lead', text: 'We rebuilt the Social State design system in three months — in public, with customers using it the whole time. Here\'s what worked and what almost killed us.' },
+      { type: 'lead', text: 'We rebuilt the Social Stats design system in three months — in public, with customers using it the whole time. Here\'s what worked and what almost killed us.' },
       { type: 'h2', text: 'Tokens first, components second' },
       { type: 'p', children: <>The first thing we did was rip out hex codes from every component file and route them through CSS variables. Boring, slow, mechanical. Worth it: dark mode took two weeks instead of two months.</> },
       { type: 'h2', text: 'The button we rebuilt seven times' },
@@ -170,7 +178,7 @@ const POSTS = [
       { type: 'p', children: <>Specific posts/campaigns/conversations with screenshots, links, and the metric that made them notable. This is what the client forwards to their CEO.</> },
       { type: 'h2', text: 'Chart 5: What\'s next' },
       { type: 'p', children: <>One slide. Three bets for next month. This is the slide that justifies your retainer renewal.</> },
-      { type: 'callout', children: <>The Reports module on Social State templates these five charts out of the box. Customise once, schedule monthly, white-label, done.</> },
+      { type: 'callout', children: <>The Reports module on Social Stats templates these five charts out of the box. Customise once, schedule monthly, white-label, done.</> },
     ],
   },
 
@@ -196,7 +204,7 @@ const POSTS = [
       { type: 'h2', text: 'What worked' },
       { type: 'ul', items: [
         <>Per-platform render rules expressed as JSON (length, hashtag count, link handling).</>,
-        <>A small Social State call per platform that adapts the prose without changing voice.</>,
+        <>A small Social Stats call per platform that adapts the prose without changing voice.</>,
         <>"Smart resize" for media — pre-cropped variants for square, portrait, landscape.</>,
       ] },
       { type: 'callout', children: <>Result: time-to-publish dropped 3.5x in our internal A/B. Composer became our most-used surface.</> },

@@ -1,3 +1,11 @@
+# ============================================================================
+#  Social Stats — Social Media Management & Marketing Platform
+#  Author    : Chandrabhan Shekhawat
+#  Company   : Gigai Kripa Services
+#  Website   : https://gigaikripaservices.com/
+#  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+#  Released under the MIT License — see LICENSE. Keep this notice.
+# ============================================================================
 """
 OAuth 2.0 handlers for all 5 platforms:
   Facebook, Instagram, YouTube, Google My Business, LinkedIn
@@ -32,7 +40,7 @@ FACEBOOK_CONSUMER_APP_ID = getattr(
 )
 FACEBOOK_CONSUMER_REDIRECT = getattr(
     settings, 'FACEBOOK_CONSUMER_REDIRECT_URI',
-    'https://socialstate.ai/api/oauth/facebook/consumer/callback/',
+    'https://socialstats.app/api/oauth/facebook/consumer/callback/',
 )
 
 def _facebook_consumer_secret():

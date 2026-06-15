@@ -1,5 +1,13 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
- * AIAuditPage — client-visible "What did Social State do for me?" feed.
+ * AIAuditPage — client-visible "What did Social Stats do for me?" feed.
  *
  * Shows every AI request scoped to the current client, recent first.
  * Includes a quota meter at the top (today's usage vs daily cap) and a
@@ -22,14 +30,12 @@ import { aiV2API } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import toast from '../../components/ui/toast';
 
-
 const STATUS_VARIANT = {
   success:       { variant: 'success', icon: CheckCircle2 },
   error:         { variant: 'danger',  icon: AlertTriangle },
   rate_limited:  { variant: 'warning', icon: AlertTriangle },
   budget_capped: { variant: 'warning', icon: AlertTriangle },
 };
-
 
 export default function AIAuditPage({ clientId: propClientId = null }) {
   const { user } = useAuth();
@@ -58,7 +64,7 @@ export default function AIAuditPage({ clientId: propClientId = null }) {
   return (
     <div className="app-page app-page--lg">
       <PageHeader
-        title="What did Social State do for me?"
+        title="What did Social Stats do for me?"
         subtitle="Every AI request on this client account — for transparency + compliance."
         actions={(
           <Button variant="ghost" size="sm" icon={RefreshCw} onClick={load}>Refresh</Button>
@@ -145,7 +151,7 @@ export default function AIAuditPage({ clientId: propClientId = null }) {
             <EmptyState
               icon={Sparkles}
               title="No AI activity yet"
-              description="As you use Social State features, every request shows up here."
+              description="As you use Social Stats features, every request shows up here."
             />
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -212,7 +218,7 @@ export default function AIAuditPage({ clientId: propClientId = null }) {
       }}>
         <Sparkles size={12} style={{ color: 'var(--brand-primary-hover)', verticalAlign: -1 }} />
         {' '}
-        SocialState powers every request below. We log each call for compliance and
+        SocialStats powers every request below. We log each call for compliance and
         do not train on your data. AI-generated content is marked with a
         <strong> ✨ AI-assisted</strong> badge in the UI. Sensitive verticals (medical,
         legal, financial) include a regulatory disclaimer. Vendor-level disclosure is
@@ -225,7 +231,6 @@ export default function AIAuditPage({ clientId: propClientId = null }) {
     </div>
   );
 }
-
 
 function FilterRow({ label, count, active, onClick }) {
   return (

@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
  * VerifyEmailPage — /verify-email?token=UUID
  * Verifies token → stores JWT → redirects to /pending.
@@ -49,9 +57,9 @@ export default function VerifyEmailPage() {
                                'Just a moment…'
       }
       heroSub={
-        status === 'success' ? 'Welcome to Social State. Let\'s get your workspace set up.' :
+        status === 'success' ? 'Welcome to Social Stats. Let\'s get your workspace set up.' :
         status === 'error'   ? 'Verification links expire after 24 hours. Resend a fresh one if needed.' :
-                               'We\'re activating your Social State account.'
+                               'We\'re activating your Social Stats account.'
       }
     >
       <div style={cardStyle}>

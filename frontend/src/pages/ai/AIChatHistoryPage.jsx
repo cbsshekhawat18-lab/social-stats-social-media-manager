@@ -1,5 +1,13 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
- * AIChatHistoryPage — full-page browser for past Social State conversations.
+ * AIChatHistoryPage — full-page browser for past Social Stats conversations.
  *
  * Left: searchable list of conversations (active + archived toggle).
  * Right: selected conversation with all messages.
@@ -20,7 +28,6 @@ import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import { aiV2API } from '../../services/api';
 import toast from '../../components/ui/toast';
-
 
 export default function AIChatHistoryPage() {
   const [conversations, setConversations] = useState([]);
@@ -82,7 +89,7 @@ export default function AIChatHistoryPage() {
     <div className="app-page app-page--lg">
       <PageHeader
         title="Chat History"
-        subtitle="Past conversations with Social State"
+        subtitle="Past conversations with Social Stats"
         actions={(
           <Button
             size="sm" variant="ghost"
@@ -126,7 +133,7 @@ export default function AIChatHistoryPage() {
               <EmptyState
                 icon={MessageSquare}
                 title={showArchived ? 'No archived chats' : 'No conversations yet'}
-                description={showArchived ? null : 'Press ⌘J anywhere to start a chat with Social State.'}
+                description={showArchived ? null : 'Press ⌘J anywhere to start a chat with Social Stats.'}
                 compact
               />
             ) : (
@@ -224,7 +231,6 @@ export default function AIChatHistoryPage() {
   );
 }
 
-
 function HistoryMessage({ msg }) {
   const isUser = msg.role === 'user';
   // Tool result rows often have empty .content but populated .tool_results
@@ -277,7 +283,6 @@ function HistoryMessage({ msg }) {
     </div>
   );
 }
-
 
 // ── styles ─────────────────────────────────────────────────────────────
 const twoColStyle = {

@@ -1,0 +1,38 @@
+# robots.txt for Social Stats
+
+User-agent: *
+Allow: /
+Allow: /features
+Allow: /pricing
+Allow: /customers
+Allow: /about
+Allow: /contact
+Allow: /blog
+Allow: /blog/*
+Allow: /help
+Allow: /status
+Allow: /changelog
+Allow: /security
+Allow: /privacy
+Allow: /terms
+Allow: /refund
+Allow: /cookies
+Allow: /gdpr
+Allow: /dpdp
+
+# Authenticated app surfaces — not indexable
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /pending
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /invitation/
+Disallow: /auth/
+Disallow: /oauth/
+Disallow: /report/
+Disallow: /500
+Disallow: /maintenance
+
+Sitemap: https://socialstats.app/sitemap.xml

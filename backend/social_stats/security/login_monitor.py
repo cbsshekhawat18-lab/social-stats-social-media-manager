@@ -1,3 +1,11 @@
+# ============================================================================
+#  Social Stats — Social Media Management & Marketing Platform
+#  Author    : Chandrabhan Shekhawat
+#  Company   : Gigai Kripa Services
+#  Website   : https://gigaikripaservices.com/
+#  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+#  Released under the MIT License — see LICENSE. Keep this notice.
+# ============================================================================
 """
 suspicious-login detection.
 
@@ -62,14 +70,14 @@ def notify_new_login(*, user, context: dict) -> None:
         return
     try:
         from django.core.mail import send_mail
-        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstate.ai')
-        frontend = getattr(settings, 'FRONTEND_URL', 'https://app.socialstate.ai')
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app')
+        frontend = getattr(settings, 'FRONTEND_URL', 'https://app.socialstats.app')
 
         when = timezone.now().strftime('%Y-%m-%d %H:%M UTC')
-        subject = '[Social State] New login to your account'
+        subject = '[Social Stats] New login to your account'
         body = (
             f'Hi {user.first_name or user.username},\n\n'
-            f'We detected a new sign-in to your Social State account at {when}.\n\n'
+            f'We detected a new sign-in to your Social Stats account at {when}.\n\n'
             f'  IP address : {context.get("ip") or "unknown"}\n'
             f'  Browser    : {context.get("browser") or "unknown"} on {context.get("os") or "unknown"}\n'
             f'  Device     : {context.get("device") or "unknown"}\n\n'
@@ -77,8 +85,8 @@ def notify_new_login(*, user, context: dict) -> None:
             f'If you don\'t recognise this sign-in:\n'
             f'  1. Change your password immediately: {frontend}/u/settings/security\n'
             f'  2. Review and revoke active sessions on the same page\n'
-            f'  3. Contact support@socialstate.ai\n\n'
-            f'— Social State Security'
+            f'  3. Contact support@socialstats.app\n\n'
+            f'— Social Stats Security'
         )
         send_mail(subject, body, from_email, [user.email], fail_silently=True)
     except Exception:

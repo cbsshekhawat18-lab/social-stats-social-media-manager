@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import axios from 'axios';
 
 const api = axios.create({
@@ -43,7 +51,11 @@ api.interceptors.response.use(
 
     const refresh = localStorage.getItem('refresh_token');
     if (!refresh) {
-      _redirectToLogin();
+      // No session in storage — the user was never signed in. Let the
+      // page handle the 401 itself: marketing pages ignore it and render
+      // normally; <Protected> wrappers redirect to /login on their own.
+      // Auto-redirecting here would bounce visitors off /pricing / /about
+      // before they ever see the marketing site.
       return Promise.reject(error);
     }
 
@@ -104,7 +116,7 @@ export const manageRequestAPI = {
   decline: (token, payload)  => api.post  (`/manage-invite/${token}/decline/`, payload || {}),
 };
 
-// ── Marketplace: relations (Stage 5) ───────────────────
+// ── Marketplace: relations () ───────────────────
 export const relationAPI = {
   list:           ()             => api.get(`/relations/`),
   get:            (id)           => api.get(`/relations/${id}/`),
@@ -197,13 +209,13 @@ export const metaAdsAPI = {
   health:    ()        => api.get('/meta-ads/health/'),
 };
 
-// ── Notification preferences (Stage 13) ────────────────
+// ── Notification preferences () ────────────────
 export const notificationPrefsAPI = {
   get:    ()       => api.get ('/notifications/preferences/'),
   update: (rows)   => api.put ('/notifications/preferences/update/', { rows }),
 };
 
-// ── Verification + Disputes (Stage 15) ─────────────────
+// ── Verification + Disputes () ─────────────────
 export const verificationAPI = {
   submit:  (slug, documents) => api.post(`/agency/${slug}/verification/submit/`, { documents }),
   pending: ()                => api.get('/admin/verifications/pending/'),
@@ -219,7 +231,7 @@ export const disputeAPI = {
   resolve: (id, payload)     => api.post(`/admin/disputes/${id}/resolve/`, payload),
 };
 
-// ── Activity feed (Stages 5 + 12) ──────────────────────
+// ── Activity feed ( + 12) ──────────────────────
 export const activityAPI = {
   list:    (params)     => api.get(`/activity/`, { params }),
   flag:    (id, reason) => api.post(`/activity/${id}/flag/`, { reason }),
@@ -232,7 +244,7 @@ export const activityAPI = {
   },
 };
 
-// ── Approvals (Stage 6) ────────────────────────────────
+// ── Approvals () ────────────────────────────────
 export const approvalAPI = {
   pending: ()              => api.get('/approvals/pending/'),
   history: ()              => api.get('/approvals/history/'),
@@ -241,7 +253,7 @@ export const approvalAPI = {
   reject:  (id, reason)    => api.post(`/approvals/${id}/reject/`,  { reason }),
 };
 
-// ── Agency invites (Stage 7 — user invites agency) ─────
+// ── Agency invites ( — user invites agency) ─────
 export const agencyInviteAPI = {
   send:           (data)            => api.post('/end-user/invite-agency/', data),
   sent:           ()                => api.get ('/end-user/sent-agency-invites/'),
@@ -251,7 +263,7 @@ export const agencyInviteAPI = {
   agencyIncoming: (slug)            => api.get (`/agency/${slug}/incoming-invites/`),
 };
 
-// ── Marketplace (Stage 8) ───────────────────────────────
+// ── Marketplace () ───────────────────────────────
 export const marketplaceAPI = {
   list:       (params)        => api.get('/marketplace/agencies/', { params }),
   get:        (slug)          => api.get(`/marketplace/agencies/${slug}/`),
@@ -265,7 +277,7 @@ export const agencyAPI = {
   update: (slug, data)  => api.put (`/agency/${slug}/`, data),
 };
 
-// ── Billing (Stage 10 — end-user) ───────────────────────
+// ── Billing ( — end-user) ───────────────────────
 export const billingAPI = {
   plans:        (side = 'end_user') => api.get('/billing/plans/', { params: { side } }),
   subscription: ()                  => api.get('/billing/subscription/'),
@@ -275,7 +287,7 @@ export const billingAPI = {
   invoices:     ()                  => api.get('/billing/invoices/'),
 };
 
-// ── Agency billing (Stage 11) ───────────────────────────
+// ── Agency billing () ───────────────────────────
 export const agencyBillingAPI = {
   subscription: (slug)        => api.get (`/agency/${slug}/billing/subscription/`),
   checkout:     (slug, plan)  => api.post(`/agency/${slug}/billing/checkout/`, { plan }),
@@ -284,7 +296,7 @@ export const agencyBillingAPI = {
   invoices:     (slug)        => api.get (`/agency/${slug}/billing/invoices/`),
 };
 
-// ── Reviews (Stage 9) ───────────────────────────────────
+// ── Reviews () ───────────────────────────────────
 export const reviewAPI = {
   list:    (slug, params)        => api.get(`/agencies/${slug}/reviews/`, { params }),
   create:  (slug, payload)       => api.post(`/agencies/${slug}/reviews/`, payload),
@@ -514,7 +526,7 @@ export const hashtagAPI = {
   getSavedSets:(params) => api.get('/ai/hashtags/saved-sets/', { params }),
 };
 
-// ── AI Assistant (Stage 8) ─────────────────────────────
+// ── AI Assistant () ─────────────────────────────
 export const aiAPI = {
   composePost:        (data) => api.post('/ai/compose-post/', data),
   suggestHashtags:    (data) => api.post('/ai/suggest-hashtags/', data),
@@ -528,7 +540,7 @@ export const aiAPI = {
   getBrandVoice:      ()     => api.get('/ai/brand-voice/'),
 };
 
-// ── AI v2 — Smart Composer (Stage 2 of comprehensive AI build) ─────────
+// ── AI v2 — Smart Composer ( of comprehensive AI build) ─────────
 // Routed through the new AIClient with caching + rate limiting + cost logs.
 export const aiV2API = {
   compose:         (data) => api.post('/ai/v2/compose/',          data),
@@ -589,7 +601,7 @@ export const aiV2API = {
   audit:           (params) => api.get('/ai/v2/audit/',           { params }),
 };
 
-// ── Audit + Notification preferences + Approval queue (Stage 13) ──
+// ── Audit + Notification preferences + Approval queue () ──
 export const auditAPI = {
   list: (params) => api.get('/audit/log/', { params }),
 };
@@ -600,7 +612,7 @@ export const notificationsAPI = {
   approvalQueue:  (params) => api.get('/composer/approvals/', { params }),
 };
 
-// ── Competitors + Benchmark (Stage 12) ─────────────────
+// ── Competitors + Benchmark () ─────────────────
 export const competitorAPI = {
   list:       (params)   => api.get('/competitors/', { params }),
   get:        (id)       => api.get(`/competitors/${id}/`),
@@ -614,12 +626,12 @@ export const competitorAPI = {
   benchmark:  (data)     => api.post('/competitors/benchmark/', data),
 };
 
-// ── Audience Insights (Stage 12) ───────────────────────
+// ── Audience Insights () ───────────────────────
 export const audienceAPI = {
   unified: (params) => api.get('/audience/unified/', { params }),
 };
 
-// ── Video Studio (Stage 10) ────────────────────────────
+// ── Video Studio () ────────────────────────────
 export const videoAPI = {
   upload:           (formData) => api.post('/video/upload/', formData,
                                   { headers: { 'Content-Type': 'multipart/form-data' } }),
@@ -631,7 +643,7 @@ export const videoAPI = {
   youtubeUpload:    (data)     => api.post('/video/youtube-upload/', data),
 };
 
-// ── Automations (Stage 9) ──────────────────────────────
+// ── Automations () ──────────────────────────────
 export const automationsAPI = {
   list:      (params)   => api.get('/automations/', { params }),
   get:       (id)       => api.get(`/automations/${id}/`),
@@ -778,7 +790,7 @@ export const whatsappAPI = {
   },
 };
 
-// ── Stage 10 — security + privacy (Settings UI) ─────────────────────────
+// ── — security + privacy (Settings UI) ─────────────────────────
 export const sessionsAPI = {
   list:      ()        => api.get  ('/auth/sessions/'),
   revoke:    (id)      => api.post (`/auth/sessions/${id}/revoke/`, {}),

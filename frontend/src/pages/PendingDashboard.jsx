@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
  * PendingDashboard — shown to self-registered clients who have no agency yet.
  * Two paths: go solo (setup-solo endpoint) or wait for / accept an agency invitation.
@@ -7,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { soloAPI, invitationAPI } from '../services/api';
 import { Building2, UserCheck, Clock, CheckCircle, XCircle, Bell, LogOut, ChevronRight, Loader2 } from 'lucide-react';
-import { SocialStateLogoHorizontal } from '../components/ui/SocialStateLogo';
+import { BrandLogoHorizontal } from '../components/ui/BrandLogo';
 
 const CYAN  = '#00d7ff';
 const BG    = 'var(--surface-page)';
@@ -79,7 +87,7 @@ export default function PendingDashboard() {
     <div style={s.page}>
       {/* Top bar */}
       <header style={s.topBar}>
-        <SocialStateLogoHorizontal height={32} />
+        <BrandLogoHorizontal height={32} />
         <div style={s.topRight}>
           {pendingCount > 0 && (
             <div style={s.bellBadge}>
@@ -100,7 +108,7 @@ export default function PendingDashboard() {
           <div style={s.avatar}>{(user?.name || user?.email || 'U')[0].toUpperCase()}</div>
           <div>
             <h1 style={s.welcomeTitle}>Welcome{user?.name ? `, ${user.name}` : ''}!</h1>
-            <p style={s.welcomeSub}>Choose how you'd like to use Social State.</p>
+            <p style={s.welcomeSub}>Choose how you'd like to use Social Stats.</p>
           </div>
         </div>
 

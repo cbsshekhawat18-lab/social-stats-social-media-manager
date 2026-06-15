@@ -1,0 +1,123 @@
+name: Security scans
+
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  schedule:
+    # Daily 03:00 UTC — catches CVEs published since the last PR.
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write   # for SARIF upload to GitHub Code Scanning
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────
+  # Python static analysis (Bandit) + dependency CVEs (pip-audit + safety)
+  # ───────────────────────────────────────────────────────────────────────
+  python-scan:
+    name: Python — Bandit + pip-audit + safety
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install dev deps (scanners)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Bandit (static security scan)
+        run: |
+          bandit -r social_stats dashboard \
+            -c pyproject.toml \
+            -lll \
+            --severity-level high \
+            --confidence-level medium \
+            -f json -o bandit-report.json
+          bandit -r social_stats dashboard \
+            -c pyproject.toml \
+            --severity-level high \
+            --confidence-level medium
+
+      - name: pip-audit (CVE scan — informational baseline)
+        # Records findings as a JSON artifact + annotates the run; doesn't
+        # gate the merge yet because we have a baseline of pre-existing CVEs
+        # to triage. Flip to `--strict` (fail on findings) once SECURITY_BASELINE.md
+        # is empty.
+        continue-on-error: true
+        run: |
+          pip-audit --requirement requirements.txt \
+                    --vulnerability-service osv \
+                    --format json --output pip-audit-report.json || true
+          pip-audit --requirement requirements.txt --vulnerability-service osv || true
+
+      - name: pip-audit (gate on NEW vulns vs baseline)
+        # Compares findings against SECURITY_BASELINE.md so a NEW CVE in a
+        # NEW dep blocks the PR even while the baseline is non-empty.
+        # (Helper script lives in scripts/ — wired in a later commit.)
+        if: hashFiles('scripts/audit-diff.py') != ''
+        run: python scripts/audit-diff.py pip-audit-report.json SECURITY_BASELINE.md
+
+      - name: safety (Snyk CVE DB)
+        # safety has a free tier; in CI we use --short-report to avoid auth.
+        continue-on-error: true   # informational — pip-audit is the gate
+        run: safety check --file requirements.txt --short-report
+
+      - name: Upload Bandit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: backend/bandit-report.json
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Frontend dependency scan (npm audit)
+  # ───────────────────────────────────────────────────────────────────────
+  frontend-scan:
+    name: Frontend — npm audit
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm audit (HIGH+ blocks merge)
+        run: npm audit --audit-level=high
+        # `npm audit` exits non-zero on findings ≥ the level — gates the merge.
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Secrets scan (gitleaks)
+  # ───────────────────────────────────────────────────────────────────────
+  secret-scan:
+    name: Secrets — gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitleaks scans the full history on PR
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Default config catches AWS / Stripe / Google API keys / generic
+        # high-entropy strings. Add a .gitleaks.toml if you need custom rules.

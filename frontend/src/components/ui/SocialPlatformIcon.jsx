@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 const PLATFORM_ALIASES = {
   google: 'google',
   google_my_business: 'google_my_business',
@@ -39,14 +47,14 @@ export default function SocialPlatformIcon({ platform, size = 18, title, style }
       return (
         <SvgWrap size={size} title={title || 'Instagram'} style={style}>
           <defs>
-            <linearGradient id="socialstate-instagram-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+            <linearGradient id="socialstats-instagram-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#F58529" />
               <stop offset="35%" stopColor="#DD2A7B" />
               <stop offset="70%" stopColor="#8134AF" />
               <stop offset="100%" stopColor="#515BD4" />
             </linearGradient>
           </defs>
-          <rect x="2.25" y="2.25" width="19.5" height="19.5" rx="5.5" fill="url(#socialstate-instagram-gradient)" />
+          <rect x="2.25" y="2.25" width="19.5" height="19.5" rx="5.5" fill="url(#socialstats-instagram-gradient)" />
           <circle cx="12" cy="12" r="4.25" fill="none" stroke="#fff" strokeWidth="1.9" />
           <circle cx="17.3" cy="6.9" r="1.15" fill="#fff" />
           <rect x="6.1" y="6.1" width="11.8" height="11.8" rx="3.6" fill="none" stroke="#fff" strokeWidth="1.9" />

@@ -1,5 +1,5 @@
 /*
- * Social State Design Tokens — single source of truth for the visual system.
+ * Social Stats Design Tokens — single source of truth for the visual system.
  *
  * Layering note:
  *   - This file defines the canonical NEW token names (--surface-page, --text-*,
@@ -195,7 +195,7 @@ textarea:focus-visible,
 
 /* Invert the dark wordmark logo in dark mode so it stays legible.
    The asset is a dark glyph on transparent — fine in light mode as-is. */
-[data-theme="dark"] .socialstate-loader__logo {
+[data-theme="dark"] .socialstats-loader__logo {
   filter: brightness(0) invert(1);
 }
 

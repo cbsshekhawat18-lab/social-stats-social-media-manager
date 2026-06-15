@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
  * BotFlowsListPage — entry point for the bot builder.
  *
@@ -15,13 +23,11 @@ import {
 import { botAPI, botTemplateAPI } from '../../services/api';
 import toast from '../../components/ui/toast';
 
-
 const FILTERS = [
   { key: 'all',    label: 'All' },
   { key: 'active', label: 'Active' },
   { key: 'draft',  label: 'Draft' },
 ];
-
 
 export default function BotFlowsListPage() {
   const navigate = useNavigate();
@@ -134,7 +140,6 @@ export default function BotFlowsListPage() {
     </div>
   );
 }
-
 
 function FlowCard({ flow, onDuplicate, onDelete }) {
   const [menu, setMenu] = useState(false);
@@ -264,7 +269,6 @@ function Empty({ templates, onCreate }) {
     </div>
   );
 }
-
 
 function CreateModal({ onClose, onCreated }) {
   const [mode, setMode] = useState('blank'); // 'blank' | 'ai'
@@ -407,7 +411,7 @@ function CreateModal({ onClose, onCreated }) {
               borderRadius: 'var(--radius-sm)',
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
-              <Sparkles size={12} /> Social State drafts the flow. You can edit every step in the visual editor.
+              <Sparkles size={12} /> Social Stats drafts the flow. You can edit every step in the visual editor.
             </p>
             {aiWarning && (
               <p style={{
@@ -455,7 +459,6 @@ const modeTab = (active) => ({
   borderRadius: 'var(--radius-pill)',
   cursor: 'pointer', fontFamily: 'inherit',
 });
-
 
 const btnPrimary = {
   display: 'inline-flex', alignItems: 'center', gap: 6,

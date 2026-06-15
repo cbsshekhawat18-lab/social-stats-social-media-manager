@@ -1,0 +1,6 @@
+<!-- PLACEHOLDER brand mark for Social Stats — replace with a real logo before launch. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64" role="img" aria-label="Social Stats">
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#00CCF5"/>
+  <path d="M22 18 C 22 10, 42 10, 42 18 C 42 26, 22 26, 22 32 C 22 38, 42 38, 42 46 C 42 54, 22 54, 22 46"
+        fill="none" stroke="#0a0e14" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /* =============================================================================
  * FacebookConnectModal
  * -----------------------------------------------------------------------------
@@ -24,14 +32,14 @@
  *
  *   2. Self-contained (uses Facebook JS SDK directly):
  *        <FacebookConnectModal
- *          appName="Social State"
+ *          appName="Social Stats"
  *          onConnect={(token, user) => { ... }}
  *        />
  *      Renders its own trigger, calls window.FB.login() on Continue.
  * ===========================================================================*/
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { SocialStateMark } from './ui/SocialStateLogo';
+import { BrandMark } from './ui/BrandLogo';
 
 const FB_APP_ID = 'YOUR_FACEBOOK_APP_ID';
 const FB_API_VERSION = 'v21.0';
@@ -328,7 +336,7 @@ export default function FacebookConnectModal({
                 <CloseGlyph />
               </button>
               <div style={styles.appLogoWrap}>
-                <SocialStateMark size={48} />
+                <BrandMark size={48} />
               </div>
               <h2 id="fb-connect-title" style={styles.title}>
                 Connect Your Facebook &amp; Instagram

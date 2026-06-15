@@ -1,0 +1,61 @@
+name: Bug report
+description: Report something that isn't working as expected
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please fill out the sections
+        below so we can reproduce and fix it quickly.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+      placeholder: When I schedule a post for a future date, ...
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to trigger the bug.
+      placeholder: |
+        1. Run `python manage.py demo_setup`
+        2. Sign in as agency@demo.local
+        3. Go to the composer and ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the app?
+      options:
+        - Analytics dashboard
+        - Composer / scheduling / content calendar
+        - Inbox
+        - WhatsApp bot builder
+        - Agency / marketplace
+        - AI assistant
+        - Auth / OAuth
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, Node version, browser, and whether backend/frontend.
+      placeholder: macOS 14, Python 3.11, Node 18, Chrome
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / screenshots
+      description: Paste any console output, tracebacks, or screenshots.
+      render: shell
+    validations:
+      required: false

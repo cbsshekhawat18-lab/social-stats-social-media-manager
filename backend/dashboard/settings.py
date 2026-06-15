@@ -1,3 +1,11 @@
+# ============================================================================
+#  Social Stats — Social Media Management & Marketing Platform
+#  Author    : Chandrabhan Shekhawat
+#  Company   : Gigai Kripa Services
+#  Website   : https://gigaikripaservices.com/
+#  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+#  Released under the MIT License — see LICENSE. Keep this notice.
+# ============================================================================
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -7,13 +15,13 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-in-production')
 
-# Independent keys for field-level encryption of OAuth tokens (Stage 1 security).
+# Independent keys for field-level encryption of OAuth tokens ( security).
 # Preferred form: FIELD_ENCRYPTION_KEYS — comma-separated, primary first.
 # All keys decrypt; only the first encrypts new writes. Rotation flow:
-#   1. Generate new key
-#   2. Prepend it to FIELD_ENCRYPTION_KEYS in env
-#   3. Run social_stats.security.tasks.rotate_encryption_keys
-#   4. Remove the retired key on next deploy
+# 1. Generate new key
+# 2. Prepend it to FIELD_ENCRYPTION_KEYS in env
+# 3. Run social_stats.security.tasks.rotate_encryption_keys
+# 4. Remove the retired key on next deploy
 # Backwards compat: FIELD_ENCRYPTION_KEY (singular) is honoured when KEYS is
 # empty; SECRET_KEY-derived as dev-only last resort.
 FIELD_ENCRYPTION_KEYS = os.environ.get('FIELD_ENCRYPTION_KEYS', '')
@@ -58,9 +66,9 @@ MIDDLEWARE = [
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.Argon2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',         # legacy verifier
-    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',     # legacy verifier
-    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',   # legacy verifier
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',  # legacy verifier
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',  # legacy verifier
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',  # legacy verifier
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -154,7 +162,7 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ── Security headers + HTTPS enforcement (Stage 6) ──────────────────────────
+# ── Security headers + HTTPS enforcement () ──────────────────────────
 # Defaults flip ON when DEBUG is False. Each can still be overridden per env
 # (useful for staging that runs HTTP-only behind a private LB).
 def _env_bool(name: str, default: bool) -> bool:
@@ -192,11 +200,11 @@ CONTENT_SECURITY_POLICY = {
         'https://partnersv1.pinbot.ai',
         'https://graph.facebook.com',
         'https://www.googleapis.com',
-        *_csp_connect_extra,
+ *_csp_connect_extra,
     ],
 }
 
-# ── Stage 7 — CAPTCHA + AI cost quotas ───────────────────────────────────────
+# ── — CAPTCHA + AI cost quotas ───────────────────────────────────────
 TURNSTILE_SECRET_KEY = os.environ.get('TURNSTILE_SECRET_KEY', '')
 TURNSTILE_SITE_KEY   = os.environ.get('TURNSTILE_SITE_KEY',   '')
 
@@ -228,8 +236,8 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION':    True,
     'UPDATE_LAST_LOGIN':           True,
     'AUTH_HEADER_TYPES':           ('Bearer',),
-    'AUDIENCE':                    os.environ.get('JWT_AUDIENCE', 'socialstate-app'),
-    'ISSUER':                      os.environ.get('JWT_ISSUER',   'socialstate.com'),
+    'AUDIENCE':                    os.environ.get('JWT_AUDIENCE', 'socialstats-app'),
+    'ISSUER':                      os.environ.get('JWT_ISSUER',   'socialstats.com'),
     # JTI claim is on by default in simplejwt — required for blacklist to work.
 }
 
@@ -359,16 +367,16 @@ EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.zoho.in')
 EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_USE_TLS       = True
 EMAIL_USE_SSL       = False
-EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', 'noreply@socialstate.ai')
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', 'noreply@socialstats.app')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', 'Social State <noreply@socialstate.ai>')
+DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', 'Social Stats <noreply@socialstats.app>')
 
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
 # ── Anthropic Claude API ──────────────────────────────
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 
-# AI infrastructure (Stage 1) — central limits + model selection.
+# AI infrastructure () — central limits + model selection.
 AI_MONTHLY_BUDGET_USD     = float(os.environ.get('AI_MONTHLY_BUDGET_USD', '500'))
 AI_PER_CLIENT_DAILY_LIMIT = int(os.environ.get('AI_PER_CLIENT_DAILY_LIMIT', '100'))
 AI_CACHE_TTL_SECONDS      = int(os.environ.get('AI_CACHE_TTL_SECONDS', '86400'))

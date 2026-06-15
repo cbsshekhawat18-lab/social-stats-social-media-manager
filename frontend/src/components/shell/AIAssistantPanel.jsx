@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Sparkles, Wand2, Hash, RefreshCw, Languages, Clock, X, Copy, Check, Loader2,
@@ -135,7 +143,7 @@ function Panel({ tab, setTab, onClose }) {
               <Sparkles size={14} />
             </span>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>Social State</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>Social Stats</div>
               <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
                 Cmd/Ctrl + J
               </div>

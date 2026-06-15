@@ -1,13 +1,21 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
- * Social State logo — pure SVG / CSS, no image assets required.
+ * Social Stats logo — pure SVG / CSS, no image assets required.
  *
  * Five variants kept compatible with the prior API so consumers don't
  * have to change:
- *   SocialStateMark            — square brand mark (icon-only)
- *   SocialStateMarkInverted    — same, inverted for dark surfaces
- *   SocialStateWordmark        — small wordmark (text only)
- *   SocialStateLogoHorizontal  — mark + wordmark, side by side
- *   SocialStateLogoStacked     — mark + wordmark, stacked
+ *   BrandMark            — square brand mark (icon-only)
+ *   BrandMarkInverted    — same, inverted for dark surfaces
+ *   BrandWordmark        — small wordmark (text only)
+ *   BrandLogoHorizontal  — mark + wordmark, side by side
+ *   BrandLogoStacked     — mark + wordmark, stacked
  *
  * To swap in a real logo asset later, replace these renderers with <img>
  * tags pointing at the new file. The export signatures don't need to change.
@@ -26,7 +34,7 @@ function MarkSvg({ size = 40, inverted = false }) {
       height={size}
       viewBox="0 0 64 64"
       role="img"
-      aria-label="Social State"
+      aria-label="Social Stats"
       style={{ display: 'block', flexShrink: 0 }}
     >
       <rect x="0" y="0" width="64" height="64" rx="14" fill={bg} />
@@ -49,7 +57,7 @@ function WordmarkSvg({ height = 22, color = 'currentColor' }) {
   return (
     <span
       role="img"
-      aria-label="Social State"
+      aria-label="Social Stats"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -63,12 +71,12 @@ function WordmarkSvg({ height = 22, color = 'currentColor' }) {
         userSelect: 'none',
       }}
     >
-      Social&nbsp;State
+      Social&nbsp;Stats
     </span>
   );
 }
 
-export function SocialStateMark({ size = 40, className, style: extraStyle }) {
+export function BrandMark({ size = 40, className, style: extraStyle }) {
   return (
     <span className={className} style={{ display: 'inline-flex', ...extraStyle }}>
       <MarkSvg size={size} />
@@ -76,7 +84,7 @@ export function SocialStateMark({ size = 40, className, style: extraStyle }) {
   );
 }
 
-export function SocialStateMarkInverted({ size = 40, className, style: extraStyle }) {
+export function BrandMarkInverted({ size = 40, className, style: extraStyle }) {
   return (
     <span className={className} style={{ display: 'inline-flex', ...extraStyle }}>
       <MarkSvg size={size} inverted />
@@ -84,7 +92,7 @@ export function SocialStateMarkInverted({ size = 40, className, style: extraStyl
   );
 }
 
-export function SocialStateWordmark({ height = 22, className, style: extraStyle }) {
+export function BrandWordmark({ height = 22, className, style: extraStyle }) {
   return (
     <span className={className} style={{ display: 'inline-flex', height, ...extraStyle }}>
       <WordmarkSvg height={height} />
@@ -92,7 +100,7 @@ export function SocialStateWordmark({ height = 22, className, style: extraStyle 
   );
 }
 
-export function SocialStateLogoHorizontal({ height = 36, className, style: extraStyle }) {
+export function BrandLogoHorizontal({ height = 36, className, style: extraStyle }) {
   const markSize = Math.round(height);
   return (
     <span
@@ -111,7 +119,7 @@ export function SocialStateLogoHorizontal({ height = 36, className, style: extra
   );
 }
 
-export function SocialStateLogoStacked({ height = 100, className, style: extraStyle }) {
+export function BrandLogoStacked({ height = 100, className, style: extraStyle }) {
   const markSize = Math.round(height * 0.6);
   return (
     <span

@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
  * AIUsagePage — admin-only AI cost + usage dashboard.
  *
@@ -243,7 +251,6 @@ export default function AIUsagePage() {
   );
 }
 
-
 // ── helpers ────────────────────────────────────────────────────────────
 
 function BudgetGauge({ budget }) {
@@ -296,7 +303,6 @@ function BudgetGauge({ budget }) {
   );
 }
 
-
 function StatTile({ label, value, highlight, accent }) {
   return (
     <div style={{
@@ -320,7 +326,6 @@ function StatTile({ label, value, highlight, accent }) {
     </div>
   );
 }
-
 
 function DailyBars({ rows }) {
   const max = useMemo(() => Math.max(...rows.map((r) => r.cost_usd || 0), 0.0001), [rows]);
@@ -347,7 +352,6 @@ function DailyBars({ rows }) {
     </div>
   );
 }
-
 
 function fmtNum(n) {
   if (n == null) return '0';

@@ -1,0 +1,9 @@
+-r requirements.txt
+
+# ── Static analysis ──────────────────────────────────────────────────────────
+bandit[toml]==1.7.9        # Python static security scanner
+ruff==0.6.9                # Fast linter (replaces flake8 + pyflakes)
+
+# ── Dependency CVE scanning ──────────────────────────────────────────────────
+pip-audit==2.7.3           # PyPA-maintained vuln scanner (uses OSV.dev)
+safety==3.2.7              # Snyk-backed vuln database

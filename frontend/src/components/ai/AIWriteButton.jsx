@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useRef, useState } from 'react';
 import { Sparkles, Loader2, X, Check, RefreshCw, Copy } from 'lucide-react';
 
@@ -174,7 +182,7 @@ export default function AIWriteButton({
               <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-primary)', fontWeight: 600, fontSize: 14 }}>
                   <Sparkles size={14} style={{ color: 'var(--brand-primary-hover)' }} />
-                  Write with Social State
+                  Write with Social Stats
                 </div>
                 <Button variant="ghost" size="sm" iconOnly icon={X} aria-label="Close" onClick={() => setOpen(false)} />
               </header>
@@ -245,7 +253,7 @@ export default function AIWriteButton({
                 style={{ marginTop: 14 }}
                 icon={Sparkles}
               >
-                {loading ? 'Social State is writing…' : 'Generate'}
+                {loading ? 'Social Stats is writing…' : 'Generate'}
               </Button>
               <p style={{ margin: '8px 0 0', fontSize: 11, color: 'var(--text-tertiary)', textAlign: 'center' }}>
                 Cmd+Enter to generate · Esc to close

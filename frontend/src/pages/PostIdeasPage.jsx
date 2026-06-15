@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -627,7 +635,7 @@ function LoadingScreen({ steps, currentStep }) {
       <div style={styles.loadingCard}>
         <div style={styles.loadingSpinner} />
         <h2 style={styles.loadingTitle}>Building your content calendar…</h2>
-        <p style={styles.loadingSub}>Social State is crafting personalised post ideas for your business</p>
+        <p style={styles.loadingSub}>Social Stats is crafting personalised post ideas for your business</p>
         <div style={styles.loadingSteps}>
           {steps.map((s, i) => (
             <div key={s} style={{

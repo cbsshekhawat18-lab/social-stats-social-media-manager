@@ -1,5 +1,13 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
- * HomePage — Social State marketing site front door.
+ * HomePage — Social Stats marketing site front door.
  *
  * 15-section long-scroll structure (from the marketing-website spec):
  *   1.  Hero (above fold)
@@ -51,14 +59,13 @@ import Meta   from '../components/Meta';
 import JsonLd, { buildOrganization, buildWebSite } from '../components/JsonLd';
 import { track } from '../services/analytics';
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 export default function HomePage() {
   return (
     <MarketingLayout>
       <Meta
         noSuffix
-        title="Social State — The AI marketing OS for modern agencies"
+        title="Social Stats — The AI marketing OS for modern agencies"
         description="Manage analytics, content, conversations, and ads for every client — across 5 platforms — in one place. AI-powered, built for modern teams."
       />
       <JsonLd id="organization" data={buildOrganization()} />
@@ -78,7 +85,6 @@ export default function HomePage() {
     </MarketingLayout>
   );
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 1 — HERO
@@ -231,7 +237,6 @@ function Hero() {
   );
 }
 
-
 // ── Floating-card contents ──────────────────────────────────────────────────
 function NotificationCard() {
   return (
@@ -313,7 +318,6 @@ const floatIconStyle = (bg, color) => ({
   background: bg, color, borderRadius: 'var(--radius-sm)',
 });
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 2 — PLATFORM STRIP
 // Customer-logo carousel intentionally omitted until we have real customers.
@@ -353,7 +357,6 @@ function TrustStrip() {
   );
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 3 — THREE PILLARS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -377,9 +380,9 @@ function ThreePillars() {
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         <ScrollReveal>
           <SectionHeading
-            eyebrow="What is Social State"
+            eyebrow="What is Social Stats"
             title="One product, three superpowers"
-            subtitle="Stop juggling 5 different SaaS tools. Social State is the single dashboard that runs your client's marketing end-to-end."
+            subtitle="Stop juggling 5 different SaaS tools. Social Stats is the single dashboard that runs your client's marketing end-to-end."
           />
         </ScrollReveal>
 
@@ -434,7 +437,6 @@ function ThreePillars() {
     </section>
   );
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 4 — BENTO GRID
@@ -501,7 +503,6 @@ function BentoSection() {
   );
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 5 — USE CASE TABS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -565,7 +566,7 @@ function UseCaseTabs() {
     <section style={{ padding: 'clamp(64px, 10vh, 120px) 24px', background: 'var(--surface-page)' }}>
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         <ScrollReveal>
-          <SectionHeading eyebrow="Made for every kind of marketer" title="Whoever you are, Social State fits" />
+          <SectionHeading eyebrow="Made for every kind of marketer" title="Whoever you are, Social Stats fits" />
         </ScrollReveal>
 
         <ScrollReveal delay={0.1}>
@@ -651,7 +652,6 @@ function UseCaseTabs() {
   );
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 6 — HOW IT WORKS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -716,7 +716,6 @@ function HowItWorks() {
   );
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 7 — AI EVERYWHERE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -750,7 +749,7 @@ function AIEverywhere() {
               fontSize: 16, lineHeight: 1.6,
               color: 'var(--text-secondary)', maxWidth: 480,
             }}>
-              Social State isn't an "AI feature". It's an AI-native product — Social State shows up wherever you're stuck.
+              Social Stats isn't an "AI feature". It's an AI-native product — Social Stats shows up wherever you're stuck.
             </p>
             <ul style={{ margin: '24px 0 0', padding: 0, listStyle: 'none' }}>
               {features.map((f) => (
@@ -787,15 +786,14 @@ function AIEverywhere() {
   );
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 8 — COMPARISON
 // ─────────────────────────────────────────────────────────────────────────────
 function ComparisonSection() {
-  const columns = ['Social State', 'Hootsuite', 'Sprout Social', 'Buffer'];
+  const columns = ['Social Stats', 'Hootsuite', 'Sprout Social', 'Buffer'];
   const rows = [
     { feature: 'Multi-platform analytics',     cells: ['yes',          'yes',     'yes',     'partial'] },
-    { feature: 'Deep AI assistant',            cells: ['Social State',    'partial', 'partial', 'no'] },
+    { feature: 'Deep AI assistant',            cells: ['Social Stats',    'partial', 'partial', 'no'] },
     { feature: 'WhatsApp Business API',        cells: ['yes',          'no',      'no',      'no'] },
     { feature: 'Click-to-WhatsApp bots',       cells: ['yes',          'no',      'no',      'no'] },
     { feature: 'Visual bot builder',           cells: ['yes',          'no',      'no',      'no'] },
@@ -816,7 +814,7 @@ function ComparisonSection() {
         <ScrollReveal>
           <SectionHeading
             eyebrow="Honest comparison"
-            title="How Social State stacks up"
+            title="How Social Stats stacks up"
             subtitle="We're not for everyone. We're built for agencies + businesses serious about AI + WhatsApp."
           />
         </ScrollReveal>
@@ -830,7 +828,6 @@ function ComparisonSection() {
   );
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 11 — MARKETPLACE TEASER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -841,7 +838,7 @@ function MarketplaceTeaser() {
   const steps = [
     { title: 'Browse verified agencies',  body: 'Search by industry, language, budget, and platform.' },
     { title: 'Match by fit',              body: 'See pricing ranges, specialities, and example workflows up front.' },
-    { title: 'Manage from one inbox',     body: 'Approvals, scheduled posts, and reporting flow through Social State.' },
+    { title: 'Manage from one inbox',     body: 'Approvals, scheduled posts, and reporting flow through Social Stats.' },
   ];
   return (
     <section style={{ padding: 'clamp(64px, 10vh, 120px) 24px', background: 'var(--surface-page)' }}>
@@ -897,7 +894,6 @@ function MarketplaceTeaser() {
     </section>
   );
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 12 — PRICING TEASER
@@ -999,7 +995,6 @@ function PricingTeaser() {
   );
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 13 — STATS BAND
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1054,7 +1049,6 @@ function StatsBand() {
   );
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Section 14 — FINAL CTA
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1072,7 +1066,6 @@ function FinalCTA() {
     </section>
   );
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Reusable section heading

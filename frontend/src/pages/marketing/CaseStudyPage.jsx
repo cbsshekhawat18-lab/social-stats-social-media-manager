@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 /**
  * CaseStudyPage — generic, data-driven customer story page.
  *
@@ -39,7 +47,6 @@ import JsonLd, { buildBreadcrumbs, SITE_URL } from '../../components/JsonLd';
 import STUDIES from './caseStudies';
 import ComingSoonPage from './ComingSoonPage';
 
-
 export default function CaseStudyPage() {
   const { slug } = useParams();
   const study = STUDIES[slug];
@@ -52,7 +59,7 @@ export default function CaseStudyPage() {
     <MarketingLayout>
       <Meta
         noSuffix
-        title={`${company} — Social State Customer Story`}
+        title={`${company} — Social Stats Customer Story`}
         description={tagline}
       />
       <JsonLd
@@ -458,7 +465,6 @@ export default function CaseStudyPage() {
     </MarketingLayout>
   );
 }
-
 
 // ── helpers ─────────────────────────────────────────────────────────
 const paraStyle = {

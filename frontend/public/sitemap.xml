@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Social Stats sitemap
+  ==============
+  Hand-maintained for now. Update when any of these data files change:
+    src/pages/marketing/productPages.js
+    src/pages/marketing/solutionPages.js
+    src/pages/marketing/caseStudies.js
+    src/pages/marketing/blogPosts.js
+    src/pages/marketing/agencyProfiles.js
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- ── Top-level marketing ────────────────────────────────── -->
+  <url><loc>https://socialstats.app/</loc>          <changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://socialstats.app/pricing</loc>   <changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://socialstats.app/customers</loc> <changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://socialstats.app/integrations</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/agencies</loc>  <changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/about</loc>     <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/contact</loc>   <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/blog</loc>      <changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/help</loc>      <changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://socialstats.app/changelog</loc> <changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://socialstats.app/status</loc>    <changefreq>daily</changefreq>  <priority>0.5</priority></url>
+  <url><loc>https://socialstats.app/for-businesses</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/for-agencies</loc> <changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- ── Product pages ──────────────────────────────────────── -->
+  <url><loc>https://socialstats.app/product/analytics</loc>          <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/product/composer</loc>           <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/product/inbox</loc>              <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/product/whatsapp</loc>           <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/product/bot-builder</loc>        <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/product/ai</loc>                 <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/product/ai-assistant</loc>       <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/product/reports</loc>            <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/product/automations</loc>        <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/product/marketplace-product</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- ── Solution pages ─────────────────────────────────────── -->
+  <url><loc>https://socialstats.app/solutions/agencies</loc>    <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/solutions/businesses</loc>  <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/solutions/creators</loc>    <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/solutions/real-estate</loc> <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/solutions/clinics</loc>     <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/solutions/restaurants</loc> <changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://socialstats.app/solutions/ecommerce</loc>   <changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- ── Customer case studies ──────────────────────────────── -->
+  <url><loc>https://socialstats.app/customers/acme-realty</loc>     <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/customers/sunrise-clinics</loc> <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/customers/bluewave-agency</loc> <changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- ── Partner agency profiles ────────────────────────────── -->
+  <url><loc>https://socialstats.app/agencies/bluewave-agency</loc> <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/agencies/halcyon</loc>         <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/agencies/verve</loc>           <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/agencies/lumen</loc>           <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/agencies/ember</loc>           <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/agencies/apex-marketing</loc>  <changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <!-- ── Blog posts ─────────────────────────────────────────── -->
+  <url><loc>https://socialstats.app/blog/unified-marketing-os-is-here</loc> <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/blog/how-we-train-brand-voice</loc>     <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/blog/whatsapp-engagement-2026</loc>     <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/blog/designing-a-design-system</loc>    <changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://socialstats.app/blog/agency-roi-blueprint</loc>         <changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://socialstats.app/blog/composer-design-decisions</loc>    <changefreq>monthly</changefreq><priority>0.6</priority></url>
+
+  <!-- ── Trust + legal ──────────────────────────────────────── -->
+  <url><loc>https://socialstats.app/security</loc>  <changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://socialstats.app/privacy</loc>   <changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://socialstats.app/terms</loc>     <changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://socialstats.app/refund</loc>    <changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://socialstats.app/cookies</loc>   <changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://socialstats.app/gdpr</loc>      <changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://socialstats.app/dpdp</loc>      <changefreq>monthly</changefreq><priority>0.4</priority></url>
+
+</urlset>

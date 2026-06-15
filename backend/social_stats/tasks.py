@@ -1,3 +1,11 @@
+# ============================================================================
+#  Social Stats — Social Media Management & Marketing Platform
+#  Author    : Chandrabhan Shekhawat
+#  Company   : Gigai Kripa Services
+#  Website   : https://gigaikripaservices.com/
+#  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+#  Released under the MIT License — see LICENSE. Keep this notice.
+# ============================================================================
 """
 Celery tasks — auto-sync all 5 platforms every few hours.
 """
@@ -1145,7 +1153,7 @@ def send_scheduling_reminders():
         send_mail(
             subject=f"📅 Tomorrow: {posts.count()} post(s) going live",
             message=body,
-            from_email=getattr(djsettings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.io'),
+            from_email=getattr(djsettings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app'),
             recipient_list=admins,
             fail_silently=True,
         )

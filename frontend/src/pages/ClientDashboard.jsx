@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useState } from 'react';
 import { NavLink, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -198,7 +206,7 @@ function OverviewTab(p) {
         </div>
       </div>
 
-      {/* AI today briefing — Stage 7 of comprehensive AI build */}
+      {/* AI today briefingof comprehensive AI build */}
       {clientId && <TodayBriefing clientId={clientId} basePath={briefingBasePath} />}
 
       {/* Control bar */}

@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -60,7 +68,7 @@ export default function ContactPage() {
     <MarketingLayout>
       <Meta
         title="Contact"
-        description="Sales, support, partnerships, press — get in touch with the Social State team. We typically reply within one business day."
+        description="Sales, support, partnerships, press — get in touch with the Social Stats team. We typically reply within one business day."
       />
       {/* Hero */}
       <section style={{ padding: '128px 32px 56px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -133,7 +141,7 @@ export default function ContactPage() {
                 </h2>
                 <p style={{ margin: '8px auto 20px', maxWidth: 380, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                   We usually reply within one business day. If it's urgent, email us at{' '}
-                  <a href="mailto:hello@socialstate.ai" style={{ color: 'var(--text-link)', fontWeight: 500 }}>hello@socialstate.ai</a>.
+                  <a href="mailto:hello@socialstats.app" style={{ color: 'var(--text-link)', fontWeight: 500 }}>hello@socialstats.app</a>.
                 </p>
                 <Button as={Link} to="/" variant="secondary" size="md">Back to home</Button>
               </div>
@@ -216,29 +224,29 @@ export default function ContactPage() {
             <ContactInfoCard
               icon={Mail}
               title="Email"
-              body="hello@socialstate.ai"
+              body="hello@socialstats.app"
               detail="General inquiries, partnerships, press."
-              link="mailto:hello@socialstate.ai"
+              link="mailto:hello@socialstats.app"
             />
             <ContactInfoCard
               icon={MessageSquare}
               title="Sales"
-              body="sales@socialstate.ai"
+              body="sales@socialstats.app"
               detail="Demos, pricing, and enterprise contracts."
-              link="mailto:sales@socialstate.ai"
+              link="mailto:sales@socialstats.app"
             />
             <ContactInfoCard
               icon={Phone}
               title="Phone"
               body="Email-first support"
               detail="Phone callbacks scheduled via support."
-              link="mailto:support@socialstate.ai"
+              link="mailto:support@socialstats.app"
             />
             <ContactInfoCard
               icon={MapPin}
               title="Office"
               body="Bengaluru, India"
-              detail="Postal address shared on request via support@socialstate.ai."
+              detail="Postal address shared on request via support@socialstats.app."
             />
           </div>
         </div>

@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useState } from 'react';
 import LegalPageLayout from '../components/marketing/LegalPageLayout';
 import Input from '../components/ui/Input';
@@ -20,17 +28,17 @@ export default function DPDPPage() {
       title="DPDP Compliance (India)"
       effectiveDate="2026-01-01"
       lastUpdated="2026-04-15"
-      intro="Social State is an India-headquartered company. This page explains how we comply with the Digital Personal Data Protection Act, 2023 (DPDP) for our Indian customers and users."
+      intro="Social Stats is an India-headquartered company. This page explains how we comply with the Digital Personal Data Protection Act, 2023 (DPDP) for our Indian customers and users."
       sections={[
         {
           id: 'role',
           title: '1. Our role under DPDP',
           body: (
             <>
-              <p>Under the DPDP Act 2023, Social State acts as:</p>
+              <p>Under the DPDP Act 2023, Social Stats acts as:</p>
               <ul>
                 <li><strong>Data Fiduciary</strong> for your account data — we determine the purpose and means of processing.</li>
-                <li><strong>Data Processor</strong> for content you upload via Social State (we process on your behalf as a Data Fiduciary).</li>
+                <li><strong>Data Processor</strong> for content you upload via Social Stats (we process on your behalf as a Data Fiduciary).</li>
               </ul>
             </>
           ),
@@ -120,8 +128,8 @@ export default function DPDPPage() {
                 Our Grievance Officer can be reached at:
               </p>
               <p style={{ background: 'var(--surface-sunken)', padding: 16, borderRadius: 'var(--radius-md)', fontSize: 14 }}>
-                <strong>Grievance Officer, Social State</strong><br />
-                <a href="mailto:grievance@socialstate.ai">grievance@socialstate.ai</a><br />
+                <strong>Grievance Officer, Social Stats</strong><br />
+                <a href="mailto:grievance@socialstats.app">grievance@socialstats.app</a><br />
                 For postal correspondence, write to the Grievance Officer at the
                 address shared in our reply to your email.
               </p>

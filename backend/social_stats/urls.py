@@ -1,3 +1,11 @@
+# ============================================================================
+#  Social Stats — Social Media Management & Marketing Platform
+#  Author    : Chandrabhan Shekhawat
+#  Company   : Gigai Kripa Services
+#  Website   : https://gigaikripaservices.com/
+#  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+#  Released under the MIT License — see LICENSE. Keep this notice.
+# ============================================================================
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -251,7 +259,7 @@ router.register(r'whatsapp/templates', WhatsAppTemplateViewSet,    basename='wa-
 router.register(r'whatsapp/campaigns', WhatsAppCampaignViewSet,    basename='wa-campaign')
 router.register(r'whatsapp/messages',  WhatsAppMessageViewSet,     basename='wa-message')
 
-# CTWA Bot Builder — Stage 4
+# CTWA Bot Builder
 router.register(r'bot-flows',         BotFlowViewSet,         basename='bot-flow')
 router.register(r'bot-templates',     BotTemplateViewSet,     basename='bot-template')
 router.register(r'bot-conversations', BotConversationViewSet, basename='bot-conversation')
@@ -265,14 +273,14 @@ urlpatterns = [
     path('auth/me/',                      me,                            name='me'),
     path('auth/signup/',                  signup,                        name='signup'),
 
-    # End-user (B2C) — Stage 3
+    # End-user (B2C)
     path('end-user/signup/',     end_user_signup,         name='end_user_signup'),
     path('end-user/me/',         end_user_me,             name='end_user_me'),
     path('end-user/profile/',    end_user_update_profile, name='end_user_update_profile'),
     path('end-user/workspace/',  end_user_workspace,      name='end_user_workspace'),
     path('end-user/incoming-requests/', list_incoming_requests, name='end_user_incoming_requests'),
 
-    # Manage requests (Stage 4)
+    # Manage requests ()
     path('manage-request/send/',                  send_manage_request,    name='manage_request_send'),
     path('manage-request/sent/',                  list_sent_requests,     name='manage_request_sent'),
     path('manage-request/<int:request_id>/',      cancel_manage_request,  name='manage_request_cancel'),
@@ -280,7 +288,7 @@ urlpatterns = [
     path('manage-invite/<uuid:token>/accept/',    accept_manage_invite,   name='manage_invite_accept'),
     path('manage-invite/<uuid:token>/decline/',   decline_manage_invite,  name='manage_invite_decline'),
 
-    # Relation management (Stage 5)
+    # Relation management ()
     path('relations/',                                list_relations,             name='relation_list'),
     path('relations/<int:relation_id>/',              get_relation,               name='relation_get'),
     path('relations/<int:relation_id>/permissions/',  update_relation_permissions, name='relation_perms'),
@@ -290,20 +298,20 @@ urlpatterns = [
     path('relations/<int:relation_id>/flag/',         flag_relation,              name='relation_flag'),
     path('relations/<int:relation_id>/agency-profile/', relation_agency_profile,  name='relation_agency_profile'),
 
-    # Activity log (Stages 5 + 12)
+    # Activity log ( + 12)
     path('activity/',                            list_activity,              name='activity_list'),
     path('activity/export.csv',                  export_activity_csv,        name='activity_export_csv'),
     path('activity/<int:activity_id>/flag/',     flag_activity,              name='activity_flag'),
     path('activity/<int:activity_id>/revert/',   revert_activity,            name='activity_revert'),
 
-    # Approvals (Stage 6)
+    # Approvals ()
     path('approvals/pending/',                   list_pending,           name='approvals_pending'),
     path('approvals/history/',                   list_history,           name='approvals_history'),
     path('approvals/<int:approval_id>/',         get_approval,           name='approvals_get'),
     path('approvals/<int:approval_id>/approve/', approve_approval,       name='approvals_approve'),
     path('approvals/<int:approval_id>/reject/',  reject_approval,        name='approvals_reject'),
 
-    # Agency invites — user-side (Stage 7)
+    # Agency invites — user-side ()
     path('end-user/invite-agency/',         send_agency_invite,        name='end_user_invite_agency'),
     path('end-user/sent-agency-invites/',   list_sent_agency_invites,  name='end_user_sent_agency_invites'),
     path('agency-invite/<uuid:token>/',         get_agency_invite,     name='agency_invite_get'),
@@ -311,7 +319,7 @@ urlpatterns = [
     path('agency-invite/<uuid:token>/decline/', decline_agency_invite, name='agency_invite_decline'),
     path('agency/<slug:slug>/incoming-invites/', agency_incoming_invites, name='agency_incoming_invites'),
 
-    # Marketplace (Stage 8)
+    # Marketplace ()
     path('marketplace/agencies/',                    list_marketplace_agencies, name='marketplace_list'),
     path('marketplace/agencies/<slug:slug>/',        get_marketplace_agency,    name='marketplace_get'),
     path('marketplace/featured/',                    list_featured,             name='marketplace_featured'),
@@ -319,13 +327,13 @@ urlpatterns = [
     path('marketplace/agencies/<slug:slug>/contact/', contact_agency,           name='marketplace_contact'),
     path('agency/<slug:slug>/',                      agency_profile,            name='agency_profile'),
 
-    # Reviews (Stage 9)
+    # Reviews ()
     path('agencies/<slug:slug>/reviews/',     list_reviews,        name='reviews_list'),
     path('reviews/<int:review_id>/',          review_detail,       name='review_detail'),
     path('reviews/<int:review_id>/respond/',  respond_to_review,   name='review_respond'),
     path('reviews/<int:review_id>/helpful/',  mark_review_helpful, name='review_helpful'),
 
-    # Billing (Stage 10)
+    # Billing ()
     path('billing/plans/',                  billing_plans,             name='billing_plans'),
     path('billing/subscription/',           my_subscription,           name='billing_subscription'),
     path('billing/checkout/',               billing_checkout,          name='billing_checkout'),
@@ -334,7 +342,7 @@ urlpatterns = [
     path('billing/invoices/',               billing_invoices,          name='billing_invoices'),
     path('billing/webhook/razorpay/',       billing_razorpay_webhook,  name='billing_webhook_razorpay'),
 
-    # Agency billing (Stage 11)
+    # Agency billing ()
     path('agency/<slug:slug>/billing/subscription/', agency_subscription,      name='agency_billing_subscription'),
     path('agency/<slug:slug>/billing/checkout/',     agency_billing_checkout,  name='agency_billing_checkout'),
     path('agency/<slug:slug>/billing/confirm/',      agency_billing_confirm,   name='agency_billing_confirm'),
@@ -344,14 +352,14 @@ urlpatterns = [
     # Notification preferences — see notification_views.notification_preferences
     # registered later in this file (handles GET + PUT).
 
-    # Verification (Stage 15)
+    # Verification ()
     path('agency/<slug:slug>/verification/submit/',     submit_verification,         name='verif_submit'),
     path('admin/verifications/pending/',                list_pending_verifications,  name='verif_pending'),
     path('admin/verifications/<int:agency_id>/',        get_verification,            name='verif_get'),
     path('admin/verifications/<int:agency_id>/approve/', approve_verification,       name='verif_approve'),
     path('admin/verifications/<int:agency_id>/reject/',  reject_verification,        name='verif_reject'),
 
-    # Disputes (Stage 15)
+    # Disputes ()
     path('disputes/file/',                              file_dispute,                name='dispute_file'),
     path('admin/disputes/',                             list_disputes,               name='dispute_list'),
     path('admin/disputes/<int:dispute_id>/',            get_dispute,                 name='dispute_get'),
@@ -482,7 +490,7 @@ urlpatterns = [
     path('ai/hashtags/<int:pk>/save-set/',         save_set,       name='ai_hashtags_save_set'),
     path('ai/hashtags/saved-sets/',                get_saved_sets, name='ai_hashtags_saved_sets'),
 
-    # Unified AI Assistant (Stage 8)
+    # Unified AI Assistant ()
     path('ai/compose-post/',           compose_post,            name='ai_compose_post'),
     path('ai/suggest-hashtags/',       suggest_hashtags,        name='ai_suggest_hashtags'),
     path('ai/best-time-to-post/',      best_time_to_post,       name='ai_best_time'),
@@ -494,7 +502,7 @@ urlpatterns = [
     path('ai/train-brand-voice/',      train_brand_voice,       name='ai_train_brand_voice'),
     path('ai/brand-voice/',            get_brand_voice,         name='ai_brand_voice'),
 
-    # ── AI v2 — content creation (Stage 2 of comprehensive AI build) ─────────
+    # ── AI v2 — content creation ( of comprehensive AI build) ─────────
     # New endpoints flow through the centralised AIClient (cache + rate-limit + cost).
     # Existing /ai/* endpoints above remain unchanged.
     path('ai/v2/compose/',          ai_v2_compose,           name='ai_v2_compose'),
@@ -506,19 +514,19 @@ urlpatterns = [
     path('ai/v2/title-generator/',  ai_v2_title_generator,   name='ai_v2_title_generator'),
     path('ai/v2/post-improve/',     ai_v2_post_improve,      name='ai_v2_post_improve'),
 
-    # ── AI v2 — image (Stage 3) ─────────────────────────────────────────────
+    # ── AI v2 — image () ─────────────────────────────────────────────
     path('ai/v2/describe-image/',          ai_v2_describe_image,    name='ai_v2_describe_image'),
     path('ai/v2/image-to-post/',           ai_v2_image_to_post,     name='ai_v2_image_to_post'),
     path('ai/v2/alt-text/',                ai_v2_alt_text,          name='ai_v2_alt_text'),
     path('ai/v2/brand-compliance-check/',  ai_v2_brand_compliance,  name='ai_v2_brand_compliance'),
 
-    # ── AI v2 — video (Stage 3) ─────────────────────────────────────────────
+    # ── AI v2 — video () ─────────────────────────────────────────────
     path('ai/v2/video-script/',            ai_v2_video_script,      name='ai_v2_video_script'),
     path('ai/v2/video-captions/',          ai_v2_video_captions,    name='ai_v2_video_captions'),
     path('ai/v2/video-chapters/',          ai_v2_video_chapters,    name='ai_v2_video_chapters'),
     path('ai/v2/video-summary/',           ai_v2_video_summary,     name='ai_v2_video_summary'),
 
-    # ── AI v2 — engagement (Stage 4) ────────────────────────────────────────
+    # ── AI v2 — engagement () ────────────────────────────────────────
     path('ai/v2/reply-suggest/',      ai_v2_reply_suggest,     name='ai_v2_reply_suggest'),
     path('ai/v2/auto-reply/',         ai_v2_auto_reply,        name='ai_v2_auto_reply'),
     path('ai/v2/sentiment-analyze/',  ai_v2_sentiment_analyze, name='ai_v2_sentiment_analyze'),
@@ -527,17 +535,17 @@ urlpatterns = [
     path('ai/v2/crisis-detect/',      ai_v2_crisis_detect,     name='ai_v2_crisis_detect'),
     path('ai/v2/spam-filter/',        ai_v2_spam_filter,       name='ai_v2_spam_filter'),
 
-    # ── AI v2 — brand voice (Stage 5) ───────────────────────────────────────
+    # ── AI v2 — brand voice () ───────────────────────────────────────
     path('ai/v2/brand-voice/',         ai_v2_brand_voice_get,   name='ai_v2_brand_voice_get'),
     path('ai/v2/brand-voice/train/',   ai_v2_brand_voice_train, name='ai_v2_brand_voice_train'),
     path('ai/v2/brand-voice/test/',    ai_v2_brand_voice_test,  name='ai_v2_brand_voice_test'),
 
-    # ── AI v2 — chat assistant (Stage 6) ────────────────────────────────────
+    # ── AI v2 — chat assistant () ────────────────────────────────────
     path('ai/v2/chat/',                              ai_v2_chat,         name='ai_v2_chat'),
     path('ai/v2/chat/conversations/',                ai_v2_chat_list,    name='ai_v2_chat_conversations'),
     path('ai/v2/chat/conversations/<int:pk>/',       ai_v2_chat_detail,  name='ai_v2_chat_conversation_detail'),
 
-    # ── AI v2 — insights (Stage 7) ──────────────────────────────────────────
+    # ── AI v2 — insights () ──────────────────────────────────────────
     path('ai/v2/insight-generate/',    ai_v2_insight_generate,   name='ai_v2_insight_generate'),
     path('ai/v2/insights/',            ai_v2_insights_list,      name='ai_v2_insights_list'),
     path('ai/v2/insights/<int:pk>/',   ai_v2_insight_update,     name='ai_v2_insight_update'),
@@ -548,11 +556,11 @@ urlpatterns = [
     path('ai/v2/audience-profile/',    ai_v2_audience_profile,   name='ai_v2_audience_profile'),
     path('ai/v2/today-briefing/',      ai_v2_today_briefing,     name='ai_v2_today_briefing'),
 
-    # ── AI v2 — reports + narration (Stage 8) ──────────────────────────────
+    # ── AI v2 — reports + narration () ──────────────────────────────
     path('ai/v2/report-write/',        ai_v2_report_write,       name='ai_v2_report_write'),
     path('ai/v2/report-narrate/',      ai_v2_report_narrate,     name='ai_v2_report_narrate'),
 
-    # ── AI v2 — usage / cost dashboard (Stage 10) ──────────────────────────
+    # ── AI v2 — usage / cost dashboard () ──────────────────────────
     path('ai/v2/usage/',           ai_v2_usage_overview,   name='ai_v2_usage_overview'),
     path('ai/v2/usage/by-client/', ai_v2_usage_by_client,  name='ai_v2_usage_by_client'),
     path('ai/v2/usage/by-user/',   ai_v2_usage_by_user,    name='ai_v2_usage_by_user'),
@@ -577,7 +585,7 @@ urlpatterns = [
     # Composer preflight (validates a draft post against each platform's rules)
     path('composer/preflight/',     PreflightCheckView.as_view(),       name='composer_preflight'),
 
-    # Video Studio (Stage 10)
+    # Video Studio ()
     path('video/upload/',             upload_video,        name='video_upload'),
     path('video/trim/',               trim_video,          name='video_trim'),
     path('video/resize/',             resize_video,        name='video_resize'),
@@ -585,15 +593,15 @@ urlpatterns = [
     path('video/add-captions/',       add_captions,        name='video_captions'),
     path('video/youtube-upload/',     youtube_upload,      name='video_youtube_upload'),
 
-    # Real-time webhooks (Stage 11)
+    # Real-time webhooks ()
     path('webhooks/meta/',            meta_webhook,        name='webhook_meta'),
     path('webhooks/youtube/',         youtube_webhook,     name='webhook_youtube'),
 
-    # Audience + competitor benchmark (Stage 12)
+    # Audience + competitor benchmark ()
     path('audience/unified/',         UnifiedAudienceView.as_view(), name='audience_unified'),
     path('competitors/benchmark/',    BenchmarkView.as_view(),       name='competitors_benchmark'),
 
-    # Notifications + approvals (Stage 13)
+    # Notifications + approvals ()
     path('notifications/preferences/', notification_preferences,    name='notif_preferences'),
     path('composer/approvals/',        approval_queue,              name='composer_approvals'),
 
@@ -609,13 +617,13 @@ urlpatterns = [
     path('manual/test/<int:credential_id>/',  test_credential,          name='manual_test'),
     path('manual/instructions/<str:platform>/', get_setup_instructions, name='manual_instructions'),
 
-    # Meta Ads (CTWA — Stage 4 + Stage 13 health)
+    # Meta Ads (CTWA — + health)
     path('meta-ads/health/',    meta_ads_health,   name='meta_ads_health'),
     path('meta-ads/accounts/',  list_ad_accounts,  name='meta_ad_accounts'),
     path('meta-ads/campaigns/', list_ad_campaigns, name='meta_ad_campaigns'),
     path('meta-ads/ads/',       list_ads,          name='meta_ads'),
 
-    # CTWA Bot Builder — Stage 12 AI helpers
+    # CTWA Bot Builder — AI helpers
     path('bot-flows/generate-with-ai/',
          bot_generate_flow_with_ai, name='bot_generate_flow_with_ai'),
     path('bot-conversations/<int:conversation_id>/ai-suggest-replies/',
@@ -623,7 +631,7 @@ urlpatterns = [
     path('ai/persona-builder/',
          bot_build_persona,         name='ai_persona_builder'),
 
-    # CTWA Bot Builder — Stage 15 safety settings
+    # CTWA Bot Builder — safety settings
     path('bot-settings/', bot_settings, name='bot_settings'),
 
     # Public service health (powers /status marketing page)

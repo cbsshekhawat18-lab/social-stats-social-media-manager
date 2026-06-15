@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './services/queryClient';
@@ -9,7 +17,7 @@ import { Toaster } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 
-import { SocialStateLogoStacked } from './components/ui/SocialStateLogo';
+import { BrandLogoStacked } from './components/ui/BrandLogo';
 
 // ── New shell ───────────────────────────────────────────────────────────────
 import AppShell from './components/shell/AppShell';
@@ -73,7 +81,7 @@ const AgenciesShowcasePage    = lazy(() => import('./pages/marketing/AgenciesSho
 const AgencyShowcasePage      = lazy(() => import('./pages/marketing/AgencyShowcasePage'));
 const BlogPostPage         = lazy(() => import('./pages/BlogPostPage'));
 
-// ── End-user (B2C marketplace) — Stage 3 ────────────────────────────────────
+// ── End-user (B2C marketplace) — ────────────────────────────────────
 const EndUserSignupPage    = lazy(() => import('./pages/end-user/EndUserSignupPage'));
 const EndUserShell         = lazy(() => import('./pages/end-user/EndUserShell'));
 const EndUserDashboard     = lazy(() => import('./pages/end-user/EndUserDashboard'));
@@ -84,7 +92,7 @@ const ApprovalsPage        = lazy(() => import('./pages/end-user/ApprovalsPage')
 const EndUserBillingPage   = lazy(() => import('./pages/end-user/EndUserBillingPage'));
 const NotificationPreferencesPage = lazy(() => import('./pages/end-user/NotificationPreferencesPage'));
 
-// ── Marketplace flows — Stages 4 + 7 + 8 ────────────────────────────────────
+// ── Marketplace flows — ────────────────────────────────────
 const ManageInvitePage           = lazy(() => import('./pages/marketplace/ManageInvitePage'));
 const AgencyInviteResponsePage   = lazy(() => import('./pages/marketplace/AgencyInviteResponsePage'));
 const MarketplacePage            = lazy(() => import('./pages/marketplace/MarketplacePage'));
@@ -287,7 +295,7 @@ function AgencyLayout() {
 
 function Loader() {
   return (
-    <div className="socialstate-loader" style={{
+    <div className="socialstats-loader" style={{
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
@@ -298,10 +306,10 @@ function Loader() {
       gap: 20,
     }}>
       <div
-        className="socialstate-loader__logo"
+        className="socialstats-loader__logo"
         style={{ animation: 'pulse-dot 1.8s ease-in-out infinite' }}
       >
-        <SocialStateLogoStacked height={120} />
+        <BrandLogoStacked height={120} />
       </div>
       <div style={{
         fontSize: 12,
@@ -327,7 +335,7 @@ export default function App() {
         <AuthProvider>
         <QueryClientProvider client={queryClient}>
         <RealtimeProvider>
-          {/* Phase 7 — bridges WebSocket events to React Query cache
+          {/*bridges WebSocket events to React Query cache
               invalidation + bumps zustand badge counts between polls.
               Renders nothing; safe to mount unconditionally. */}
           <RealtimeBridge />
@@ -361,12 +369,12 @@ export default function App() {
             <Route path="/blog"             element={<BlogIndexPage />} />
             <Route path="/blog/:slug"       element={<BlogPostPage />} />
 
-            {/* Marketing — Stage 3 product pages (data-driven via productPages.js) */}
+            {/* Marketingproduct pages (data-driven via productPages.js) */}
             <Route path="/product/:slug"     element={<ProductPage />} />
-            {/* Marketing — Stage 4 solution pages (data-driven via solutionPages.js) */}
+            {/* Marketingsolution pages (data-driven via solutionPages.js) */}
             <Route path="/solutions/:slug"   element={<SolutionPage />} />
             <Route path="/integrations"      element={<IntegrationsPage />} />
-            {/* Stage 10 — marketing-flavoured agency showcase (public, SEO).
+            {/*marketing-flavoured agency showcase (public, SEO).
                 The functional B2C marketplace lives at /marketplace. */}
             <Route path="/agencies"          element={<AgenciesShowcasePage />} />
             <Route path="/agencies/:slug"    element={<AgencyShowcasePage />} />
@@ -419,7 +427,7 @@ export default function App() {
               </Protected>
             } />
 
-            {/* End-user (B2C marketplace) shell — Stages 3 + 5 */}
+            {/* End-user (B2C marketplace) shell*/}
             <Route path="/u" element={
               <Protected roles={['client']} accountTypes={['end_user']}>
                 <EndUserShell />
@@ -440,7 +448,7 @@ export default function App() {
           </Routes>
           </Suspense>
 
-          {/* Toast notifications — Stage 5 */}
+          {/* Toast notifications*/}
           <Toaster
             position="top-right"
             toastOptions={{

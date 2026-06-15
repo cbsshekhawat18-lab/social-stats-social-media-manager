@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
@@ -36,7 +44,7 @@ style.textContent = `
     --text-secondary: #475569;
     --text-muted:     #94a3b8;
 
-    /* Brand — Social State (Cyan + Black) */
+    /* Brand — Social Stats (Cyan + Black) */
     --blue:          #00B8DA;
     --blue-hover:    #009EC0;
     --blue-light:    #E0F9FF;

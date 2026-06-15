@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Heart, Compass, Layers, Globe, Linkedin, Twitter } from 'lucide-react';
@@ -45,7 +53,7 @@ const VALUES = [
 const TEAM = [];
 
 const TIMELINE = [
-  { date: '2024',  title: 'First prototype',    body: 'Social State started as a unified dashboard for analytics across the platforms agencies actually use.' },
+  { date: '2024',  title: 'First prototype',    body: 'Social Stats started as a unified dashboard for analytics across the platforms agencies actually use.' },
   { date: '2025',  title: 'Composer + Inbox',   body: 'Content composer with per-platform formatting and a unified inbox across DMs, comments, and reviews.' },
   { date: '2026',  title: 'Marketing OS (you are here)', body: 'Unified control center across analytics, messaging, ads, AI, and automations.' },
 ];
@@ -55,7 +63,7 @@ export default function AboutPage() {
     <MarketingLayout>
       <Meta
         title="About"
-        description="Social State is the marketing OS for modern teams — unified analytics, content, messaging, and AI across the 5 platforms that matter."
+        description="Social Stats is the marketing OS for modern teams — unified analytics, content, messaging, and AI across the 5 platforms that matter."
       />
       {/* Hero */}
       <section style={{ padding: '128px 32px 64px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -80,7 +88,7 @@ export default function AboutPage() {
             We're building the marketing OS we wanted at our last company.
           </h1>
           <p style={{ margin: 0, fontSize: 18, lineHeight: 1.65, color: 'var(--text-secondary)' }}>
-            Social State started with a frustrated founding team and a long list of broken
+            Social Stats started with a frustrated founding team and a long list of broken
             marketing tools. We're building the unified product we wanted at our
             last company.
           </p>
@@ -179,7 +187,7 @@ export default function AboutPage() {
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <Badge variant="brand" size="md">Team</Badge>
             <h2 style={{ margin: '14px 0 12px', fontSize: 'clamp(28px, 3.4vw, 40px)', fontWeight: 600, letterSpacing: '-0.025em', color: 'var(--text-primary)' }}>
-              The humans behind Social State.
+              The humans behind Social Stats.
             </h2>
             <p style={{ margin: '0 auto', maxWidth: 540, fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
               We're a small, experienced team based in Bangalore and remote.
@@ -235,8 +243,8 @@ export default function AboutPage() {
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
                 Individual team profiles will appear here as we go public.
                 In the meantime, the easiest way to reach us is over email at{' '}
-                <a href="mailto:hello@socialstate.ai" style={{ color: 'var(--text-link)', fontWeight: 600 }}>
-                  hello@socialstate.ai
+                <a href="mailto:hello@socialstats.app" style={{ color: 'var(--text-link)', fontWeight: 600 }}>
+                  hello@socialstats.app
                 </a>.
               </p>
             </div>
@@ -318,7 +326,7 @@ export default function AboutPage() {
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Button as={Link} to="/contact" size="lg" iconRight={ArrowRight}>Say hello</Button>
-          <Button as={Link} to="/signup"  variant="secondary" size="lg">Try Social State free</Button>
+          <Button as={Link} to="/signup"  variant="secondary" size="lg">Try Social Stats free</Button>
         </div>
       </section>
     </MarketingLayout>

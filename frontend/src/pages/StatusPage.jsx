@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
 import MarketingLayout from '../components/marketing/MarketingLayout';
@@ -90,10 +98,9 @@ const FALLBACK_SERVICES = [
   { id: 'google',   name: 'Google integration (YouTube + GMB)' },
   { id: 'linkedin', name: 'LinkedIn integration' },
   { id: 'pinbot',   name: 'WhatsApp (Pinbot.ai)' },
-  { id: 'ai',       name: 'Social State' },
+  { id: 'ai',       name: 'Social Stats' },
   { id: 'razorpay', name: 'Billing (Razorpay)' },
 ];
-
 
 export default function StatusPage() {
   const [data,  setData]  = useState(null);   // raw response
@@ -145,7 +152,7 @@ export default function StatusPage() {
     <MarketingLayout>
       <Meta
         title="System Status"
-        description="Live uptime, scheduled maintenance, and recent incidents for the Social State platform."
+        description="Live uptime, scheduled maintenance, and recent incidents for the Social Stats platform."
       />
 
       {/* Hero / overall status */}
@@ -193,7 +200,7 @@ export default function StatusPage() {
             fontWeight: 600,
             color: 'var(--text-primary)',
           }}>
-            Social State System Status
+            Social Stats System Status
           </h1>
           <p style={{ margin: 0, fontSize: 13, color: 'var(--text-tertiary)' }}>
             {lastChecked

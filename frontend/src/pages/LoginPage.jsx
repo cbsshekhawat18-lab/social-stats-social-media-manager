@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, AlertCircle, Briefcase, User as UserIcon, Shield } from 'lucide-react';
@@ -94,7 +102,7 @@ export default function LoginPage() {
     <AuthLayout
       footer={
         <>
-          New to Social State?{' '}
+          New to Social Stats?{' '}
           <Link to="/signup" style={{ color: 'var(--text-link)', fontWeight: 600, textDecoration: 'none' }}>
             Create an account
           </Link>
@@ -123,7 +131,7 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>
-            Sign in to your Social State workspace.
+            Sign in to your Social Stats workspace.
           </p>
         </header>
 

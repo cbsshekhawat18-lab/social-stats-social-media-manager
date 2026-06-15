@@ -1,3 +1,11 @@
+# ============================================================================
+#  Social Stats — Social Media Management & Marketing Platform
+#  Author    : Chandrabhan Shekhawat
+#  Company   : Gigai Kripa Services
+#  Website   : https://gigaikripaservices.com/
+#  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+#  Released under the MIT License — see LICENSE. Keep this notice.
+# ============================================================================
 import uuid
 from django.db import models
 from django.db import transaction
@@ -87,7 +95,7 @@ class Client(models.Model):
     # IANA timezone for accurate scheduled-post timing per client.
     timezone = models.CharField(max_length=64, blank=True, default='')
 
-    # ── Marketplace ownership (Phase 1.1) ────────────────────────────────────
+    # ── Marketplace ownership ────────────────────────────────────
     # Who owns this workspace? Existing rows backfill to 'agency_owned' so the
     # legacy agency-managed flow stays untouched. End-user self-signups create
     # rows with 'end_user_owned' + owner_user set.
@@ -124,19 +132,19 @@ class Client(models.Model):
     location_country              = models.CharField(max_length=2,   blank=True)
     is_discoverable_in_marketplace = models.BooleanField(default=False)
 
-    # ── Meta Conversions API (Stage 13 — CTWA bot builder) ───────────────────
+    # ── Meta Conversions API (— CTWA bot builder) ───────────────────
     # When set, lead-capture pushes a 'Lead' event to Meta so CTWA ads can
     # optimize on real conversions. Test code is for sandbox testing only.
     meta_pixel_id        = models.CharField(max_length=50, blank=True)
     meta_capi_test_code  = models.CharField(max_length=30, blank=True)
 
-    # ── Stage 15 — bot safety controls ───────────────────────────────────────
+    # ── — bot safety controls ───────────────────────────────────────
     bot_enabled                = models.BooleanField(default=True)   # workspace kill switch
     bot_max_msgs_per_minute    = models.IntegerField(default=20)     # per-contact rate limit
     bot_max_msgs_per_conv      = models.IntegerField(default=200)    # break runaway loops
     bot_spam_threshold         = models.IntegerField(default=5)      # auto-end at this score
 
-    # ── Stage 9 — GDPR/DPDP "right to restrict processing" toggle ────────────
+    # ── — GDPR/DPDP "right to restrict processing" toggle ────────────
     # When True, sync tasks skip this client + AI features + composer return 423.
     # The user can still log in to view existing data.
     is_processing_paused = models.BooleanField(default=False)
@@ -185,7 +193,7 @@ class UserProfile(models.Model):
     email_verified     = models.BooleanField(default=True)   # False for email/password signups until verified
     agency             = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='managed_clients')
 
-    # ── Marketplace account type (Phase 1.10) ────────────────────────────────
+    # ── Marketplace account type ────────────────────────────────
     # 'legacy' is the default for everyone existing pre-marketplace; the
     # signup flows (end-user vs agency) set the right value going forward.
     ACCOUNT_TYPES = [
@@ -320,7 +328,7 @@ class PlatformCredential(models.Model):
     connected_at = models.DateTimeField(auto_now_add=True)
     updated_at   = models.DateTimeField(auto_now=True)
 
-    # How the credential was provisioned. 'oauth' = via Social State-owned OAuth app.
+    # How the credential was provisioned. 'oauth' = via Social Stats-owned OAuth app.
     # 'manual_token' = client pasted their own token from their dev account.
     # 'system_user' = Meta System User token (long-lived, ideal for prod).
     auth_method  = models.CharField(
@@ -359,7 +367,7 @@ class ManualCredentialExtras(models.Model):
     PlatformCredential.access_token / refresh_token already hold the per-account
     tokens; this row only adds the user's Google Cloud OAuth client identity
     so the existing token-refresh path can keep working without an
-    Social State-owned OAuth app. Encrypted at rest (same Fernet pipeline as tokens).
+    Social Stats-owned OAuth app. Encrypted at rest (same Fernet pipeline as tokens).
     """
     credential          = models.OneToOneField(PlatformCredential, on_delete=models.CASCADE, related_name='manual_extras')
     oauth_client_id     = EncryptedTextField(blank=True)
@@ -583,7 +591,7 @@ class Alert(models.Model):
 class AIInsight(models.Model):
     """
     AI-generated insight for a client. Originally a per-month rollup; extended
-    in Stage 1 of the AI infra to support feed-style insights with severity,
+    in the AI infra to support feed-style insights with severity,
     confidence, action recommendations, and dismiss/acted-on tracking.
 
     Two coexisting shapes:
@@ -599,7 +607,7 @@ class AIInsight(models.Model):
     year              = models.PositiveSmallIntegerField(null=True, blank=True)
     content           = models.TextField()
 
-    # Feed-style fields — added Stage 1 AI infra
+    # Feed-style fields — added AI infra
     title             = models.CharField(max_length=200, blank=True)
     insight_type      = models.CharField(max_length=60, blank=True,
                                          help_text='engagement_trend, competitor_alert, best_time_shift, etc.')
@@ -1355,7 +1363,7 @@ NOTIF_TYPE_CHOICES = [
     ('invitation_accepted',  'Invitation Accepted'),
     ('invitation_rejected',  'Invitation Rejected'),
     ('invitation_cancelled', 'Invitation Cancelled'),
-    # Marketplace — Stage 4
+    # Marketplace
     ('manage_request_received',  'Manage Request Received'),
     ('manage_request_accepted',  'Manage Request Accepted'),
     ('manage_request_declined',  'Manage Request Declined'),
@@ -1804,7 +1812,7 @@ class MediaAsset(models.Model):
 
 
 class UnifiedPost(models.Model):
-    """A post composed in Social State, fanned out to one or more platforms."""
+    """A post composed in Social Stats, fanned out to one or more platforms."""
     client            = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='unified_posts')
     created_by        = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_unified_posts')
     title             = models.CharField(max_length=200, blank=True, help_text='Optional internal label')
@@ -2048,7 +2056,7 @@ class BrandVoiceProfile(models.Model):
     preferred_words   = models.JSONField(default=list, blank=True, help_text='Brand vocabulary to favour')
     style_rules       = models.JSONField(default=list, blank=True)
 
-    # Audience + content fences (added Stage 1 AI infra)
+    # Audience + content fences (added AI infra)
     target_audience   = models.TextField(blank=True)
     prohibited_topics = models.JSONField(default=list, blank=True)
     emoji_usage       = models.CharField(max_length=10, choices=EMOJI_USAGE_CHOICES, default='moderate', blank=True)
@@ -2148,9 +2156,9 @@ ACTION_RESULT_CHOICES = [
 
 class ActionLog(models.Model):
     """
-    Append-only record of every write action Social State performs against a
+    Append-only record of every write action Social Stats performs against a
     platform on behalf of a client. Used for compliance review and the
-    "what did SocialState do for me?" page.
+    "what did SocialStats do for me?" page.
     """
     actor       = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='action_logs')
@@ -2191,7 +2199,7 @@ SMART_NOTIFICATION_EVENT_CHOICES = [
     ('approval_pending',  'Post needs approval'),
     ('inbox_message',     'New inbound message'),
     ('inbox_review',      'New review'),
-    # Marketplace — Stage 13
+    # Marketplace
     ('manage_request_received', 'Agency wants to manage your account'),
     ('agency_invite_received',  'Client invited your agency'),
     ('relation_terminated',     'Agency relationship ended'),
@@ -2200,7 +2208,7 @@ SMART_NOTIFICATION_EVENT_CHOICES = [
     ('new_review_received',     'New review left for your agency'),
     ('review_response',         'Agency replied to your review'),
     ('marketplace_inquiry',     'Marketplace inquiry'),
-    # CTWA bot builder — Stage 14
+    # CTWA bot builder
     ('bot_handoff',          'Bot handed a conversation to you'),
     ('bot_lead_captured',    'New CTWA lead captured'),
     ('bot_ai_takeover',      'AI chat took over a conversation'),
@@ -2218,7 +2226,7 @@ SMART_NOTIFICATION_EVENT_CHOICES = [
     ('relation_resumed',   'A client resumed your access'),
     ('agency_disconnected',     'A client disconnected from your agency'),
     ('client_account_deleted',  'A client deleted their account'),
-    ('client_joined',           'Your invited client joined Social State'),
+    ('client_joined',           'Your invited client joined Social Stats'),
 ]
 
 NOTIFICATION_CHANNEL_CHOICES = [
@@ -2250,7 +2258,7 @@ class NotificationPreference(models.Model):
 
 
 # ════════════════════════════════════════════════════════════════════════
-# AI Infrastructure — added in Stage 1 of the AI build-out
+# AI Infrastructure — added in the AI build-out
 # ════════════════════════════════════════════════════════════════════════
 
 
@@ -2297,7 +2305,7 @@ class AIUsageLog(models.Model):
 
 
 class AIConversation(models.Model):
-    """A chat thread between a user and Social State."""
+    """A chat thread between a user and Social Stats."""
     CONTEXT_CHOICES = [
         ("general",         "General"),
         ("client_specific", "Client-specific"),
@@ -2437,7 +2445,7 @@ class AITrainedAsset(models.Model):
         return f"{self.client.company} | {self.asset_type} | {self.source_id or self.id}"
 
 
-# ── Marketplace (Phase 1 of two-sided platform) ──────────────────────────────
+# ── Marketplace(two-sided platform) ──────────────────────────────
 # Models live in marketplace_models.py for readability; re-exported here so
 # Django picks them up under the social_stats app label.
 from .marketplace_models import (  # noqa: E402,F401
@@ -2455,7 +2463,7 @@ from .marketplace_models import (  # noqa: E402,F401
     Dispute,
 )
 
-# ── CTWA Bot Builder (Stage 1 of bot/lead funnel) ─────────────────────────────
+# ── CTWA Bot Builder(bot/lead funnel) ─────────────────────────────
 from .bot_models import (  # noqa: E402,F401
     NODE_TYPES,
     BotFlow,
@@ -2467,29 +2475,29 @@ from .bot_models import (  # noqa: E402,F401
     CTWACampaign,
 )
 
-# ── Stage 2 security build-out — active session tracking ──────────────────────
+# ── security build-out — active session tracking ──────────────────────
 from .security.sessions import UserSession  # noqa: E402,F401
 
-# ── Stage 3 security build-out — MFA ──────────────────────────────────────────
+# ── security build-out — MFA ──────────────────────────────────────────
 from .security.mfa import UserMFA  # noqa: E402,F401
 
-# ── Stage 4 security build-out — API keys ─────────────────────────────────────
+# ── security build-out — API keys ─────────────────────────────────────
 from .security.api_keys import APIKey  # noqa: E402,F401
 
-# ── Stage 5 security build-out — webhook replay protection ────────────────────
+# ── security build-out — webhook replay protection ────────────────────
 from .security.webhook_replay import WebhookEvent  # noqa: E402,F401
 
-# ── Stage 8 security build-out — security audit log ───────────────────────────
+# ── security build-out — security audit log ───────────────────────────
 from .security.audit import SecurityAuditLog  # noqa: E402,F401
 
-# ── Stage 9 security build-out — privacy / data-subject rights ────────────────
+# ── security build-out — privacy / data-subject rights ────────────────
 from .security.privacy_models import (  # noqa: E402,F401
     DataExportRequest, AccountDeletionRequest, UserConsent,
 )
 
-# ── Stage 12 security build-out — Meta/Google platform compliance ─────────────
+# ── security build-out — Meta/Google platform compliance ─────────────
 from .security.platform_compliance import PlatformDataDeletionRequest  # noqa: E402,F401
 
-# ── Phase 2 integration — central event bus ──────────────────────────────────
+# ── central event bus ──────────────────────────────────
 from .events.models import EventLog  # noqa: E402,F401
 

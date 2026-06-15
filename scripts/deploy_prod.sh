@@ -23,7 +23,7 @@ echo "[4/8] Collect static files"
 python manage.py collectstatic --noinput
 
 echo "[5/8] Create superuser (interactive)"
-python manage.py createsuperuser --email admin@socialstate.ai || true
+python manage.py createsuperuser --email admin@socialstats.app || true
 
 echo "[6/8] Run gunicorn (for local tests)"
 gunicorn dashboard.wsgi:application --bind 0.0.0.0:8000 --workers 4 &

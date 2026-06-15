@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useMemo, useState } from 'react';
 import { contentAPI } from '../../services/api';
 import LegalPageLayout from '../marketing/LegalPageLayout';
@@ -83,7 +91,7 @@ export default function StaticContentPage({ contentKey, fallbackTitle, eyebrow }
     >
       {doc.content?.footer_link_label && doc.content?.footer_link_url && (
         <p style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid var(--border-subtle)', fontSize: 12, color: 'var(--text-tertiary)' }}>
-          © {new Date().getFullYear()} SocialState ·{' '}
+          © {new Date().getFullYear()} SocialStats ·{' '}
           <a href={doc.content.footer_link_url} style={{ color: 'var(--text-link)' }}>
             {doc.content.footer_link_label}
           </a>

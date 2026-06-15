@@ -1,10 +1,18 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 
 /**
- * Restyled with new design tokens (Stage 2). Public API unchanged:
- *   <PageHeader title subtitle action actions backHref meta eyebrow />
+ * Restyled with new design tokens (). Public API unchanged:
+ * <PageHeader title subtitle action actions backHref meta eyebrow />
  */
 export default function PageHeader({ title, subtitle, action, actions, backHref, meta = [], eyebrow = null }) {
   const navigate = useNavigate();

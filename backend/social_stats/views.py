@@ -1,3 +1,11 @@
+# ============================================================================
+#  Social Stats — Social Media Management & Marketing Platform
+#  Author    : Chandrabhan Shekhawat
+#  Company   : Gigai Kripa Services
+#  Website   : https://gigaikripaservices.com/
+#  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+#  Released under the MIT License — see LICENSE. Keep this notice.
+# ============================================================================
 from datetime import date, timedelta
 from django.db.models import Sum, Avg
 from django.contrib.auth.models import User
@@ -247,7 +255,7 @@ def me(request):
         # Silently refresh any expired platform tokens on every page load
         if profile.client_id:
             _silent_token_refresh(profile.client_id)
-        # Marketplace (Stage 8): surface the primary agency slug so the
+        # Marketplace (): surface the primary agency slug so the
         # agency-side marketplace profile editor can resolve its target.
         try:
             if profile.primary_agency_id:

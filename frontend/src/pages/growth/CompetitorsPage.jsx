@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useState } from 'react';
 import {
   Plus, Trash2, RefreshCw, Sparkles, TrendingUp, X,
@@ -294,7 +302,7 @@ function CompetitorDetail({ competitor, onChange }) {
       <Card padding="md">
         <Card.Header
           title="AI insights"
-          subtitle="Social State analyzes 30 days of snapshots + sample posts"
+          subtitle="Social Stats analyzes 30 days of snapshots + sample posts"
           action={<Button icon={Sparkles} loading={loadingInsights} onClick={fetchInsights}>
             Generate
           </Button>}

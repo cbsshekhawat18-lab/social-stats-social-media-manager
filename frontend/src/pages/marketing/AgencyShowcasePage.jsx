@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -50,7 +58,7 @@ export default function AgencyShowcasePage() {
     <MarketingLayout>
       <Meta
         noSuffix
-        title={`${name} — Social State Partner Agency`}
+        title={`${name} — Social Stats Partner Agency`}
         description={tagline}
       />
       <JsonLd
@@ -545,7 +553,7 @@ export default function AgencyShowcasePage() {
             color: 'rgba(255,255,255,0.75)',
             lineHeight: 1.55,
           }}>
-            All Social State partner agencies use the same product you would. You stay in control of your data, permissions, and access.
+            All Social Stats partner agencies use the same product you would. You stay in control of your data, permissions, and access.
           </p>
 
           <div style={{
@@ -573,7 +581,6 @@ export default function AgencyShowcasePage() {
     </MarketingLayout>
   );
 }
-
 
 // ── helpers ────────────────────────────────────────────────────────────
 const sectionH2 = {

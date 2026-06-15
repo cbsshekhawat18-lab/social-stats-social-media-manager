@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -6,7 +14,7 @@ import {
   Briefcase, Receipt, Store,
 } from 'lucide-react';
 
-import { SocialStateMark } from '../ui/SocialStateLogo';
+import { BrandMark } from '../ui/BrandLogo';
 import AccountTypeBadge from '../ui/AccountTypeBadge';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -46,7 +54,7 @@ export default function ModuleRail({ currentModule, basePath, modules, notifCoun
       <button
         type="button"
         onClick={() => navigate(`${basePath}/${currentModule || 'analytics'}`)}
-        aria-label="Social State home"
+        aria-label="Social Stats home"
         style={{
           width: 36, height: 36,
           borderRadius: 'var(--radius-md)',
@@ -58,7 +66,7 @@ export default function ModuleRail({ currentModule, basePath, modules, notifCoun
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
-        <SocialStateMark size={22} />
+        <BrandMark size={22} />
       </button>
 
       <Divider />

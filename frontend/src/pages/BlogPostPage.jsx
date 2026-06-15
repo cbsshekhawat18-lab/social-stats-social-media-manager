@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Linkedin, Facebook, Link as LinkIcon, Quote } from 'lucide-react';
@@ -221,7 +229,7 @@ export default function BlogPostPage() {
                   {post.author.role}
                 </div>
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
-                  Writes about {post.tags?.slice(0, 2).join(' and ').toLowerCase() || post.category.toLowerCase()} on the SocialState journal.
+                  Writes about {post.tags?.slice(0, 2).join(' and ').toLowerCase() || post.category.toLowerCase()} on the SocialStats journal.
                 </p>
               </div>
             </div>
@@ -323,7 +331,7 @@ export default function BlogPostPage() {
             Free plan, no card. Most teams connect 4–6 platforms before they finish their morning coffee.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <Button as={Link} to="/signup" size="md" iconRight={ArrowRight}>Try Social State free</Button>
+            <Button as={Link} to="/signup" size="md" iconRight={ArrowRight}>Try Social Stats free</Button>
             <Button as={Link} to="/blog" variant="ghost" size="md" icon={ArrowLeft}>All posts</Button>
           </div>
         </div>
@@ -348,7 +356,6 @@ export default function BlogPostPage() {
     </MarketingLayout>
   );
 }
-
 
 // ── nodes ─────────────────────────────────────────────────────────────
 function BodyNode({ node, accent }) {
@@ -418,7 +425,6 @@ function BodyNode({ node, accent }) {
       return null;
   }
 }
-
 
 // ── helpers ───────────────────────────────────────────────────────────
 function slugify(s = '') {
@@ -498,7 +504,6 @@ function RelatedCard({ post }) {
     </Link>
   );
 }
-
 
 function NotFoundState({ slug }) {
   return (

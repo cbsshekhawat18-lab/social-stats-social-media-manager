@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,7 +20,7 @@ import SkipLink from '../ui/SkipLink';
  *
  *   ┌──────────────────────────────┬─────────────────────────────┐
  *   │  HERO PANEL (mesh gradient)  │  FORM PANEL                 │
- *   │  - Social State logo top-left      │  - Centered card             │
+ *   │  - Social Stats logo top-left      │  - Centered card             │
  *   │  - Eyebrow + headline        │  - children                 │
  *   │  - Rotating testimonials     │  - Footer link slot         │
  *   │  - Stat strip                │                             │
@@ -369,7 +377,7 @@ export default function AuthLayout({
           >
             <Link to="/privacy" style={legalLinkStyle}>Privacy</Link>
             <Link to="/terms"   style={legalLinkStyle}>Terms</Link>
-            <a href="mailto:support@socialstate.ai" style={legalLinkStyle}>Support</a>
+            <a href="mailto:support@socialstats.app" style={legalLinkStyle}>Support</a>
           </div>
         </div>
       </main>

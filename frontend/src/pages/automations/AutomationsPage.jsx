@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useMemo, useState } from 'react';
 import {
   Plus, Zap, Play, Pause, Trash2, ChevronRight, X, Sparkles,
@@ -30,7 +38,7 @@ const ACTION_OPTIONS = [
   { id: 'auto_reply',     label: 'Auto-reply',          icon: Send,
     desc: 'Posts a fixed text reply' },
   { id: 'ai_smart_reply', label: 'AI smart-reply',      icon: Sparkles,
-    desc: 'Lets Social State write a short reply matching your brand voice' },
+    desc: 'Lets Social Stats write a short reply matching your brand voice' },
   { id: 'notify',         label: 'Send notification',   icon: Bell,
     desc: 'Creates an in-app notification' },
   { id: 'assign',         label: 'Assign to user',      icon: UserPlus,
@@ -442,7 +450,7 @@ function ActionConfig({ type, value, onChange }) {
     return (
       <div style={{ ...infoBoxStyle, marginTop: 12 }}>
         <Sparkles size={14} color="var(--brand-primary-hover)" />
-        <span>Social State writes a short on-brand reply using the trained brand voice.</span>
+        <span>Social Stats writes a short on-brand reply using the trained brand voice.</span>
       </div>
     );
   }

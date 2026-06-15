@@ -1,9 +1,9 @@
 
-Contact: mailto:security@socialstate.ai
-Contact: https://socialstate.ai/security
+Contact: mailto:security@socialstats.app
+Contact: https://socialstats.app/security
 Expires: 2026-12-31T23:59:59Z
 Preferred-Languages: en, hi
-Canonical: https://app.socialstate.ai/.well-known/security.txt
-Policy: https://socialstate.ai/security
-Encryption: https://socialstate.ai/.well-known/pgp-key.asc
-Hiring: https://socialstate.ai/careers
+Canonical: https://app.socialstats.app/.well-known/security.txt
+Policy: https://socialstats.app/security
+Encryption: https://socialstats.app/.well-known/pgp-key.asc
+Hiring: https://socialstats.app/careers

@@ -1,5 +1,5 @@
 # Update Privacy Policy and Terms to include encryption-at-rest details
-# and fix privacy@socialstate.ai → support@socialstate.ai in live DB.
+# and fix privacy@socialstats.app → support@socialstats.app in live DB.
 
 import datetime
 from django.db import migrations
@@ -23,11 +23,11 @@ def update_content(apps, schema_editor):
                     {
                         'title': '1. Introduction',
                         'html': (
-                            '<p>Social State ("we", "our", or "us") operates a social media analytics platform at '
-                            '<strong>socialstate.ai</strong>. We connect to Facebook, Instagram, Google, YouTube, and LinkedIn '
+                            '<p>Social Stats ("we", "our", or "us") operates a social media analytics platform at '
+                            '<strong>socialstats.app</strong>. We connect to Facebook, Instagram, Google, YouTube, and LinkedIn '
                             'to display performance statistics for your social accounts. This Privacy Policy explains what '
                             'data we collect, how we use it, how we protect it, and the rights available to you.</p>'
-                            '<p>By using Social State you agree to this Privacy Policy. If you do not agree, please disconnect '
+                            '<p>By using Social Stats you agree to this Privacy Policy. If you do not agree, please disconnect '
                             'your accounts and stop using the Service.</p>'
                         ),
                     },
@@ -41,7 +41,7 @@ def update_content(apps, schema_editor):
                             '<li><strong>Post data</strong> — post captions, media thumbnails, published timestamps, and per-post metrics retrieved from platform APIs</li>'
                             '<li><strong>Basic profile information</strong> — name and profile picture of connected pages/accounts</li>'
                             '<li><strong>OAuth tokens</strong> — access tokens and refresh tokens issued by each platform, stored <strong>encrypted at rest</strong> using AES symmetric encryption (Fernet), used solely to fetch analytics on your behalf</li>'
-                            '<li><strong>Account information</strong> — email address, name, and role within Social State, provided at registration</li>'
+                            '<li><strong>Account information</strong> — email address, name, and role within Social Stats, provided at registration</li>'
                             '</ul>'
                             '<p>We do <strong>not</strong> collect passwords to third-party platforms, private messages, '
                             'friend lists, personal photos, or any data beyond what is needed for analytics.</p>'
@@ -52,7 +52,7 @@ def update_content(apps, schema_editor):
                         'html': (
                             '<p>Data collected is used exclusively for the following purposes:</p>'
                             '<ul>'
-                            '<li>Displaying analytics dashboards and reports within Social State</li>'
+                            '<li>Displaying analytics dashboards and reports within Social Stats</li>'
                             '<li>Syncing performance data on a scheduled basis so your statistics remain current</li>'
                             '<li>Generating AI-powered insights and recommendations based on your performance trends</li>'
                             '<li>Producing shareable reports you choose to export or share</li>'
@@ -70,14 +70,14 @@ def update_content(apps, schema_editor):
                     {
                         'title': '4. Google API Services — Limited Use Disclosure',
                         'html': (
-                            '<p>Social State uses Google APIs to access YouTube and Google Business Profile data. '
+                            '<p>Social Stats uses Google APIs to access YouTube and Google Business Profile data. '
                             'Our use of information received from Google APIs adheres to the '
                             '<a href="https://developers.google.com/terms/api-services-user-data-policy" '
                             'target="_blank" rel="noreferrer">Google API Services User Data Policy</a>, '
                             'including the <strong>Limited Use</strong> requirements.</p>'
                             '<p>Specifically:</p>'
                             '<ul>'
-                            '<li>We access Google user data only to provide or improve user-facing features of Social State.</li>'
+                            '<li>We access Google user data only to provide or improve user-facing features of Social Stats.</li>'
                             '<li>Google user data is not transferred to third parties except as necessary to provide the service, '
                             'or as required by law.</li>'
                             '<li>We do not use Google user data for serving advertisements.</li>'
@@ -91,14 +91,14 @@ def update_content(apps, schema_editor):
                             '<li><code>https://www.googleapis.com/auth/yt-analytics.readonly</code> — read-only access to YouTube Analytics</li>'
                             '<li><code>https://www.googleapis.com/auth/business.manage</code> — read-only access to Google Business Profile data</li>'
                             '</ul>'
-                            '<p>You can revoke Social State\'s access to your Google data at any time via '
+                            '<p>You can revoke Social Stats\'s access to your Google data at any time via '
                             '<a href="https://myaccount.google.com/permissions" target="_blank" rel="noreferrer">myaccount.google.com/permissions</a>.</p>'
                         ),
                     },
                     {
                         'title': '5. Facebook & Instagram Data (Meta Platform)',
                         'html': (
-                            '<p>Social State connects to the Meta Graph API to retrieve Facebook Page and Instagram Business '
+                            '<p>Social Stats connects to the Meta Graph API to retrieve Facebook Page and Instagram Business '
                             'account analytics. We request only the permissions necessary to read analytics data:</p>'
                             '<ul>'
                             '<li><code>pages_read_engagement</code> — read page engagement metrics</li>'
@@ -107,23 +107,23 @@ def update_content(apps, schema_editor):
                             '<li><code>instagram_manage_insights</code> — read Instagram audience and post insights</li>'
                             '<li><code>read_insights</code> — read Facebook Page Insights</li>'
                             '</ul>'
-                            '<p>Data obtained from Meta APIs is used solely to display analytics within Social State. '
+                            '<p>Data obtained from Meta APIs is used solely to display analytics within Social Stats. '
                             'We comply with the '
                             '<a href="https://developers.facebook.com/policy/" target="_blank" rel="noreferrer">Meta Platform Terms</a> '
                             'and the '
                             '<a href="https://developers.facebook.com/devpolicy/" target="_blank" rel="noreferrer">Meta Developer Policies</a>.</p>'
-                            '<p>Social State does not share Facebook or Instagram data with third parties, does not use it for advertising '
+                            '<p>Social Stats does not share Facebook or Instagram data with third parties, does not use it for advertising '
                             'targeting, and does not store it beyond what is necessary to display your analytics dashboard.</p>'
-                            '<p>You can revoke access via Facebook Settings → Apps and Websites, or by disconnecting within Social State Settings.</p>'
+                            '<p>You can revoke access via Facebook Settings → Apps and Websites, or by disconnecting within Social Stats Settings.</p>'
                             '<p>To request deletion of your Facebook/Instagram data from our servers, '
                             'visit our <a href="/data-deletion">Data Deletion page</a> or email '
-                            '<a href="mailto:support@socialstate.ai">support@socialstate.ai</a>.</p>'
+                            '<a href="mailto:support@socialstats.app">support@socialstats.app</a>.</p>'
                         ),
                     },
                     {
                         'title': '6. LinkedIn Data',
                         'html': (
-                            '<p>Social State connects to the LinkedIn Marketing API to retrieve LinkedIn Page and post analytics. '
+                            '<p>Social Stats connects to the LinkedIn Marketing API to retrieve LinkedIn Page and post analytics. '
                             'We request only the scopes needed for read-only analytics access:</p>'
                             '<ul>'
                             '<li><code>r_organization_social</code> — read LinkedIn Page posts and social metrics</li>'
@@ -132,9 +132,9 @@ def update_content(apps, schema_editor):
                             '</ul>'
                             '<p>We comply with the '
                             '<a href="https://legal.linkedin.com/api-terms-of-use" target="_blank" rel="noreferrer">LinkedIn API Terms of Use</a>. '
-                            'LinkedIn data is used solely to display analytics within Social State and is not shared with third parties.</p>'
+                            'LinkedIn data is used solely to display analytics within Social Stats and is not shared with third parties.</p>'
                             '<p>You can revoke access via LinkedIn Settings → Data Privacy → Other applications, '
-                            'or by disconnecting within Social State Settings.</p>'
+                            'or by disconnecting within Social Stats Settings.</p>'
                         ),
                     },
                     {
@@ -153,7 +153,7 @@ def update_content(apps, schema_editor):
                         'title': '8. Data Retention',
                         'html': (
                             '<ul>'
-                            '<li>Analytics data is retained for as long as your Social State account remains active</li>'
+                            '<li>Analytics data is retained for as long as your Social Stats account remains active</li>'
                             '<li>OAuth tokens are stored <strong>encrypted at rest</strong> and refreshed automatically; they are deleted immediately upon disconnecting a social account</li>'
                             '<li>Upon account deletion, all personal data and social analytics data is permanently removed within <strong>30 days</strong></li>'
                             '<li>Anonymised aggregate statistics (e.g. platform-wide benchmarks) may be retained indefinitely — these cannot be linked back to your identity</li>'
@@ -179,11 +179,11 @@ def update_content(apps, schema_editor):
                             'connections only; no public access is permitted.</li>'
                             '<li><strong>Access controls</strong> — access to production systems is restricted by role. '
                             'Application secrets and encryption keys are stored in environment variables, not in source code.</li>'
-                            '<li><strong>Token lifecycle</strong> — when you disconnect a social account or delete your Social State account, '
+                            '<li><strong>Token lifecycle</strong> — when you disconnect a social account or delete your Social Stats account, '
                             'all associated OAuth tokens are immediately purged from the database.</li>'
                             '</ul>'
                             '<p>No system is completely secure. If you believe your account has been compromised, '
-                            'contact us immediately at <a href="mailto:support@socialstate.ai">support@socialstate.ai</a>.</p>'
+                            'contact us immediately at <a href="mailto:support@socialstats.app">support@socialstats.app</a>.</p>'
                         ),
                     },
                     {
@@ -195,19 +195,19 @@ def update_content(apps, schema_editor):
                             '<li><strong>Correction</strong> — request corrections to inaccurate or incomplete data</li>'
                             '<li><strong>Deletion</strong> — request permanent deletion of your account and all associated data</li>'
                             '<li><strong>Portability</strong> — request your data in a machine-readable format</li>'
-                            '<li><strong>Revoke access</strong> — disconnect any social account at any time from Social State Settings or directly from the platform</li>'
+                            '<li><strong>Revoke access</strong> — disconnect any social account at any time from Social Stats Settings or directly from the platform</li>'
                             '<li><strong>Opt out of communications</strong> — unsubscribe from non-essential emails at any time</li>'
                             '</ul>'
                             '<p>To exercise any of these rights, contact us at '
-                            '<a href="mailto:support@socialstate.ai">support@socialstate.ai</a>.</p>'
+                            '<a href="mailto:support@socialstats.app">support@socialstats.app</a>.</p>'
                         ),
                     },
                     {
                         'title': '11. Children\'s Privacy',
                         'html': (
-                            '<p>Social State is not directed at children under the age of 16. We do not knowingly collect '
+                            '<p>Social Stats is not directed at children under the age of 16. We do not knowingly collect '
                             'personal data from children. If you believe a child has provided us with personal data, '
-                            'contact us at <a href="mailto:support@socialstate.ai">support@socialstate.ai</a> and we will delete it promptly.</p>'
+                            'contact us at <a href="mailto:support@socialstats.app">support@socialstats.app</a> and we will delete it promptly.</p>'
                         ),
                     },
                     {
@@ -215,7 +215,7 @@ def update_content(apps, schema_editor):
                         'html': (
                             '<p>We may update this Privacy Policy from time to time. When we do, we will update the '
                             '"Last Updated" date at the top of this page. Material changes will be communicated by email '
-                            'or via an in-app notice. Continued use of Social State after changes take effect constitutes your '
+                            'or via an in-app notice. Continued use of Social Stats after changes take effect constitutes your '
                             'acceptance of the updated policy.</p>'
                         ),
                     },
@@ -224,8 +224,8 @@ def update_content(apps, schema_editor):
                         'html': (
                             '<p>For privacy-related questions, data requests, or concerns:</p>'
                             '<p>'
-                            '<strong>Email:</strong> <a href="mailto:support@socialstate.ai">support@socialstate.ai</a><br />'
-                            '<strong>Website:</strong> <a href="https://socialstate.ai" target="_blank" rel="noreferrer">socialstate.ai</a>'
+                            '<strong>Email:</strong> <a href="mailto:support@socialstats.app">support@socialstats.app</a><br />'
+                            '<strong>Website:</strong> <a href="https://socialstats.app" target="_blank" rel="noreferrer">socialstats.app</a>'
                             '</p>'
                         ),
                     },
@@ -249,8 +249,8 @@ def update_content(apps, schema_editor):
                     {
                         'title': '1. Acceptance of Terms',
                         'html': (
-                            '<p>By accessing or using the Social State platform ("the Service") at '
-                            '<a href="https://socialstate.ai">socialstate.ai</a>, you agree to be bound by these '
+                            '<p>By accessing or using the Social Stats platform ("the Service") at '
+                            '<a href="https://socialstats.app">socialstats.app</a>, you agree to be bound by these '
                             'Terms of Service ("Terms") and our <a href="/privacy">Privacy Policy</a>. '
                             'If you do not agree to all Terms, do not use the Service.</p>'
                             '<p>We may revise these Terms at any time by posting an updated version. '
@@ -261,11 +261,11 @@ def update_content(apps, schema_editor):
                     {
                         'title': '2. Description of the Service',
                         'html': (
-                            '<p>Social State is a social media analytics platform that connects to your Facebook, '
+                            '<p>Social Stats is a social media analytics platform that connects to your Facebook, '
                             'Instagram, Google, YouTube, and LinkedIn accounts — with your explicit permission — '
                             'and displays performance statistics, engagement metrics, post analytics, and related '
                             'insights in a unified dashboard.</p>'
-                            '<p>Social State is a <strong>read-only</strong> analytics tool. We do <strong>not</strong> '
+                            '<p>Social Stats is a <strong>read-only</strong> analytics tool. We do <strong>not</strong> '
                             'post, publish, schedule, edit, delete, or otherwise modify any content on your '
                             'connected social media accounts.</p>'
                         ),
@@ -286,32 +286,32 @@ def update_content(apps, schema_editor):
                         'title': '4. Connecting Third-Party Social Accounts',
                         'html': (
                             '<p>When you connect a Facebook, Instagram, Google, YouTube, or LinkedIn account, '
-                            'you authorise Social State to access that account\'s analytics data via the platform\'s '
+                            'you authorise Social Stats to access that account\'s analytics data via the platform\'s '
                             'official API under your explicit OAuth consent. You can revoke this access at any time:</p>'
                             '<ul>'
-                            '<li><strong>Facebook/Instagram</strong> — Facebook Settings → Apps and Websites → find Social State → Remove</li>'
+                            '<li><strong>Facebook/Instagram</strong> — Facebook Settings → Apps and Websites → find Social Stats → Remove</li>'
                             '<li><strong>Google/YouTube</strong> — '
                             '<a href="https://myaccount.google.com/permissions" target="_blank" rel="noreferrer">myaccount.google.com/permissions</a> '
-                            '→ find Social State → Remove Access</li>'
-                            '<li><strong>LinkedIn</strong> — LinkedIn Settings → Data Privacy → Other applications → find Social State → Remove</li>'
-                            '<li><strong>Social State dashboard</strong> — Settings page → Connected Accounts → Disconnect</li>'
+                            '→ find Social Stats → Remove Access</li>'
+                            '<li><strong>LinkedIn</strong> — LinkedIn Settings → Data Privacy → Other applications → find Social Stats → Remove</li>'
+                            '<li><strong>Social Stats dashboard</strong> — Settings page → Connected Accounts → Disconnect</li>'
                             '</ul>'
                         ),
                     },
                     {
                         'title': '5. Google API Services — Compliance',
                         'html': (
-                            '<p>Social State\'s use of data obtained from Google APIs complies with the '
+                            '<p>Social Stats\'s use of data obtained from Google APIs complies with the '
                             '<a href="https://developers.google.com/terms/api-services-user-data-policy" '
                             'target="_blank" rel="noreferrer">Google API Services User Data Policy</a>, '
                             'including the Limited Use requirements.</p>'
-                            '<p>Google user data accessed by Social State:</p>'
+                            '<p>Google user data accessed by Social Stats:</p>'
                             '<ul>'
-                            '<li>Is used only to provide analytics features directly visible to you within Social State</li>'
+                            '<li>Is used only to provide analytics features directly visible to you within Social Stats</li>'
                             '<li>Is not transferred to third parties for advertising, data brokerage, or any purpose '
-                            'unrelated to the Social State service</li>'
+                            'unrelated to the Social Stats service</li>'
                             '<li>Is not used to train AI or machine-learning models</li>'
-                            '<li>Is not read by Social State employees or contractors unless you have given explicit permission, '
+                            '<li>Is not read by Social Stats employees or contractors unless you have given explicit permission, '
                             'it is required for security purposes, or it is required by law</li>'
                             '</ul>'
                             '<p>YouTube data is subject to the '
@@ -322,28 +322,28 @@ def update_content(apps, schema_editor):
                     {
                         'title': '6. Meta Platform Terms Compliance',
                         'html': (
-                            '<p>Social State\'s use of Facebook and Instagram data is governed by the '
+                            '<p>Social Stats\'s use of Facebook and Instagram data is governed by the '
                             '<a href="https://developers.facebook.com/policy/" target="_blank" rel="noreferrer">Meta Platform Terms</a> '
                             'and the '
                             '<a href="https://developers.facebook.com/devpolicy/" target="_blank" rel="noreferrer">Meta Developer Policies</a>.</p>'
                             '<p>By connecting a Facebook or Instagram account, you represent that you have the right '
                             'to authorise access to that account and that you will use the analytics data in compliance '
                             'with Meta\'s terms and policies.</p>'
-                            '<p>Social State does not sell, license, or otherwise commercialise Facebook or Instagram data, '
+                            '<p>Social Stats does not sell, license, or otherwise commercialise Facebook or Instagram data, '
                             'and does not use it for purposes beyond the analytics features explicitly provided within the platform.</p>'
                             '<p>Meta\'s user data is deleted from our systems within 30 days of account disconnection or deletion. '
                             'A data deletion callback endpoint is registered with Meta at '
-                            '<code>https://socialstate.ai/api/oauth/facebook/data-deletion/</code>.</p>'
+                            '<code>https://socialstats.app/api/oauth/facebook/data-deletion/</code>.</p>'
                         ),
                     },
                     {
                         'title': '7. LinkedIn API Terms Compliance',
                         'html': (
-                            '<p>Social State\'s use of LinkedIn data is governed by the '
+                            '<p>Social Stats\'s use of LinkedIn data is governed by the '
                             '<a href="https://legal.linkedin.com/api-terms-of-use" target="_blank" rel="noreferrer">LinkedIn API Terms of Use</a>.</p>'
                             '<p>By connecting a LinkedIn account, you represent that you are authorised to grant '
                             'access to the LinkedIn Page(s) associated with your account.</p>'
-                            '<p>Social State uses LinkedIn data solely to display Page analytics and post performance '
+                            '<p>Social Stats uses LinkedIn data solely to display Page analytics and post performance '
                             'metrics within your dashboard. LinkedIn data is not shared with third parties or used '
                             'for any purpose beyond the analytics service.</p>'
                         ),
@@ -351,7 +351,7 @@ def update_content(apps, schema_editor):
                     {
                         'title': '8. Data Security & Encryption',
                         'html': (
-                            '<p>Social State implements encryption at rest and in transit to protect all platform data stored '
+                            '<p>Social Stats implements encryption at rest and in transit to protect all platform data stored '
                             'in our backend environment:</p>'
                             '<ul>'
                             '<li><strong>Encryption in transit</strong> — all connections use TLS 1.2+ (HTTPS)</li>'
@@ -362,7 +362,7 @@ def update_content(apps, schema_editor):
                             '<li><strong>Infrastructure encryption</strong> — our production PostgreSQL database runs on AWS with '
                             'encrypted storage volumes</li>'
                             '<li><strong>Token lifecycle</strong> — tokens are purged immediately when a user disconnects a social account '
-                            'or deletes their Social State account</li>'
+                            'or deletes their Social Stats account</li>'
                             '</ul>'
                         ),
                     },
@@ -392,10 +392,10 @@ def update_content(apps, schema_editor):
                     {
                         'title': '11. Intellectual Property',
                         'html': (
-                            '<p>The Social State platform — including its design, code, branding, and content — is owned by us '
+                            '<p>The Social Stats platform — including its design, code, branding, and content — is owned by us '
                             'and protected by intellectual property laws. You may not copy, reproduce, distribute, or create '
                             'derivative works from any part of the Service without our written permission.</p>'
-                            '<p>Your social media data remains owned by you and the respective platforms. Social State claims no '
+                            '<p>Your social media data remains owned by you and the respective platforms. Social Stats claims no '
                             'ownership over analytics data retrieved from your connected accounts.</p>'
                         ),
                     },
@@ -415,7 +415,7 @@ def update_content(apps, schema_editor):
                     {
                         'title': '13. Limitation of Liability',
                         'html': (
-                            '<p>To the maximum extent permitted by applicable law, Social State and its officers, employees, '
+                            '<p>To the maximum extent permitted by applicable law, Social Stats and its officers, employees, '
                             'and affiliates shall not be liable for any indirect, incidental, special, consequential, or '
                             'punitive damages arising from your use of the Service, including but not limited to loss of '
                             'data, loss of revenue, or business interruption.</p>'
@@ -436,8 +436,8 @@ def update_content(apps, schema_editor):
                         'html': (
                             '<p>For questions about these Terms:</p>'
                             '<p>'
-                            '<strong>Email:</strong> <a href="mailto:support@socialstate.ai">support@socialstate.ai</a><br />'
-                            '<strong>Website:</strong> <a href="https://socialstate.ai" target="_blank" rel="noreferrer">socialstate.ai</a>'
+                            '<strong>Email:</strong> <a href="mailto:support@socialstats.app">support@socialstats.app</a><br />'
+                            '<strong>Website:</strong> <a href="https://socialstats.app" target="_blank" rel="noreferrer">socialstats.app</a>'
                             '</p>'
                         ),
                     },

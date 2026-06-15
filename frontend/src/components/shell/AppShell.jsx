@@ -1,3 +1,11 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -20,8 +28,8 @@ import { useAuth } from '../../hooks/useAuth';
  * Root layout shell. Replaces the inline layout logic in App.js.
  *
  * Props:
- *   children: routed content (already wrapped in <Routes>)
- *   isAdmin:  bool — admin sees all 3 modules; client sees a filtered set
+ * children: routed content (already wrapped in <Routes>)
+ * isAdmin: bool — admin sees all 3 modules; client sees a filtered set
  */
 export default function AppShell({ children, isAdmin }) {
   const location = useLocation();
@@ -80,7 +88,7 @@ export default function AppShell({ children, isAdmin }) {
     const all = [
       {
         id: 'analytics', label: 'Analytics', icon: BarChart3,
-        enabled: true, // always available
+        enabled: true,  // always available
       },
       {
         id: 'messaging', label: 'Messaging', icon: MessageCircle,
@@ -184,7 +192,7 @@ export default function AppShell({ children, isAdmin }) {
         basePath={basePath}
       />
 
-      {/* Floating Social State assistant — global Cmd/Ctrl+J (Stage 6) */}
+      {/* Floating Social Stats assistant — global Cmd/Ctrl+J */}
       <AIFloatingTrigger />
     </div>
   );
@@ -368,7 +376,7 @@ function deriveModule(pathname, basePath) {
   const rest = pathname.startsWith(basePath) ? pathname.slice(basePath.length) : pathname;
   const seg = rest.split('/').filter(Boolean)[0];
   if (seg === 'analytics' || seg === 'messaging' || seg === 'ads') return seg;
-  return 'analytics'; // default
+  return 'analytics';  // default
 }
 
 function hashHue(s) {

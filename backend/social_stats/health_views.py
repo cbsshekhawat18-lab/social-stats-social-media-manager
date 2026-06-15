@@ -1,3 +1,11 @@
+# ============================================================================
+#  Social Stats — Social Media Management & Marketing Platform
+#  Author    : Chandrabhan Shekhawat
+#  Company   : Gigai Kripa Services
+#  Website   : https://gigaikripaservices.com/
+#  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+#  Released under the MIT License — see LICENSE. Keep this notice.
+# ============================================================================
 """
 Public service-health endpoint backing the marketing /status page.
 
@@ -83,7 +91,7 @@ _THIRD_PARTY = [
     ('google',   'Google integration (YouTube + GMB)'),
     ('linkedin', 'LinkedIn integration'),
     ('pinbot',   'WhatsApp (Pinbot.ai)'),
-    ('ai',       'Social State'),
+    ('ai',       'Social Stats'),
     ('razorpay', 'Billing (Razorpay)'),
 ]
 

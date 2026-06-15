@@ -1,8 +1,16 @@
+/* ============================================================================
+ *  Social Stats — Social Media Management & Marketing Platform
+ *  Author    : Chandrabhan Shekhawat
+ *  Company   : Gigai Kripa Services
+ *  Website   : https://gigaikripaservices.com/
+ *  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
+ *  Released under the MIT License — see LICENSE. Keep this notice.
+ * ========================================================================== */
 import { fmt } from '../../services/platforms';
 
 /**
- * Restyled with the new design tokens (Stage 2). Public API unchanged:
- *   <StatCard label value icon color sub trend />
+ * Restyled with the new design tokens (). Public API unchanged:
+ * <StatCard label value icon color sub trend />
  *
  * The `color` prop drives an icon-tile gradient; the card surface itself
  * uses the surface tokens (light + dark mode aware).

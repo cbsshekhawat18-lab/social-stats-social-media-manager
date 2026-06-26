@@ -74,18 +74,50 @@ Full guides live in [`docs/`](docs/):
 
 ## Features
 
-- **Social media scheduling & content calendar** — one composer with per-platform
-  formatting, brand-voice AI captions, scheduling, and approval flows for agency clients.
-- **Analytics dashboard** — daily-metric ingestion across 5 platforms, a time-series
-  API, per-client dashboards, and AI-narrated monthly reports.
-- **Unified inbox** — one conversation queue across DMs, comments, and Google
-  reviews, with AI reply suggestions in your brand voice.
-- **Click-to-WhatsApp bot builder** — a visual flow editor with conditional branches
-  and AI chat nodes; lead capture pushes to your CRM.
-- **Agency marketplace** — a two-sided agency directory where end users can find an
-  agency to manage their workspace.
-- **AI assistant** — a Cmd/Ctrl+J assistant with tool use, brand-voice training,
-  insights, and forecasts (powered by Anthropic Claude).
+Social Stats is a full product, not a single dashboard. It ships a public
+**marketing website**, an **admin shell**, **multi-client dashboards**, and the
+modules below — all in one codebase.
+
+### 📊 Analytics & reporting
+- Cross-platform analytics dashboards (Facebook, Instagram, YouTube, LinkedIn, Google Business)
+- KPI overview — impressions, reach, clicks, video views, followers — per client and aggregated
+- Per-platform performance tables, distribution & comparison charts, date-range filters
+- Reports (exportable) + **AI-narrated** monthly summaries
+- Sync-activity logs and performance alerts
+
+### ✍️ Content & publishing
+- **Composer** — write once, format per platform, schedule
+- **Content calendar** + **Queue manager** for scheduled posting
+- **Media Library** for reusable assets
+- **Video Studio** — trim/resize, captions, thumbnails, direct YouTube upload
+- Agency **approval flows** before client posts go live
+
+### 💬 Engage
+- **Unified inbox** — DMs, comments, and Google reviews in one queue, AI reply suggestions
+- **Reviews** management
+- **Automations** — IF-this-THEN-that rules (e.g. keyword → template reply)
+
+### 🤖 AI Studio (powered by Anthropic Claude)
+- Cmd/Ctrl+J **AI assistant** with tool use + chat history
+- Smart Composer, Caption Writer, Post Ideas, Hashtag Research
+- **Brand Voice** training, **AI Insights** (trends/anomalies/forecasts), AI Audit & usage tracking
+
+### 📱 WhatsApp & CTWA bots
+- WhatsApp dashboard, inbox, contacts, lists, **templates**, **campaigns**
+- **Click-to-WhatsApp bot builder** — visual flow editor with conditional branches & AI nodes
+- Bot conversations, human-handoff queue, bot analytics, template gallery
+
+### 👥 CRM, marketplace & agencies
+- **Leads/CRM** — captured leads with conversation history
+- **Agency marketplace** — two-sided directory; profiles, reviews, invites, manage-requests, disputes
+- Multi-client agency workspaces with **granular per-client permissions**
+
+### 🛠️ Admin & platform
+- **Admin shell** (`/admin`) — manage all users, clients, staff access, audit log, approval & trust queues
+- **Public marketing site** — home, features, solutions, customers, blog, help center, status, changelog, legal pages
+- **Realtime** updates (WebSockets / Django Channels), **PWA**/offline support
+- Security: JWT + Argon2, MFA/TOTP, session management, django-axes, Fernet-encrypted tokens, GDPR/DPDP tooling
+- **Light & dark theme** toggle, fully responsive (mobile PWA layout)
 
 ### Account types
 

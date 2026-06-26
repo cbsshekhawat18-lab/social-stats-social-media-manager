@@ -837,7 +837,7 @@ const S = {
   },
   pdfBtn: {
     padding: '9px 16px', borderRadius: 12, border: 'none',
-    background: 'var(--text-primary)', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+    background: 'var(--text-primary)', color: 'var(--surface-card)', cursor: 'pointer', fontWeight: 700, fontSize: 13,
     WebkitTapHighlightColor: 'transparent',
   },
 

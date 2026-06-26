@@ -796,9 +796,9 @@ const s = {
   cameraBtn: {
     position: 'absolute', bottom: 0, right: 0,
     width: 26, height: 26, borderRadius: '50%',
-    background: 'var(--text-primary)', border: '2px solid #fff',
+    background: 'var(--text-primary)', border: '2px solid var(--surface-card)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', color: '#fff',
+    cursor: 'pointer', color: 'var(--surface-card)',
   },
   removeAvatarBtn: {
     position: 'absolute', top: -4, right: -4,

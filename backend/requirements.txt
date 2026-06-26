@@ -22,7 +22,7 @@ tenacity==8.2.3
 phonenumbers==8.13.30
 boto3==1.34.51
 moviepy==1.0.3
-python-dateutil==2.9.0
+python-dateutil==2.9.0.post0
 croniter==2.0.5
 channels==4.1.0
 channels-redis==4.2.0

@@ -10,7 +10,7 @@ google-api-python-client==2.118.0
 google-analytics-data==0.18.3
 google-auth==2.27.0
 google-auth-oauthlib==1.2.0
-google-ads==23.1.0
+google-ads==31.1.0
 python-dotenv==1.0.0
 gunicorn==21.2.0
 psycopg2-binary==2.9.9

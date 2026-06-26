@@ -16,7 +16,7 @@ gunicorn==21.2.0
 psycopg2-binary==2.9.9
 Pillow==10.2.0
 weasyprint==60.2
-anthropic>=0.18.0
+anthropic>=0.112.0
 cryptography==42.0.5
 tenacity==8.2.3
 phonenumbers==8.13.30

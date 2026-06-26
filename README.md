@@ -2,8 +2,6 @@
 
 > An open-source, self-hostable alternative to Hootsuite, Buffer & Sprout Social.
 
-_Built & maintained by **[Chandrabhan Shekhawat — Gigai Kripa Services](https://gigaikripaservices.com/)** · MIT licensed._
-
 **Social Stats** is an open-source **social media management** and marketing platform for
 agencies and teams. One product unifies a **social media scheduler** and **content calendar**,
 cross-platform **analytics dashboards**, a unified conversation inbox, a click-to-WhatsApp

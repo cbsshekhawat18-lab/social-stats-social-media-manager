@@ -13,7 +13,7 @@
     "framer-motion": "^12.38.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
-    "jspdf-autotable": "^3.8.2",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.330.0",
     "nanoid": "^5.1.11",
     "qrcode.react": "^4.2.0",

@@ -2,6 +2,8 @@
 
 > An open-source, self-hostable alternative to Hootsuite, Buffer & Sprout Social.
 
+_Built & maintained by **[Chandrabhan Shekhawat — Gigai Kripa Services](https://gigaikripaservices.com/)** · MIT licensed._
+
 **Social Stats** is an open-source **social media management** and marketing platform for
 agencies and teams. One product unifies a **social media scheduler** and **content calendar**,
 cross-platform **analytics dashboards**, a unified conversation inbox, a click-to-WhatsApp
@@ -96,6 +98,21 @@ Full guides live in [`docs/`](docs/):
 | End user (`role=client`, `account_type=end_user`) | End-user shell at `/u` + a single workspace they own |
 
 ---
+
+## Who is it for?
+
+- **Social media agencies** managing many client brands from one place, with per-client workspaces, granular permissions, and approval flows.
+- **In-house marketing teams** running several brand/social accounts who want scheduling, analytics, and a shared inbox without per-seat SaaS fees.
+- **Solo creators & small businesses** who want a free, self-hosted tool to plan posts, track growth, and reply to messages across platforms.
+- **Developers** who want a customizable, MIT-licensed Django + React base they can self-host and extend.
+
+## How it works
+
+1. **Connect accounts** — link Facebook, Instagram, YouTube, LinkedIn, Google Business, and WhatsApp via OAuth or the in-app manual setup wizard. Tokens are encrypted at rest, per workspace. See [docs/CONNECT_ACCOUNTS.md](docs/CONNECT_ACCOUNTS.md).
+2. **Plan & publish** — draft once in the composer, format per platform, schedule on the content calendar; agency posts can route through client approval.
+3. **Engage** — DMs, comments, and Google reviews land in one unified inbox with AI-suggested replies; build automated WhatsApp/CTWA bot flows.
+4. **Measure** — Celery syncs daily metrics into per-client analytics dashboards, with AI-narrated monthly reports.
+5. **Self-host** — run it on your own infrastructure (Django + DRF + Celery + Postgres + React); you own the data and the keys.
 
 ## How it compares
 
@@ -301,9 +318,29 @@ for everyone else looking for an open-source social media management tool.
 
 ---
 
+## Author & Credits
+
+**Social Stats** is built and maintained by **Chandrabhan Shekhawat** —
+**Gigai Kripa Services**.
+
+- 🌐 Website: <https://gigaikripaservices.com/>
+- 👤 Author: Chandrabhan Shekhawat
+- 🏢 Company: Gigai Kripa Services
+- © 2026 Chandrabhan Shekhawat — Gigai Kripa Services
+
+If you use Social Stats in your own project or product, a credit back to the
+author / this repository is appreciated. ⭐ Stars help others find it.
+
+---
+
 ## License
 
-[MIT](./LICENSE)
+Released under the **[MIT License](./LICENSE)** — free to use, modify, and
+self-host, for individuals and companies alike.
+
+```
+Copyright (c) 2026 Chandrabhan Shekhawat — Gigai Kripa Services
+```
 
 ---
 

@@ -29,6 +29,7 @@ to a real environment.
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from django.core.management import call_command
+from django.utils import timezone
 
 
 DEMO_PASSWORD = 'demo'
@@ -106,6 +107,17 @@ class Command(BaseCommand):
                     },
                 )
                 self.stdout.write(self.style.SUCCESS(f'  created          {spec["email"]}'))
+
+            # Demo accounts must have Terms accepted so they can log in straight
+            # away (login enforces ToS acceptance). Idempotent for existing rows.
+            profile, _ = UserProfile.objects.get_or_create(
+                user=user,
+                defaults={'role': spec['role'], 'account_type': spec['account_type']},
+            )
+            if not profile.terms_accepted:
+                profile.terms_accepted = True
+                profile.terms_accepted_at = timezone.now()
+                profile.save(update_fields=['terms_accepted', 'terms_accepted_at'])
 
             if spec['account_type'] == 'agency_member':
                 agency_user = user

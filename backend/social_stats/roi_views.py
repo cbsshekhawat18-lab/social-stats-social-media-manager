@@ -19,6 +19,7 @@ from rest_framework import status
 from .models import ROISettings, ROIReport, Client
 from .serializers import ROISettingsSerializer, ROIReportSerializer
 from .roi_calculator import calculate_roi, get_roi_trend
+from .views import check_client_access, _agency_client_ids
 
 
 def _is_admin(user):
@@ -33,6 +34,8 @@ class ROISettingsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, client_id):
+        if not check_client_access(request, client_id):
+            return Response({'error': 'Access denied.'}, status=403)
         try:
             settings = ROISettings.objects.get(client_id=client_id)
             return Response(ROISettingsSerializer(settings).data)
@@ -59,6 +62,8 @@ class ROISettingsView(APIView):
     def put(self, request, client_id):
         if not _is_admin(request.user):
             return Response({'error': 'Only agency staff can update ROI settings.'}, status=403)
+        if not check_client_access(request, client_id):
+            return Response({'error': 'Access denied.'}, status=403)
         try:
             client = Client.objects.get(id=client_id)
         except Client.DoesNotExist:
@@ -83,6 +88,8 @@ class ROICalculateView(APIView):
 
         if not all([client_id, month, year]):
             return Response({'error': 'client_id, month, year are required.'}, status=400)
+        if not check_client_access(request, client_id):
+            return Response({'error': 'Access denied.'}, status=403)
 
         try:
             result = calculate_roi(int(client_id), int(month), int(year))
@@ -126,7 +133,9 @@ class ROIReportView(ListAPIView):
     serializer_class   = ROIReportSerializer
 
     def get_queryset(self):
-        qs        = ROIReport.objects.select_related('client')
+        qs        = ROIReport.objects.select_related('client').filter(
+            client_id__in=_agency_client_ids(self.request)
+        )
         client_id = self.request.query_params.get('client_id')
         year      = self.request.query_params.get('year')
         if client_id:
@@ -147,6 +156,8 @@ class ROILiveView(APIView):
 
         if not all([client_id, month, year]):
             return Response({'error': 'client_id, month, year are required.'}, status=400)
+        if not check_client_access(request, client_id):
+            return Response({'error': 'Access denied.'}, status=403)
 
         # Build override from query params
         def _d(key, default=0):

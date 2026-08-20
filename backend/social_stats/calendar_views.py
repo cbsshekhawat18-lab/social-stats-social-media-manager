@@ -144,6 +144,11 @@ class CalendarPostViewSet(viewsets.ModelViewSet):
         return Response(dict(posts_by_date))
 
     def perform_create(self, serializer):
+        client = serializer.validated_data.get('client')
+        profile = getattr(self.request.user, 'profile', None)
+        if not client or not profile or not profile.can_access_client(client.id):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('You cannot create calendar posts for this client.')
         serializer.save(created_by=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
@@ -353,6 +358,11 @@ class CalendarNoteViewSet(viewsets.ModelViewSet):
         return Response(self.get_serializer(qs, many=True).data)
 
     def perform_create(self, serializer):
+        client = serializer.validated_data.get('client')
+        profile = getattr(self.request.user, 'profile', None)
+        if not client or not profile or not profile.can_access_client(client.id):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('You cannot create notes for this client.')
         serializer.save(created_by=self.request.user)
 
     def update(self, request, *args, **kwargs):
@@ -380,10 +390,10 @@ class PostingScheduleViewSet(viewsets.ModelViewSet):
         if not profile or profile.role == 'client':
             return qs.none()
 
+        if profile.role == 'staff':
+            qs = qs.filter(client__in=profile.assigned_clients.all())
         if client_id:
             qs = qs.filter(client_id=client_id)
-        elif profile.role == 'staff':
-            qs = qs.filter(client__in=profile.assigned_clients.all())
 
         return qs
 

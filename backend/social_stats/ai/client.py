@@ -89,6 +89,11 @@ class AIClient:
 
     # ── Internal helpers ─────────────────────────────────────────────────
 
+    def _check_processing_allowed(self):
+        """GDPR/DPDP restrict-processing gate (Client.is_processing_paused)."""
+        if self.client is not None and getattr(self.client, 'is_processing_paused', False):
+            raise AIError('AI processing is paused for this workspace (data-processing restriction).')
+
     def _model(self, override: Optional[str], deep: bool = False, fast: bool = False) -> str:
         if override:
             return override
@@ -175,6 +180,7 @@ class AIClient:
         chosen_model = self._model(model, deep=deep, fast=fast)
 
         # 1. Rate-limit pre-flight (request count + global $ budget)
+        self._check_processing_allowed()
         client_id = getattr(self.client, 'id', None)
         rate_limiter.check(client_id, feature=self.feature)
         try:
@@ -277,6 +283,7 @@ class AIClient:
         Streaming responses are NOT cached. Logs once at end with totals.
         """
         chosen_model = self._model(model, deep=deep, fast=fast)
+        self._check_processing_allowed()
         client_id = getattr(self.client, 'id', None)
         rate_limiter.check(client_id, feature=self.feature)
 
@@ -343,6 +350,7 @@ class AIClient:
         responses are not cached by default (they're rarely repeated).
         """
         chosen_model = model or getattr(settings, 'AI_DEFAULT_MODEL', 'claude-sonnet-4-6')
+        self._check_processing_allowed()
         client_id = getattr(self.client, 'id', None)
         rate_limiter.check(client_id, feature=self.feature)
 

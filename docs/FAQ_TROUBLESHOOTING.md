@@ -79,8 +79,8 @@ All three use password `demo`: `admin@demo.local`, `agency@demo.local`,
 `enduser@demo.local`. The `/login` page has one-click buttons for each.
 
 ### Database errors / want PostgreSQL instead of SQLite
-Set `DATABASE_URL=postgres://user:pass@host:5432/dbname` (or the individual
-`DB_*` vars) and re-run `python manage.py migrate`.
+Set the individual `DB_*` vars (`DB_NAME`, `DB_USER`, `DB_PASSWORD`,
+`DB_HOST`, `DB_PORT`) and re-run `python manage.py migrate`.
 
 ### Frontend can't reach the API / CORS
 The React app expects the API at `http://localhost:8000` and runs on

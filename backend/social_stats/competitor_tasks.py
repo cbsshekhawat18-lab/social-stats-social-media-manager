@@ -44,7 +44,9 @@ DEFAULT_TIMEOUT = (8, 20)
 @shared_task(bind=True)
 def snapshot_competitors(self):
     """Daily fan-out: queue a snapshot job per Competitor."""
-    qs = Competitor.objects.only('id')
+    qs = Competitor.objects.filter(
+        client__is_active=True, client__is_processing_paused=False,
+    ).only('id')
     queued = 0
     for c in qs.iterator():
         snapshot_one_competitor.delay(c.id)

@@ -322,6 +322,22 @@ class ClientViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         return [IsAuthenticated()]
 
+    def perform_create(self, serializer):
+        try:
+            profile = self.request.user.profile
+            role = profile.role
+        except Exception:
+            role = None
+            profile = None
+        if role not in ('superadmin', 'staff', 'client'):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied()
+        client = serializer.save()
+        # Link new client to this user's profile if they don't have one yet
+        if role == 'client' and profile and not profile.client:
+            profile.client = client
+            profile.save()
+
     @action(detail=True, methods=['get'])
     def summary(self, request, pk=None):
         if not check_client_access(request, pk):
@@ -508,6 +524,20 @@ class CredentialViewSet(viewsets.ModelViewSet):
             qs = qs.filter(client_id=client_id)
         return qs
 
+    def _assert_client_allowed(self, serializer):
+        client = serializer.validated_data.get('client')
+        if client and client.id not in _agency_client_ids(self.request):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('You cannot manage credentials for this client.')
+
+    def perform_create(self, serializer):
+        self._assert_client_allowed(serializer)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        self._assert_client_allowed(serializer)
+        serializer.save()
+
 
 # ── Sync Logs ─────────────────────────────────────────────────────────────────
 class SyncLogViewSet(viewsets.ReadOnlyModelViewSet):
@@ -541,34 +571,36 @@ class GoalViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        from rest_framework.exceptions import PermissionDenied
         try:
-            profile = self.request.user.profile
-            role = profile.role
+            role = self.request.user.profile.role
         except Exception:
             role = None
-            profile = None
         if role not in ('superadmin', 'staff', 'client'):
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied()
-        client = serializer.save()
-        # Link new client to this user's profile if they don't have one yet
-        if role == 'client' and profile and not profile.client:
-            profile.client = client
-            profile.save()
+        # Tenant guard: the goal's client must be one this user can access.
+        client = serializer.validated_data.get('client')
+        if not client or client.id not in _agency_client_ids(self.request):
+            raise PermissionDenied('You cannot create goals for this client.')
+        serializer.save()
 
     def perform_update(self, serializer):
+        from rest_framework.exceptions import PermissionDenied
         try:
             profile = self.request.user.profile
             role = profile.role
         except Exception:
             role = None
             profile = None
+        # Never allow moving a goal to a client outside the user's tenant.
+        new_client = serializer.validated_data.get('client')
+        if new_client and new_client.id not in _agency_client_ids(self.request):
+            raise PermissionDenied('You cannot move goals to this client.')
         # Allow client to update their own record
-        if role == 'client' and profile and profile.client_id == serializer.instance.id:
+        if role == 'client' and profile and profile.client_id == serializer.instance.client_id:
             serializer.save()
             return
         if role not in ('superadmin', 'staff'):
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied()
         serializer.save()
 
@@ -863,11 +895,15 @@ class OnboardingViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         client_id = self.request.query_params.get('client')
         if client_id:
+            if not check_client_access(self.request, client_id):
+                return OnboardingStep.objects.none()
             return OnboardingStep.objects.filter(client_id=client_id)
         try:
             profile = self.request.user.profile
-            if profile.role in ('superadmin', 'staff'):
+            if profile.role == 'superadmin':
                 return OnboardingStep.objects.all()
+            if profile.role == 'staff':
+                return OnboardingStep.objects.filter(client__in=profile.assigned_clients.all())
             if profile.client_id:
                 return OnboardingStep.objects.filter(client_id=profile.client_id)
         except Exception:
@@ -892,19 +928,19 @@ class SharedReportViewSet(viewsets.ModelViewSet):
     serializer_class = SharedReportSerializer
 
     def get_queryset(self):
-        qs = SharedReport.objects.select_related('client', 'created_by')
+        qs = SharedReport.objects.select_related('client', 'created_by').filter(
+            client_id__in=_agency_client_ids(self.request)
+        )
         client_id = self.request.query_params.get('client')
         if client_id:
             qs = qs.filter(client_id=client_id)
-        else:
-            try:
-                if self.request.user.profile.role not in ('superadmin', 'staff'):
-                    qs = qs.filter(client=self.request.user.profile.client)
-            except Exception:
-                pass
         return qs.order_by('-created_at')
 
     def perform_create(self, serializer):
+        client = serializer.validated_data.get('client')
+        if not client or client.id not in _agency_client_ids(self.request):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('You cannot share reports for this client.')
         raw_password = self.request.data.get('password', '')
         instance = serializer.save(created_by=self.request.user)
         if raw_password:
@@ -1166,9 +1202,7 @@ class PublicLookupView(APIView):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gmb_info(request, client_id):
-    profile = request.user.profile
-    # Only allow access to own client or staff/admin
-    if profile.role == 'client' and profile.client_id != client_id:
+    if not check_client_access(request, client_id):
         return Response({'error': 'Forbidden'}, status=403)
     try:
         info = GMBBusinessInfo.objects.get(client_id=client_id)
@@ -1181,8 +1215,7 @@ def gmb_info(request, client_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def gmb_reviews(request, client_id):
-    profile = request.user.profile
-    if profile.role == 'client' and profile.client_id != client_id:
+    if not check_client_access(request, client_id):
         return Response({'error': 'Forbidden'}, status=403)
     qs = GMBReview.objects.filter(client_id=client_id).order_by('-published_at')
     # Optional pagination via ?page=1&page_size=20

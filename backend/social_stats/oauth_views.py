@@ -47,6 +47,16 @@ def _facebook_consumer_secret():
     return getattr(settings, 'FACEBOOK_SOCIAL_APP_SECRET', '') or settings.META_APP_SECRET
 
 
+def _oauth_state_valid(request) -> bool:
+    """OAuth CSRF guard: the callback's `state` must equal the one-time value
+    stored in this browser's session at /start. Pops the stored value so a
+    state can't be replayed."""
+    import hmac as _hmac
+    returned = request.GET.get('state', '') or ''
+    expected = request.session.pop('oauth_state', '') or ''
+    return bool(expected) and _hmac.compare_digest(returned, expected)
+
+
 def _save_credential(client_id, platform, defaults):
     # Connected-platform count is unlimited (free / open source) — no cap.
     PlatformCredential.objects.update_or_create(
@@ -245,6 +255,10 @@ def facebook_oauth_callback(request):
     if error:
         return _settings_redirect(client_id, '?error=facebook_denied')
 
+    if not _oauth_state_valid(request):
+        logger.warning("FB business callback rejected — state mismatch (client_id=%s)", client_id)
+        return _settings_redirect(client_id, '?error=oauth_state_mismatch')
+
     # Step 1: Short-lived token
     token_resp = requests.get(
         f"https://graph.facebook.com/{settings.META_API_VERSION}/oauth/access_token",
@@ -442,6 +456,10 @@ def google_oauth_callback(request):
     client_id = parts[0]
     platform  = parts[1] if len(parts) >= 3 else 'all'  # youtube | google_my_business | all
 
+    if not _oauth_state_valid(request):
+        logger.warning("Google callback rejected — state mismatch (client_id=%s)", client_id)
+        return _settings_redirect(client_id, '?error=oauth_state_mismatch')
+
     # Exchange code for tokens
     token_resp = requests.post(
         'https://oauth2.googleapis.com/token',
@@ -600,6 +618,10 @@ def linkedin_oauth_callback(request):
 
     client_id = state.split(':')[0]
 
+    if not _oauth_state_valid(request):
+        logger.warning("LinkedIn callback rejected — state mismatch (client_id=%s)", client_id)
+        return _settings_redirect(client_id, '?error=oauth_state_mismatch')
+
     # Exchange code for access token
     token_resp = requests.post(
         'https://www.linkedin.com/oauth/v2/accessToken',
@@ -689,6 +711,9 @@ def _refresh_facebook_token(cred):
 @api_view(['GET'])
 def oauth_status(request, client_id):
     """Return connection status for all platforms. Auto-refreshes expired Google tokens."""
+    from .views import check_client_access
+    if not check_client_access(request, client_id):
+        return Response({'error': 'Access denied'}, status=403)
     credentials = PlatformCredential.objects.filter(client_id=client_id)
     result = {}
     for platform, label in [

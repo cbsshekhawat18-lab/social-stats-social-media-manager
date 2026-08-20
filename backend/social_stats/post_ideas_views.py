@@ -58,6 +58,16 @@ CALENDAR_POST_TYPE_MAP = {
     'short':     'short',
 }
 
+def _client_access_denied(request, client_id):
+    """Shared tenant guard — mirrors views.check_client_access."""
+    try:
+        if request.user.profile.can_access_client(client_id):
+            return None
+    except Exception:
+        pass
+    return Response({'error': 'Access denied'}, status=403)
+
+
 def _check_rate_limit(client: Client, month: int, year: int) -> bool:
     count = PostIdeaSet.objects.filter(
         client=client, month=month, year=year
@@ -164,6 +174,9 @@ def _get_history(request):
             pass
     if not client_id:
         return Response({'error': 'client_id required'}, status=400)
+    denied = _client_access_denied(request, client_id)
+    if denied:
+        return denied
 
     qs = PostIdeaSet.objects.filter(client_id=client_id)
     if month:
@@ -235,6 +248,9 @@ def _generate_ideas(request):
     month = int(month)
     year  = int(year)
 
+    denied = _client_access_denied(request, client_id)
+    if denied:
+        return denied
     try:
         client = Client.objects.get(id=client_id)
     except Client.DoesNotExist:
@@ -372,10 +388,9 @@ def approve_all(request, pk):
     except PostIdeaSet.DoesNotExist:
         return Response({'error': 'Not found.'}, status=404)
 
-    # Basic auth check: staff/superadmin can approve all; clients only their own
-    profile = getattr(request.user, 'profile', None)
-    if profile and profile.role == 'client' and profile.client_id != idea_set.client_id:
-        return Response({'error': 'Forbidden.'}, status=403)
+    denied = _client_access_denied(request, idea_set.client_id)
+    if denied:
+        return denied
 
     updated = idea_set.post_ideas.filter(is_approved=False).update(is_approved=True)
     return Response({'approved': updated, 'total': idea_set.post_ideas.count()})
@@ -391,6 +406,10 @@ def update_idea(request, pk, idea_pk):
         idea     = idea_set.post_ideas.get(pk=idea_pk)
     except (PostIdeaSet.DoesNotExist, PostIdea.DoesNotExist):
         return Response({'error': 'Not found.'}, status=404)
+
+    denied = _client_access_denied(request, idea_set.client_id)
+    if denied:
+        return denied
 
     editable = ['topic', 'caption_hint', 'hashtag_hints', 'best_time', 'notes',
                 'day_of_week', 'scheduled_date', 'platform', 'post_type', 'is_approved']
@@ -437,9 +456,9 @@ def add_to_calendar(request, pk):
     except PostIdeaSet.DoesNotExist:
         return Response({'error': 'Not found.'}, status=404)
 
-    profile = getattr(request.user, 'profile', None)
-    if profile and profile.role == 'client' and profile.client_id != idea_set.client_id:
-        return Response({'error': 'Forbidden.'}, status=403)
+    denied = _client_access_denied(request, idea_set.client_id)
+    if denied:
+        return denied
 
     # Optional: specific idea_ids to add, else add all approved ones
     idea_ids     = request.data.get('idea_ids', None)

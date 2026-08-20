@@ -55,9 +55,9 @@ INITIAL_LOOKBACK_DAYS = 7
 @shared_task(bind=True)
 def sync_inbox_for_all_clients(self):
     """Beat-schedule entry. Walk every active credential and queue per-platform sync."""
-    creds = PlatformCredential.objects.filter(is_active=True).only(
-        'id', 'client_id', 'platform',
-    )
+    creds = PlatformCredential.objects.filter(
+        is_active=True, client__is_active=True, client__is_processing_paused=False,
+    ).only('id', 'client_id', 'platform')
     queued = 0
     by_platform = {
         'facebook':           sync_facebook_inbox,
@@ -308,12 +308,12 @@ def _upsert_yt_comment(client_id: int, thread_id: str, comment_id: Optional[str]
             push_event('inbox.new_message', client_id, {
                 'message_id':      msg.id,
                 'conversation_id': conv.id,
-                'platform':        platform,
+                'platform':        'youtube',
                 'preview':         conv.last_message_preview,
                 'sentiment':       conv.sentiment,
                 'contact_name':    conv.contact_name,
             })
-            _emit_message_received_event(client_id, msg, platform, is_new_thread=(conv.unread_count == 1))
+            _emit_message_received_event(client_id, msg, 'youtube', is_new_thread=(conv.unread_count == 1))
             return True
     return False
 

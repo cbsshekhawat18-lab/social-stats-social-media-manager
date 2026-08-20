@@ -26,6 +26,7 @@ from .models import UserProfile, EmailVerificationToken, PasswordResetToken
 from .social_auth_views import _make_jwt
 from .security.throttles import (
     SignupBurstThrottle, SignupDailyThrottle, PasswordResetThrottle,
+    ResendVerificationThrottle,
 )
 
 
@@ -169,6 +170,7 @@ def verify_email(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([ResendVerificationThrottle])
 def resend_verification(request):
     """POST { email } — resend verification email."""
     email = (request.data.get('email') or '').strip().lower()

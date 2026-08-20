@@ -38,9 +38,10 @@ def pinbot_webhook(request):
             return HttpResponse(challenge, content_type='text/plain')
         return Response(status=403)
 
+    import hmac as _hmac
     expected = getattr(settings, 'WHATSAPP_WEBHOOK_SECRET', '')
     secret = request.headers.get('X-Webhook-Secret', '') or request.query_params.get('secret', '')
-    if not expected or secret != expected:
+    if not expected or not _hmac.compare_digest(secret, expected):
         logger.warning('Pinbot webhook rejected: bad secret')
         return Response(status=403)
 

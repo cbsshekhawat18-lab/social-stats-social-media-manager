@@ -31,7 +31,7 @@ const DEMO_LOGINS = [
 const DEMO_PASSWORD = 'demo';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginMfa } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -40,6 +40,10 @@ export default function LoginPage() {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
+  // MFA second-factor step (set when /auth/login/ returns mfa_required)
+  const [mfaToken, setMfaToken] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [useBackupCode, setUseBackupCode] = useState(false);
 
   const params = new URLSearchParams(window.location.search);
   const urlError = params.get('error');
@@ -54,23 +58,33 @@ export default function LoginPage() {
     return Object.keys(e).length === 0;
   }
 
+  function navigateFor(user) {
+    if (nextPath) {
+      navigate(nextPath, { replace: true });
+    } else if (user.role === 'superadmin' || user.role === 'staff') {
+      navigate('/admin');
+    } else if (user.account_type === 'end_user') {
+      navigate('/u');
+    } else if (user.role === 'client' && !user.client_id) {
+      navigate('/pending');
+    } else if (user.role === 'client' && !user.onboarding_complete) {
+      navigate('/dashboard/onboarding');
+    } else {
+      navigate('/dashboard');
+    }
+  }
+
   async function doLogin(emailVal, passwordVal) {
     setLoading(true);
     try {
       const user = await login(emailVal, passwordVal, true);
-      if (nextPath) {
-        navigate(nextPath, { replace: true });
-      } else if (user.role === 'superadmin' || user.role === 'staff') {
-        navigate('/admin');
-      } else if (user.account_type === 'end_user') {
-        navigate('/u');
-      } else if (user.role === 'client' && !user.client_id) {
-        navigate('/pending');
-      } else if (user.role === 'client' && !user.onboarding_complete) {
-        navigate('/dashboard/onboarding');
-      } else {
-        navigate('/dashboard');
+      if (user?.mfa_required) {
+        // Password verified; a TOTP or backup code is still needed.
+        setMfaToken(user.mfa_token);
+        setMfaCode('');
+        return;
       }
+      navigateFor(user);
     } catch (err) {
       const detail = err?.response?.data?.detail;
       setServerError(
@@ -78,6 +92,30 @@ export default function LoginPage() {
           ? 'Please verify your email before signing in. Check your inbox for the verification link.'
           : 'Invalid email or password. Please try again.'
       );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleMfaSubmit(ev) {
+    ev.preventDefault();
+    setServerError('');
+    if (!mfaCode.trim()) return;
+    setLoading(true);
+    try {
+      const user = await loginMfa(
+        mfaToken,
+        useBackupCode ? { backupCode: mfaCode.trim() } : { code: mfaCode.trim() },
+      );
+      navigateFor(user);
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 401 && err?.response?.data?.error?.includes('expired')) {
+        setMfaToken('');
+        setServerError('Your verification session expired. Please sign in again.');
+      } else {
+        setServerError(useBackupCode ? 'Invalid backup code.' : 'Invalid verification code.');
+      }
     } finally {
       setLoading(false);
     }
@@ -96,6 +134,98 @@ export default function LoginPage() {
     setPassword(DEMO_PASSWORD);
     setAccepted(true);
     await doLogin(demoEmail, DEMO_PASSWORD);
+  }
+
+  // ── MFA second-factor step ────────────────────────────────────────────────
+  if (mfaToken) {
+    return (
+      <AuthLayout>
+        <div
+          style={{
+            background: 'var(--surface-card)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-xl)',
+            padding: 32,
+            boxShadow: 'var(--shadow-md)',
+          }}
+        >
+          <header style={{ marginBottom: 24 }}>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: 24,
+                fontWeight: 600,
+                letterSpacing: '-0.02em',
+                color: 'var(--text-primary)',
+              }}
+            >
+              Two-factor verification
+            </h1>
+            <p style={{ margin: '6px 0 0', fontSize: 14, color: 'var(--text-secondary)' }}>
+              {useBackupCode
+                ? 'Enter one of your backup codes.'
+                : 'Enter the 6-digit code from your authenticator app.'}
+            </p>
+          </header>
+
+          <form onSubmit={handleMfaSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Input
+              label={useBackupCode ? 'Backup code' : 'Verification code'}
+              type="text"
+              inputMode={useBackupCode ? 'text' : 'numeric'}
+              autoComplete="one-time-code"
+              value={mfaCode}
+              onChange={(e) => setMfaCode(e.target.value)}
+              placeholder={useBackupCode ? 'xxxx-xxxx' : '123456'}
+              size="lg"
+              autoFocus
+            />
+
+            {serverError && (
+              <div
+                role="alert"
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 8,
+                  padding: '10px 12px',
+                  background: 'var(--danger-bg)',
+                  border: '1px solid var(--danger)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--danger)',
+                  fontSize: 13,
+                  lineHeight: 1.45,
+                }}
+              >
+                <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{serverError}</span>
+              </div>
+            )}
+
+            <Button type="submit" size="lg" iconRight={ArrowRight} fullWidth loading={loading}>
+              Verify
+            </Button>
+          </form>
+
+          <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+            <button
+              type="button"
+              onClick={() => { setUseBackupCode((v) => !v); setMfaCode(''); setServerError(''); }}
+              style={{ background: 'none', border: 0, padding: 0, color: 'var(--text-link)', fontWeight: 500, cursor: 'pointer' }}
+            >
+              {useBackupCode ? 'Use authenticator code' : 'Use a backup code'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMfaToken(''); setMfaCode(''); setServerError(''); }}
+              style={{ background: 'none', border: 0, padding: 0, color: 'var(--text-secondary)', cursor: 'pointer' }}
+            >
+              Back to sign in
+            </button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
   }
 
   return (

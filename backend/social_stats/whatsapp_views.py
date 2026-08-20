@@ -453,18 +453,27 @@ def _resolve_client_id_for_view(request) -> Optional[int]:
     return profile.client_id
 
 
+def _is_superadmin(request) -> bool:
+    try:
+        return request.user.profile.role == 'superadmin'
+    except Exception:
+        return False
+
+
 class WhatsAppDashboardView(APIView):
     def get(self, request):
         client_id = _resolve_client_id_for_view(request)
         qs = WhatsAppMessage.objects.all()
         if client_id:
             qs = qs.filter(client_id=client_id)
-        else:
+        elif not _is_superadmin(request):
             try:
                 if request.user.profile.role == 'staff':
                     qs = qs.filter(client__in=request.user.profile.assigned_clients.all())
+                else:
+                    qs = qs.none()
             except Exception:
-                pass
+                qs = qs.none()
 
         today = timezone.now().date()
         week_ago  = today - timedelta(days=7)
@@ -484,6 +493,15 @@ class WhatsAppDashboardView(APIView):
         active_campaigns_qs = WhatsAppCampaign.objects.filter(status__in=('scheduled', 'running'))
         if client_id:
             active_campaigns_qs = active_campaigns_qs.filter(client_id=client_id)
+        elif not _is_superadmin(request):
+            try:
+                if request.user.profile.role == 'staff':
+                    active_campaigns_qs = active_campaigns_qs.filter(
+                        client__in=request.user.profile.assigned_clients.all())
+                else:
+                    active_campaigns_qs = active_campaigns_qs.none()
+            except Exception:
+                active_campaigns_qs = active_campaigns_qs.none()
         active_campaigns = active_campaigns_qs.count()
 
         # Daily timeseries for the last 30 days
@@ -516,16 +534,49 @@ class WhatsAppInboxView(APIView):
         contact_qs = WhatsAppContact.objects.all()
         if client_id:
             contact_qs = contact_qs.filter(client_id=client_id)
+        elif not _is_superadmin(request):
+            try:
+                if request.user.profile.role == 'staff':
+                    contact_qs = contact_qs.filter(
+                        client__in=request.user.profile.assigned_clients.all())
+                else:
+                    contact_qs = contact_qs.none()
+            except Exception:
+                contact_qs = contact_qs.none()
 
         # Only include contacts with at least one message
-        contacts = (contact_qs.filter(messages__isnull=False)
-                              .distinct()
-                              .order_by('-last_message_at', '-last_inbound_at')[:200])
+        contacts = list(
+            contact_qs.filter(messages__isnull=False)
+                      .distinct()
+                      .order_by('-last_message_at', '-last_inbound_at')[:200]
+        )
+
+        # Batch the per-contact lookups (was 2 queries per contact):
+        # one aggregate for unread counts + a sliced prefetch for last message.
+        contact_ids = [c.id for c in contacts]
+        unread_by_contact = dict(
+            WhatsAppMessage.objects
+            .filter(contact_id__in=contact_ids, direction='inbound', read_at__isnull=True)
+            .values_list('contact_id')
+            .annotate(n=Count('id'))
+        )
+        # Latest inbound/outbound message per contact in one window-function
+        # query (Django 4.2 sliced prefetch).
+        from django.db.models import Prefetch
+        latest_qs = WhatsAppMessage.objects.order_by('-created_at')[:1]
+        contacts_with_latest = (
+            WhatsAppContact.objects.filter(id__in=contact_ids)
+            .prefetch_related(Prefetch('messages', queryset=latest_qs, to_attr='latest_only'))
+        )
+        last_by_contact = {
+            c.id: (c.latest_only[0] if c.latest_only else None)
+            for c in contacts_with_latest
+        }
 
         results = []
         for c in contacts:
-            last = c.messages.order_by('-created_at').first()
-            unread = c.messages.filter(direction='inbound', read_at__isnull=True).count()
+            last = last_by_contact.get(c.id)
+            unread = unread_by_contact.get(c.id, 0)
             results.append({
                 'contact':       WhatsAppContactSummarySerializer(c).data,
                 'last_message': {
@@ -569,7 +620,10 @@ class WhatsAppInboxThreadView(APIView):
             return Response({'error': 'contact not found'}, status=404)
 
         # Tenant guard
-        if client_id is not None and contact.client_id != client_id:
+        if client_id is not None:
+            if contact.client_id != client_id:
+                return Response({'error': 'access denied'}, status=403)
+        elif not _is_superadmin(request):
             return Response({'error': 'access denied'}, status=403)
 
         msgs = (WhatsAppMessage.objects
@@ -597,7 +651,10 @@ class WhatsAppSendDirectView(APIView):
             return Response({'error': 'contact not found'}, status=404)
 
         client_id = _resolve_client_id_for_view(request)
-        if client_id is not None and contact.client_id != client_id:
+        if client_id is not None:
+            if contact.client_id != client_id:
+                return Response({'error': 'access denied'}, status=403)
+        elif not _is_superadmin(request):
             return Response({'error': 'access denied'}, status=403)
 
         if msg_type != 'template' and not contact.within_24h_window:

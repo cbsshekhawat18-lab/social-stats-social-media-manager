@@ -149,9 +149,14 @@ class BestTimeToPostTests(TestCase):
             self.assertIn('day_of_week', s)
 
     def test_uses_historical_buckets(self):
-        # Seed 4 posts: 3 on Wed-12pm with high engagement, 1 on Mon-9am
-        wed_12 = datetime(2026, 5, 6, 12, 0, tzinfo=dt_tz.utc)   # Wed
-        mon_9  = datetime(2026, 5, 4, 9, 0, tzinfo=dt_tz.utc)    # Mon
+        # Seed 4 posts: 3 on Wed-12pm with high engagement, 1 on Mon-9am.
+        # Dates are computed relative to now so they always fall inside the
+        # endpoint's rolling 90-day window (fixed dates rot out of it).
+        now = timezone.now()
+        days_since_wed = (now.weekday() - 2) % 7 or 7   # most recent past Wednesday
+        wed = (now - timedelta(days=days_since_wed + 7))  # ≥1 week back, well inside 90d
+        wed_12 = wed.replace(hour=12, minute=0, second=0, microsecond=0)
+        mon_9  = (wed_12 - timedelta(days=2)).replace(hour=9)   # the Monday before
         for i in range(3):
             PostMetric.objects.create(
                 client=self.client_obj, platform='facebook', post_id=f'p{i}',

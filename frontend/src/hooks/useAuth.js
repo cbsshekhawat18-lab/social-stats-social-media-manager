@@ -7,7 +7,7 @@
  *  Released under the MIT License — see LICENSE. Keep this notice.
  * ========================================================================== */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, mfaAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -29,6 +29,26 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password, termsAccepted) => {
     const res = await authAPI.login(email, password, termsAccepted);
+    // MFA handshake: the backend returns {mfa_required, mfa_token} with no
+    // token pair. Surface it to the caller instead of poisoning storage.
+    if (res.data?.mfa_required) {
+      return { mfa_required: true, mfa_token: res.data.mfa_token };
+    }
+    localStorage.setItem('access_token',  res.data.access);
+    localStorage.setItem('refresh_token', res.data.refresh);
+    const me = await authAPI.me();
+    setUser(me.data);
+    return me.data;
+  };
+
+  // Second factor: exchange the mfa_token + TOTP/backup code for real tokens.
+  const loginMfa = async (mfaToken, { code, backupCode } = {}) => {
+    const res = await mfaAPI.login({
+      mfa_token: mfaToken,
+      ...(code ? { code } : {}),
+      ...(backupCode ? { backup_code: backupCode } : {}),
+      terms_accepted: true,
+    });
     localStorage.setItem('access_token',  res.data.access);
     localStorage.setItem('refresh_token', res.data.refresh);
     const me = await authAPI.me();
@@ -76,7 +96,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, login, logout, can,
+      user, loading, login, loginMfa, logout, can,
       refreshUser, refreshAuth, isPending,
       accountType, isEndUser, isAgency,
     }}>

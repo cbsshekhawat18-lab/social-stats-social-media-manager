@@ -52,6 +52,16 @@ PLATFORM_RULES = {
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
+def _client_access_denied(request, client_id):
+    """Shared tenant guard — mirrors views.check_client_access."""
+    try:
+        if request.user.profile.can_access_client(client_id):
+            return None
+    except Exception:
+        pass
+    return Response({'error': 'Access denied'}, status=403)
+
+
 def _cache_key(niche: str, location: str, platform: str) -> str:
     raw = json.dumps(
         {'niche': niche.lower().strip(), 'location': location.lower().strip(), 'platform': platform},
@@ -163,6 +173,9 @@ def _get_history(request):
             pass
     if not client_id:
         return Response({'error': 'client_id required'}, status=400)
+    denied = _client_access_denied(request, client_id)
+    if denied:
+        return denied
 
     qs = HashtagSet.objects.filter(client_id=client_id).order_by('-generated_at')[:30]
     return Response([_serialize_hashtag_set(hs) for hs in qs])
@@ -193,6 +206,9 @@ def _generate_hashtags(request):
         return Response({'error': 'client_id is required'}, status=400)
     if not platform:
         return Response({'error': 'platform is required'}, status=400)
+    denied = _client_access_denied(request, client_id)
+    if denied:
+        return denied
 
     try:
         client = Client.objects.get(id=client_id)
@@ -299,14 +315,9 @@ def save_set(request, pk):
         return Response({'error': 'HashtagSet not found'}, status=404)
 
     # Verify ownership
-    try:
-        profile = request.user.profile
-        is_admin = profile.role in ('superadmin', 'staff')
-    except Exception:
-        is_admin = False
-
-    if not is_admin and hs.client_id != getattr(getattr(request.user, 'profile', None), 'client_id', None):
-        return Response({'error': 'Not authorized'}, status=403)
+    denied = _client_access_denied(request, hs.client_id)
+    if denied:
+        return denied
 
     new_entry = {
         'name':       set_name,
@@ -339,6 +350,9 @@ def get_saved_sets(request):
             pass
     if not client_id:
         return Response({'error': 'client_id required'}, status=400)
+    denied = _client_access_denied(request, client_id)
+    if denied:
+        return denied
 
     qs = HashtagSet.objects.filter(client_id=client_id).exclude(saved_sets=[])
     result = []

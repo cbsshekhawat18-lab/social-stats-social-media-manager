@@ -112,6 +112,16 @@ class UnifiedPostViewSet(TenantScopedMixin, viewsets.ModelViewSet):
             return approval_pending_response(ctx['approval'])
         return None
 
+    def _processing_paused_response(self, client):
+        """423 Locked when the workspace restricted processing (GDPR/DPDP)."""
+        if client is not None and getattr(client, 'is_processing_paused', False):
+            return Response(
+                {'detail': 'Data processing is paused for this workspace. '
+                           'Resume processing in Privacy settings to compose or publish.'},
+                status=423,
+            )
+        return None
+
     def create(self, request, *args, **kwargs):
         denial = self._gate_or_pending(
             'draft_posts',
@@ -121,6 +131,12 @@ class UnifiedPostViewSet(TenantScopedMixin, viewsets.ModelViewSet):
         )
         if denial is not None:
             return denial
+        client_id = self.resolved_client_id()
+        if client_id:
+            from .models import Client
+            paused = self._processing_paused_response(Client.objects.filter(id=client_id).first())
+            if paused is not None:
+                return paused
         return super().create(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
@@ -146,6 +162,9 @@ class UnifiedPostViewSet(TenantScopedMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def publish_now(self, request, pk=None):
         post = self.get_object()
+        paused = self._processing_paused_response(post.client)
+        if paused is not None:
+            return paused
         if post.status not in ('draft', 'scheduled', 'failed', 'partial', 'pending_approval'):
             return Response(
                 {'detail': f'Cannot publish a post in status {post.status}'},
@@ -200,6 +219,9 @@ class UnifiedPostViewSet(TenantScopedMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def schedule(self, request, pk=None):
         post = self.get_object()
+        paused = self._processing_paused_response(post.client)
+        if paused is not None:
+            return paused
         when = request.data.get('scheduled_at')
         if not when:
             return Response({'detail': 'scheduled_at is required (ISO 8601)'}, status=400)

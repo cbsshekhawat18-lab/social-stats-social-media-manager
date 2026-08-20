@@ -75,10 +75,15 @@ jobs:
       - name: Run Django tests
         working-directory: backend
         env:
-          # Pointing at the service containers above. settings.py reads these
-          # via os.environ when present.
-          DATABASE_URL:       postgres://socialstats:socialstats@localhost:5432/socialstats_test
-          REDIS_URL:          redis://localhost:6379/0
+          # Pointing at the service containers above. settings.py reads the
+          # discrete DB_* vars (it has no DATABASE_URL parser).
+          DB_NAME:            socialstats_test
+          DB_USER:            socialstats
+          DB_PASSWORD:        socialstats
+          DB_HOST:            localhost
+          DB_PORT:            "5432"
+          CELERY_BROKER_URL:  redis://localhost:6379/0
+          CELERY_RESULT_BACKEND: redis://localhost:6379/0
           DJANGO_SETTINGS_MODULE: dashboard.settings
           SECRET_KEY:         test-secret-not-for-prod
           DEBUG:              "False"

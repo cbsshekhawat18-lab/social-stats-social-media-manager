@@ -43,8 +43,7 @@ OAuth tokens and manual credentials are encrypted at rest using these keys.
 
 | Variable | Required | Default | What it does |
 |---|---|---|---|
-| `DATABASE_URL` | No (dev) / **Yes (prod)** | SQLite | Full DB URL, e.g. `postgres://user:pass@host:5432/dbname`. If unset, dev uses SQLite. |
-| `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_HOST` / `DB_PORT` | No | `postgres` / `5432` etc. | Alternative to `DATABASE_URL` — set individual Postgres connection parts. |
+| `DB_NAME` / `DB_USER` / `DB_PASSWORD` / `DB_HOST` / `DB_PORT` | No (dev) / **Yes (prod)** | SQLite when `DB_NAME` unset | Postgres connection parts. If `DB_NAME` is unset, dev falls back to SQLite. (There is no `DATABASE_URL` parser.) |
 
 ## Redis / Celery
 

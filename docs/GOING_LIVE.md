@@ -75,7 +75,7 @@ These are the scopes Social Stats requests in code — apply for exactly these:
 
 - [ ] `DEBUG=False`
 - [ ] `ALLOWED_HOSTS` set to your real domain(s)
-- [ ] `DATABASE_URL` points at PostgreSQL (not SQLite)
+- [ ] `DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT` point at PostgreSQL (not SQLite)
 - [ ] `FIELD_ENCRYPTION_KEYS` set to a real Fernet key (stored in a secrets manager)
 - [ ] `SECRET_KEY` set to a strong random value
 - [ ] `FRONTEND_URL` set to your HTTPS domain

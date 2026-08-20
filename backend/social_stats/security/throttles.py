@@ -90,6 +90,25 @@ class PasswordResetThrottle(SimpleRateThrottle):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Resend-verification — 3/hour per (email, ip); stops inbox flooding
+# ─────────────────────────────────────────────────────────────────────────────
+class ResendVerificationThrottle(SimpleRateThrottle):
+    """Caps verification-email resends at 3/hour per (lowercased-email, ip)
+    so the endpoint can't be used to flood a victim's inbox."""
+    scope = 'resend_verification'
+    rate  = '3/hour'
+
+    def get_cache_key(self, request, view):
+        data = getattr(request, 'data', None) or getattr(request, 'POST', None) or {}
+        email = (data.get('email') or '').strip().lower()
+        ip    = _client_ip(request) or ''
+        if not email and not ip:
+            return None
+        ident = f'{email}|{ip}'
+        return self.cache_format % {'scope': self.scope, 'ident': ident}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # MFA verify — 5/min per user (mfa_token introspection)
 # ─────────────────────────────────────────────────────────────────────────────
 class MFAVerifyThrottle(SimpleRateThrottle):

@@ -145,8 +145,9 @@ class Client(models.Model):
     bot_spam_threshold         = models.IntegerField(default=5)      # auto-end at this score
 
     # ── — GDPR/DPDP "right to restrict processing" toggle ────────────
-    # When True, sync tasks skip this client + AI features + composer return 423.
-    # The user can still log in to view existing data.
+    # When True: batch sync fan-outs skip this client, AI calls fail with a
+    # clear error (503 via AIError), and composer create/schedule/publish
+    # return 423. The user can still log in to view existing data.
     is_processing_paused = models.BooleanField(default=False)
 
     def __str__(self):

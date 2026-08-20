@@ -798,7 +798,8 @@ def check_alerts():
 def sync_all(platform):
     from .models import PlatformCredential
     ids = PlatformCredential.objects.filter(
-        platform=platform, is_active=True, client__is_active=True
+        platform=platform, is_active=True, client__is_active=True,
+        client__is_processing_paused=False,
     ).values_list('client_id', flat=True)
     task_map = {
         'facebook':           sync_facebook,

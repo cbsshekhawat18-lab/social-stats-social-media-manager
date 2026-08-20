@@ -35,7 +35,7 @@ cd frontend && npm install && npm start
 ## Tests must stay green
 
 ```bash
-# Backend (267 tests)
+# Backend (Django test suite)
 cd backend && python manage.py test social_stats
 
 # Frontend (Jest)

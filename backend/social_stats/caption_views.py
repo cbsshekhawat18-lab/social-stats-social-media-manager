@@ -48,6 +48,16 @@ DAILY_RATE_LIMIT = 10   # requests per client per day
 CACHE_TTL = 3600        # 1 hour cache for identical inputs
 
 
+def _client_access_denied(request, client_id):
+    """Shared tenant guard — mirrors views.check_client_access."""
+    try:
+        if request.user.profile.can_access_client(client_id):
+            return None
+    except Exception:
+        pass
+    return Response({'error': 'Access denied'}, status=403)
+
+
 def _cache_key(data: dict) -> str:
     """Stable cache key based on request inputs."""
     raw = json.dumps({k: data.get(k) for k in sorted(['topic', 'tone', 'post_type', 'platforms', 'keywords', 'call_to_action'])}, sort_keys=True)
@@ -119,6 +129,9 @@ def _get_history(request):
             pass
     if not client_id:
         return Response({'error': 'client_id required'}, status=400)
+    denied = _client_access_denied(request, client_id)
+    if denied:
+        return denied
 
     qs = CaptionRequest.objects.filter(client_id=client_id).order_by('-created_at')[:20]
     data = []
@@ -161,6 +174,9 @@ def _generate_caption(request):
         return Response({'error': 'topic is required'}, status=400)
     if not platforms:
         return Response({'error': 'at least one platform is required'}, status=400)
+    denied = _client_access_denied(request, client_id)
+    if denied:
+        return denied
 
     try:
         client = Client.objects.get(id=client_id)

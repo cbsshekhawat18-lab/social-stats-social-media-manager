@@ -126,3 +126,47 @@ jobs:
         env:
           CI: "true"
         run: npm test
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Docker — build both images and boot the compose stack end-to-end
+  # ───────────────────────────────────────────────────────────────────────
+  docker:
+    name: Docker — compose stack boots
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build and start the stack
+        run: docker compose up -d --build
+
+      - name: Wait for backend health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/api/health/services/ > /dev/null 2>&1; then
+              echo "backend healthy"; exit 0
+            fi
+            sleep 5
+          done
+          echo "backend never became healthy"; docker compose logs backend | tail -50; exit 1
+
+      - name: Frontend serves the SPA through nginx
+        run: |
+          curl -fsS http://localhost:3000/ | grep -qi "<title>" || { docker compose logs frontend | tail -30; exit 1; }
+          # API reachable through the same-origin proxy (401 = auth wall, which is correct)
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/auth/me/)
+          [ "$code" = "401" ] || { echo "expected 401 from /api/auth/me/, got $code"; exit 1; }
+
+      - name: Seed demo data inside the container
+        run: docker compose exec -T backend python manage.py demo_setup
+
+      - name: Worker and beat are running
+        run: |
+          docker compose ps --format '{{.Service}} {{.State}}' | tee /tmp/ps.txt
+          grep -q "worker running" /tmp/ps.txt
+          grep -q "beat running" /tmp/ps.txt
+
+      - name: Teardown
+        if: always()
+        run: docker compose down -v

@@ -48,6 +48,12 @@ function wsBaseURL() {
     const proto = u.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${proto}//${u.host}`;
   } catch {
+    // Relative REACT_APP_API_URL (e.g. "/api" behind a same-origin proxy):
+    // connect the socket to the current origin so /ws/ hits the same proxy.
+    if (typeof window !== 'undefined' && window.location?.host) {
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${proto}//${window.location.host}`;
+    }
     return 'ws://localhost:8000';
   }
 }

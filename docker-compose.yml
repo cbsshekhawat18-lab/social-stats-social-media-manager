@@ -1,0 +1,115 @@
+# ============================================================================
+#  Social Stats — one-command self-hosted stack
+#
+#      docker compose up -d
+#      docker compose exec backend python manage.py demo_setup   # optional demo data
+#
+#  App:            http://localhost:3000          (React SPA + API proxy)
+#  Django admin:   http://localhost:8000/admin/   (backend service, direct)
+#
+#  Configuration: copy backend/.env.example → .env.docker and set at least
+#  SECRET_KEY (and ANTHROPIC_API_KEY for AI). DB/Redis/host settings are
+#  provided below and override the file. See docs/GETTING_STARTED.md.
+# ============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: socialstats
+      POSTGRES_USER: socialstats
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-socialstats}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U socialstats"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file:
+      - path: .env.docker
+        required: false
+    environment: &backend-env
+      DEBUG: "False"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+      SECRET_KEY: "${SECRET_KEY:-change-me-generate-a-real-secret-key}"
+      DB_NAME: socialstats
+      DB_USER: socialstats
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-socialstats}
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      CHANNEL_LAYERS_REDIS_URL: redis://redis:6379/1
+      # Single-origin behind the frontend nginx → plain HTTP inside the network
+      SECURE_SSL_REDIRECT: "False"
+      SESSION_COOKIE_SECURE: "False"
+      CSRF_COOKIE_SECURE: "False"
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             daphne -b 0.0.0.0 -p 8000 dashboard.asgi:application"
+    volumes:
+      - media:/app/media
+    ports:
+      - "127.0.0.1:8000:8000"   # direct API + Django admin access
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health/services/"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  worker:
+    build: ./backend
+    env_file:
+      - path: .env.docker
+        required: false
+    environment: *backend-env
+    command: celery -A dashboard worker -l info
+    volumes:
+      - media:/app/media
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  beat:
+    build: ./backend
+    env_file:
+      - path: .env.docker
+        required: false
+    environment: *backend-env
+    command: celery -A dashboard beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    volumes:
+      - media:/srv/media:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  media:

@@ -54,6 +54,9 @@ MIDDLEWARE = [
     'social_stats.security.middleware.RequestIDMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    # Serves collected static files (Django admin CSS/JS) from the app
+    # process — needed when daphne runs without a static-serving proxy.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'social_stats.security.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

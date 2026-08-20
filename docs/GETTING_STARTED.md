@@ -12,7 +12,7 @@ keys are required for this walkthrough.
 
 | Tool | Version | Notes |
 |---|---|---|
-| Python | 3.11+ | backend |
+| Python | 3.11–3.12 | backend (Django 4.2 does not support 3.13+) |
 | Node.js | 18+ | frontend |
 | Redis | any recent | required for Celery (background sync + notifications) |
 | Anthropic API key | optional | only for AI features — everything else runs without it |
@@ -27,6 +27,19 @@ sudo apt install redis-server && sudo systemctl start redis
 # Docker
 docker run -d -p 6379:6379 redis
 ```
+
+### Prefer Docker?
+
+If you have Docker, the entire stack (PostgreSQL, Redis, API, Celery
+worker + beat, frontend) runs with one command from the repo root:
+
+```bash
+docker compose up -d
+docker compose exec backend python manage.py demo_setup   # demo data
+# app: http://localhost:3000
+```
+
+The rest of this guide covers the manual (non-Docker) path.
 
 ## 2. Clone the repository
 

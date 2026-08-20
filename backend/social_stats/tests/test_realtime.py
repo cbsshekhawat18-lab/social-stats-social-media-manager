@@ -54,7 +54,7 @@ class ConsumerTests(TestCase):
             connected, code = await comm.connect()
             self.assertFalse(connected)
             self.assertEqual(code, 4401)
-        asyncio.get_event_loop().run_until_complete(run())
+        asyncio.run(run())
 
     def test_authenticated_connection_joins_tenant_group(self):
         client_obj = _client_factory()
@@ -79,7 +79,7 @@ class ConsumerTests(TestCase):
             self.assertEqual(pong['type'], 'pong')
 
             await comm.disconnect()
-        asyncio.get_event_loop().run_until_complete(run())
+        asyncio.run(run())
 
     def test_push_event_reaches_subscribers(self):
         client_obj = _client_factory()
@@ -114,7 +114,7 @@ class ConsumerTests(TestCase):
             self.assertEqual(event['data']['preview'], 'hello')
 
             await comm.disconnect()
-        asyncio.get_event_loop().run_until_complete(run())
+        asyncio.run(run())
 
     def test_push_event_helper_runs_without_raising(self):
         """Verify the sync push_event() helper itself works in sync code."""
@@ -139,7 +139,7 @@ class ConsumerTests(TestCase):
             connected, code = await comm.connect()
             self.assertFalse(connected)
             self.assertEqual(code, 4403)
-        asyncio.get_event_loop().run_until_complete(run())
+        asyncio.run(run())
 
 
 # ══════════════════════════════════════════════════════════════════════

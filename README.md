@@ -181,10 +181,29 @@ for the full picture.
 
 ---
 
-## Self-hosting / installation (local dev)
+## Self-hosting / installation
 
-You'll need: Python 3.11+, Node 18+, Redis, and an Anthropic API key for AI
-features (everything else works without external credentials).
+### Option A — Docker (recommended for self-hosting)
+
+One command brings up the full stack — PostgreSQL, Redis, the Django/Channels
+API, a Celery worker + beat, and the React app served by nginx on one origin:
+
+```bash
+docker compose up -d
+# optional: seed 3 demo accounts + 90 days of analytics
+docker compose exec backend python manage.py demo_setup
+# app:          http://localhost:3000
+# Django admin: http://localhost:8000/admin/
+```
+
+Set at least `SECRET_KEY` (and `ANTHROPIC_API_KEY` for AI) in a `.env.docker`
+file at the repo root — see `backend/.env.example` for every variable.
+
+### Option B — manual (local dev)
+
+You'll need: Python 3.11–3.12 (Django 4.2 does not support 3.13+), Node 18+,
+Redis, and an Anthropic API key for AI features (everything else works
+without external credentials).
 
 ### Backend
 

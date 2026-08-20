@@ -189,12 +189,19 @@ One command brings up the full stack — PostgreSQL, Redis, the Django/Channels
 API, a Celery worker + beat, and the React app served by nginx on one origin:
 
 ```bash
-docker compose up -d
+# Pull the prebuilt multi-arch images (amd64 + arm64) and start:
+docker compose pull && docker compose up -d
+# — or build from source instead: docker compose up -d --build
+
 # optional: seed 3 demo accounts + 90 days of analytics
 docker compose exec backend python manage.py demo_setup
 # app:          http://localhost:3000
 # Django admin: http://localhost:8000/admin/
 ```
+
+Images are published to GHCR on every release:
+`ghcr.io/cbsshekhawat18-lab/social-stats-backend` and
+`ghcr.io/cbsshekhawat18-lab/social-stats-frontend` (`:latest` + semver tags).
 
 Set at least `SECRET_KEY` (and `ANTHROPIC_API_KEY` for AI) in a `.env.docker`
 file at the repo root — see `backend/.env.example` for every variable.

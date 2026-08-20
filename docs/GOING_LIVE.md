@@ -73,6 +73,11 @@ These are the scopes Social Stats requests in code — apply for exactly these:
 
 ## Production environment checklist
 
+> Self-hosting with Docker? `docker compose up -d` from the repo root runs the
+> full stack (PostgreSQL, Redis, API, Celery worker + beat, frontend) — put
+> your production values in `.env.docker` and front it with your own
+> TLS-terminating proxy (see `infra/nginx/` for a reference config).
+
 - [ ] `DEBUG=False`
 - [ ] `ALLOWED_HOSTS` set to your real domain(s)
 - [ ] `DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT` point at PostgreSQL (not SQLite)

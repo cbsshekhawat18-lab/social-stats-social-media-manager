@@ -1,3 +1,8 @@
+---
+title: "Getting Started — Run Social Stats Locally"
+description: "Install and run the open-source Social Stats social media management platform on your own machine in minutes — Docker one-liner or manual Django + React setup, with seeded demo data and no external API keys required."
+---
+
 # Getting Started — Run Social Stats Locally
 
 This guide takes you from zero to a running **Social Stats** instance on your own

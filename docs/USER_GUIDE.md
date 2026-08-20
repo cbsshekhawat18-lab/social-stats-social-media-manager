@@ -1,3 +1,8 @@
+---
+title: "User Guide — Using Social Stats Day to Day"
+description: "How agencies and teams use Social Stats: composer and scheduler, content calendar, analytics dashboards, unified inbox, AI assistant, WhatsApp campaigns, and client workspaces."
+---
+
 # User Guide
 
 How to use Social Stats once it's running. This tour uses the three demo accounts

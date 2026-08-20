@@ -1,0 +1,36 @@
+# Social Stats
+
+> Social Stats is an open-source, self-hostable social media management &
+> marketing platform (MIT license) — an alternative to Hootsuite, Buffer and
+> Sprout Social. Built with Django + React, it unifies a post scheduler,
+> content calendar, cross-platform analytics (Facebook, Instagram, YouTube,
+> LinkedIn, Google Business Profile), a unified inbox, a click-to-WhatsApp
+> bot builder, CRM/leads, agency workspaces, and an AI assistant powered by
+> the Anthropic API.
+
+Key facts:
+- Repository: https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager
+- License: MIT — free to self-host, no feature gating
+- Quick start: `docker compose pull && docker compose up -d` (prebuilt
+  multi-arch images on GHCR), or manual setup with Python 3.11–3.12 + Node 18
+- Demo data: `docker compose exec backend python manage.py demo_setup`
+- Stack: Django 4.2, Django REST Framework, Channels (WebSockets), Celery +
+  Redis, PostgreSQL/SQLite, React 18, React Query, Zustand
+
+## Documentation
+
+- [Overview](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/): what Social Stats does and who it's for
+- [Getting Started](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/GETTING_STARTED): install and run locally (Docker or manual)
+- [Comparison](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/COMPARISON): Social Stats vs Hootsuite / Buffer / Sprout Social
+- [User Guide](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/USER_GUIDE): day-to-day usage
+- [Configuration](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/CONFIGURATION): every environment variable
+- [Connect Accounts](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/CONNECT_ACCOUNTS): Facebook, Instagram, YouTube, LinkedIn, Google Business
+- [Connect WhatsApp](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/CONNECT_WHATSAPP): WhatsApp Business + bot builder
+- [Going Live](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/GOING_LIVE): production checklist and OAuth app review
+- [FAQ & Troubleshooting](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/FAQ_TROUBLESHOOTING)
+
+## Optional
+
+- [Changelog / Releases](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/releases)
+- [Contributing](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/CONTRIBUTING.md)
+- [Security policy](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/SECURITY.md)

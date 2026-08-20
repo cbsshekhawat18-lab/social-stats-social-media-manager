@@ -1,3 +1,8 @@
+---
+title: "Social Stats vs Hootsuite, Buffer & Sprout Social"
+description: "A factual comparison of open-source, self-hosted Social Stats against closed-source SaaS social media management tools — pricing, data ownership, features, and when each is the right choice."
+---
+
 # How Social Stats Compares
 
 A fair, factual comparison between **Social Stats** (open-source, self-hosted) and

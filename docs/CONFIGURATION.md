@@ -1,3 +1,8 @@
+---
+title: "Configuration Reference — Every Environment Variable"
+description: "Every environment variable Social Stats reads: database, Redis/Celery, OAuth apps for Facebook, Instagram, YouTube, LinkedIn and Google Business, WhatsApp, email, AI models, and security settings."
+---
+
 # Configuration Reference
 
 Every variable in [`backend/.env.example`](../backend/.env.example), what it does,

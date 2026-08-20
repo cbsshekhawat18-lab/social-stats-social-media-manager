@@ -1,3 +1,8 @@
+---
+title: "Going Live — Production Checklist & Platform App Review"
+description: "Deploy Social Stats to production: environment checklist, TLS, and the exact OAuth scopes plus app-review steps for Meta, Google and LinkedIn."
+---
+
 # Going Live — Platform App Review & Production Checklist
 
 To move from the Manual Setup wizard (users paste their own tokens) to **Quick

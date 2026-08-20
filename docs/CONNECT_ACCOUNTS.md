@@ -1,3 +1,8 @@
+---
+title: "Connect Social Accounts — Facebook, Instagram, YouTube, LinkedIn, Google Business"
+description: "How to connect Facebook, Instagram, YouTube, LinkedIn and Google Business Profile accounts to self-hosted Social Stats — OAuth Quick Connect or the Manual Setup wizard with your own tokens."
+---
+
 # Connect Social Accounts
 
 How to connect each social platform to Social Stats. All redirect URIs, scopes,

@@ -1,3 +1,8 @@
+---
+title: "FAQ & Troubleshooting"
+description: "Answers to common questions about self-hosting Social Stats — database setup, demo logins, CORS, Celery/Redis, AI configuration, and more."
+---
+
 # FAQ & Troubleshooting
 
 Common problems and their fixes. See [CONFIGURATION.md](CONFIGURATION.md) for any

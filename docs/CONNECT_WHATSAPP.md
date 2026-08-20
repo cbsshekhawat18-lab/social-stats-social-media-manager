@@ -1,3 +1,8 @@
+---
+title: "Connect WhatsApp Business — Messaging, Campaigns & Bots"
+description: "Set up the WhatsApp Business module in Social Stats: inbox, contact lists, template campaigns, and the click-to-WhatsApp bot builder."
+---
+
 # Connect WhatsApp Business
 
 Social Stats integrates WhatsApp Business through the **Pinbot Partners API v3**.

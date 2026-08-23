@@ -11,7 +11,7 @@ google-analytics-data==0.23.0
 google-auth==2.55.1
 google-auth-oauthlib==1.4.0
 python-dotenv==1.2.2
-gunicorn==21.2.0
+gunicorn==26.1.0
 whitenoise==6.11.0
 psycopg2-binary==2.9.12
 Pillow==12.3.0

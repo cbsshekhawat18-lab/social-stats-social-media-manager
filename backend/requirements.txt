@@ -29,7 +29,7 @@ channels-redis==4.3.0
 daphne==4.2.2
 
 # ── Stage 2 security build-out (auth hardening) ──────────────────────────────
-argon2-cffi==23.1.0          # password hashing (replaces PBKDF2 default)
+argon2-cffi==25.1.0          # password hashing (replaces PBKDF2 default)
 django-axes==6.4.0           # brute-force lockout
 user-agents==2.2.0           # parse User-Agent for session display
 

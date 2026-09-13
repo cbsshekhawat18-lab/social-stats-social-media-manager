@@ -2,7 +2,7 @@
 
 # ── Static analysis ──────────────────────────────────────────────────────────
 bandit[toml]==1.9.4        # Python static security scanner
-ruff==0.15.20                # Fast linter (replaces flake8 + pyflakes)
+ruff==0.16.7                # Fast linter (replaces flake8 + pyflakes)
 
 # ── Dependency CVE scanning ──────────────────────────────────────────────────
 pip-audit==2.10.1           # PyPA-maintained vuln scanner (uses OSV.dev)

@@ -4,12 +4,12 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
-    "@tanstack/react-query": "^5.101.4",
-    "axios": "^1.19.0",
+    "@tanstack/react-query": "^5.102.8",
+    "axios": "^1.20.0",
     "cmdk": "^1.1.1",
     "dagre": "^0.8.5",
     "date-fns": "^3.3.1",
-    "dompurify": "^3.4.13",
+    "dompurify": "^3.4.15",
     "framer-motion": "^12.38.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
@@ -31,8 +31,8 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.3",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "react-scripts": "5.0.1"
   },
   "scripts": {

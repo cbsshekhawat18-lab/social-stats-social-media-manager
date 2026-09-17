@@ -120,7 +120,7 @@ def _send_email(user: User, subject: str, title: str, body: str, cta_url: str = 
     try:
         send_mail(
             subject, plain,
-            getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app'),
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com'),
             [user.email],
             html_message=html, fail_silently=True,
         )

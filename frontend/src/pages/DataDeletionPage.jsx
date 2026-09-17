@@ -74,7 +74,7 @@ export default function DataDeletionPage() {
             <strong>(1)</strong> directly from each platform's settings below,{' '}
             <strong>(2)</strong> from your Social Stats account settings (Settings → Delete Account), or{' '}
             <strong>(3)</strong> by emailing us at{' '}
-            <a href="mailto:support@socialstats.app" style={{ color: '#007a9a' }}>support@socialstats.app</a>.
+            the administrator of this Social Stats instance.
             All data is permanently deleted within <strong>30 days</strong> of a valid request.
           </p>
 
@@ -114,8 +114,8 @@ export default function DataDeletionPage() {
           </p>
           <div style={styles.emailBox}>
             <span style={styles.emailIcon}>✉</span>
-            <a href="mailto:support@socialstats.app" style={styles.emailLink}>
-              support@socialstats.app
+            <a href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues" target="_blank" rel="noreferrer" style={styles.emailLink}>
+              GitHub Issues
             </a>
           </div>
           <p style={styles.p}>Please include in your email:</p>
@@ -154,7 +154,7 @@ export default function DataDeletionPage() {
             <p style={styles.contactTitle}>Questions?</p>
             <p style={styles.contactText}>
               Contact our privacy team at{' '}
-              <a href="mailto:support@socialstats.app" style={styles.inlineLink}>support@socialstats.app</a>
+              <a href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues" target="_blank" rel="noreferrer" style={styles.inlineLink}>the project's GitHub Issues</a>
               {' '}or visit our{' '}
               <a href="/privacy" style={styles.inlineLink}>Privacy Policy</a>.
             </p>

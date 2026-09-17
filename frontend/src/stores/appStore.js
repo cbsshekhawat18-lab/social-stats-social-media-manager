@@ -79,7 +79,7 @@ export const useAppStore = create(
       reset: () => set(initial),
     }),
     {
-      name: 'socialstats.app-state',
+      name: 'social-stats-state',
       storage: createJSONStorage(() => localStorage),
       // Only persist the active-client choice — badge counts are ephemeral
       // and re-fetched on app boot.

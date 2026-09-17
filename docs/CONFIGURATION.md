@@ -26,8 +26,8 @@ and the platform credentials only when you want to connect real accounts.
 |---|---|---|---|
 | `SECRET_KEY` | **Yes (prod)** | dev fallback | Django cryptographic signing key. Dev has an insecure fallback; in production set a long random value. Generate: `python -c "import secrets; print(secrets.token_urlsafe(50))"`. |
 | `DEBUG` | No | `False` | `True` enables Django debug pages. **Keep `False` in production.** |
-| `ALLOWED_HOSTS` | **Yes (prod)** | `socialstats.app,www.socialstats.app` | Comma-separated hostnames Django will serve. For local dev add `localhost,127.0.0.1`. Requests to other hosts are rejected. |
-| `FRONTEND_URL` | **Yes** | `https://socialstats.app` | Base URL of the React app. Used to build links in emails and OAuth redirects back to the UI. For local dev set `http://localhost:3000`. |
+| `ALLOWED_HOSTS` | **Yes (prod)** | `app.example.com,api.example.com` | Comma-separated hostnames Django will serve. For local dev add `localhost,127.0.0.1`. Requests to other hosts are rejected. |
+| `FRONTEND_URL` | **Yes** | `https://app.example.com` | Base URL of the React app. Used to build links in emails and OAuth redirects back to the UI. For local dev set `http://localhost:3000`. |
 
 ## Field-level encryption
 
@@ -98,7 +98,7 @@ Get these from [linkedin.com/developers](https://www.linkedin.com/developers).
 | `EMAIL_PORT` | For email | `587` | SMTP port. |
 | `EMAIL_HOST_USER` | For email | placeholder | SMTP username. For Gmail, enable 2FA → App Passwords. |
 | `EMAIL_HOST_PASSWORD` | For email | placeholder | SMTP password / Gmail App Password. |
-| `DEFAULT_FROM_EMAIL` | No | `Social Stats <noreply@socialstats.app>` | From address on outgoing email. |
+| `DEFAULT_FROM_EMAIL` | No | `Social Stats <noreply@example.com>` | From address on outgoing email. |
 
 > Without email config, the app still runs; email-dependent features (report
 > delivery, some notifications) simply won't send.

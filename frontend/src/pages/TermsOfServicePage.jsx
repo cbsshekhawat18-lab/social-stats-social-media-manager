@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
                 <li>You must be at least <strong>18 years old</strong> to create an account.</li>
                 <li>You are responsible for keeping your credentials secure. We strongly recommend enabling 2FA.</li>
                 <li>You are responsible for all activity under your account, including activity by your team members.</li>
-                <li>Notify us immediately at <a href="mailto:security@socialstats.app">security@socialstats.app</a> if you suspect unauthorised access.</li>
+                <li>Notify the administrator of this Social Stats instance immediately if you suspect unauthorised access.</li>
                 <li>You may not share, sell, or transfer your account to another person or company without our consent.</li>
               </ul>
             </>
@@ -227,7 +227,7 @@ export default function TermsOfServicePage() {
           title: '14. Contact',
           body: (
             <p>
-              Questions about these Terms? Email us at <a href="mailto:legal@socialstats.app">legal@socialstats.app</a> or visit
+              Questions about these Terms? Contact the administrator of this Social Stats instance or visit
               our <a href="/contact">contact page</a>.
             </p>
           ),

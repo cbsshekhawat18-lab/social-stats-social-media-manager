@@ -49,12 +49,10 @@ export default function JsonLd({ id, data }) {
 // ── shared site identity ──────────────────────────────────────────────
 const SITE = {
   name: 'Social Stats',
-  url: 'https://socialstats.app',
-  logo: 'https://socialstats.app/logo512.png',
+  url: 'https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/',
+  logo: 'https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/screenshot.png',
   sameAs: [
-    'https://twitter.com/socialstats',
-    'https://www.linkedin.com/company/socialstats',
-    'https://github.com/socialstats',
+    'https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager',
   ],
 };
 
@@ -83,7 +81,7 @@ export function buildOrganization() {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',
-      email: 'support@socialstats.app',
+      url: 'https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues',
       availableLanguage: ['en', 'hi'],
     },
   };

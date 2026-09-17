@@ -139,7 +139,7 @@ function PanelHeader() {
           textTransform: 'uppercase',
         }}
       >
-        socialstats.app/dashboard
+        localhost:3000/dashboard
       </div>
     </div>
   );

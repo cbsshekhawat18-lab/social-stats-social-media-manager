@@ -25,7 +25,7 @@ from .social_auth_views import _make_jwt
 from .auth_views import _email_html
 
 FRONTEND_URL = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-FROM_EMAIL   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app')
+FROM_EMAIL   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com')
 
 
 def _send_invitation_email(invitation, client_user):

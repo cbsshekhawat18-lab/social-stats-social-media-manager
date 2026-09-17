@@ -140,8 +140,8 @@ export default function ContactPage() {
                   Thanks — we got your message.
                 </h2>
                 <p style={{ margin: '8px auto 20px', maxWidth: 380, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  We usually reply within one business day. If it's urgent, email us at{' '}
-                  <a href="mailto:hello@socialstats.app" style={{ color: 'var(--text-link)', fontWeight: 500 }}>hello@socialstats.app</a>.
+                  We usually reply within one business day. If it's urgent, open an issue{' '}
+                  <a href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues" target="_blank" rel="noreferrer" style={{ color: 'var(--text-link)', fontWeight: 500 }}>on GitHub</a>.
                 </p>
                 <Button as={Link} to="/" variant="secondary" size="md">Back to home</Button>
               </div>
@@ -223,30 +223,30 @@ export default function ContactPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <ContactInfoCard
               icon={Mail}
-              title="Email"
-              body="hello@socialstats.app"
-              detail="General inquiries, partnerships, press."
-              link="mailto:hello@socialstats.app"
+              title="GitHub Issues"
+              body="Bugs & feature requests"
+              detail="The fastest way to reach the maintainers."
+              link="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues"
             />
             <ContactInfoCard
               icon={MessageSquare}
-              title="Sales"
-              body="sales@socialstats.app"
-              detail="Demos, pricing, and enterprise contracts."
-              link="mailto:sales@socialstats.app"
+              title="Repository"
+              body="Source code & docs"
+              detail="Self-hosting guides, configuration, and releases."
+              link="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager"
             />
             <ContactInfoCard
               icon={Phone}
-              title="Phone"
-              body="Email-first support"
-              detail="Phone callbacks scheduled via support."
-              link="mailto:support@socialstats.app"
+              title="Support"
+              body="GitHub-first support"
+              detail="Open an issue — we reply on the repository."
+              link="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues"
             />
             <ContactInfoCard
               icon={MapPin}
               title="Office"
               body="Bengaluru, India"
-              detail="Postal address shared on request via support@socialstats.app."
+              detail="Open-source project — no physical office."
             />
           </div>
         </div>

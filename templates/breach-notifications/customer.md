@@ -46,19 +46,19 @@ Social Stats does not process payments or store any card/billing details.
 
 1. **Change your Social Stats password.** We've reset every active session, so you'll
    be signed out the next time you visit.
-   → https://app.socialstats.app/u/settings/security
+   → https://app.example.com/u/settings/security
 2. **Enable two-factor authentication** if you haven't already. We strongly
    recommend it for every admin user.
-   → https://app.socialstats.app/u/settings/security
+   → https://app.example.com/u/settings/security
 3. **Review your API keys.** Revoke any you don't recognise.
-   → https://app.socialstats.app/u/settings/api-keys
+   → https://app.example.com/u/settings/api-keys
 4. **Review activity logs.** If you see something suspicious, contact us.
 5. {{ situation_specific_action — e.g. rotate the OAuth tokens for Meta }}
 
 ## How to contact us
 
-- **Email:** privacy@socialstats.app (encrypted: pgp-key.asc on our security page)
-- **Status page:** https://status.socialstats.app
+- **Email:** privacy@example.com
+- **Status page:** https://status.example.com
 - **Security advisory:** {{ url_to_full_writeup }}
 - **Phone (urgent):** {{ phone }} — Mon-Fri 9-19 IST
 

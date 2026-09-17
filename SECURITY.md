@@ -6,10 +6,9 @@ and the public. This document covers our **Vulnerability Disclosure Program
 
 ## Reporting a vulnerability
 
-**Email:** [security@socialstats.app](mailto:security@socialstats.app)
-
-For sensitive reports, please encrypt with our PGP key (fingerprint published
-at [socialstats.app/.well-known/security.txt](https://socialstats.app/.well-known/security.txt)).
+**Preferred channel:** [GitHub private vulnerability reporting](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/security/advisories/new)
+(Security tab → *Report a vulnerability*). Reports stay private between you
+and the maintainers until a fix ships.
 
 When reporting, include:
 
@@ -24,10 +23,10 @@ We respond to every report within **2 business days** with a triage acknowledgem
 
 | In scope | Out of scope |
 |---|---|
-| `*.socialstats.app` web + API | Third-party services we use (Anthropic, Pinbot) |
-| Mobile apps once they ship | DoS / volumetric attacks |
-| OAuth flows + token handling | Spam, phishing of our customers (use abuse@) |
-| Tenant-isolation bugs (IDOR, SSRF) | Self-XSS / clickjacking on logged-out marketing pages |
+| The code in this repository (backend API + frontend) | Third-party services the code integrates with (Anthropic, Pinbot, the social platforms) |
+| OAuth flows + token handling | DoS / volumetric attacks against someone's self-hosted instance |
+| Tenant-isolation bugs (IDOR, SSRF) | Individual self-hosted deployments (report those to their operator) |
+| Auth, MFA, session and webhook handling | Self-XSS / clickjacking on logged-out marketing pages |
 | Authentication + authorization | Recently-disclosed CVEs in dependencies (we patch via Dependabot) |
 | Encryption at rest + in transit | Outdated browser support |
 
@@ -44,9 +43,7 @@ We will not pursue legal action against good-faith researchers who:
 
 We do not currently run a paid bounty program. Reports earn:
 
-- **Public credit** in our [Hall of Fame](https://socialstats.app/security#hall-of-fame) (with permission)
-- **Social Stats swag** for High/Critical findings
-- **Cash rewards** for Critical findings affecting customer data — at our discretion, typically ₹10,000 – ₹50,000
+- **Public credit** in the Acknowledgements section below and in the fix's release notes (with permission)
 
 ## Patching SLA
 
@@ -68,9 +65,8 @@ The SLA starts when triage confirms the issue is reproducible AND in-scope.
 For Critical and High issues we cut a hotfix release outside of the regular
 deployment cadence. The following channels carry security release notes:
 
-- [socialstats.app/security](https://socialstats.app/security) — public advisory page
-- Email to all admin users on affected workspaces (when applicable)
-- The `#security` channel inside our customer Slack community
+- [GitHub security advisories](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/security/advisories) — published after the fix
+- [GitHub releases](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/releases) — hotfix release notes flag security fixes
 
 ## How we find vulnerabilities ourselves
 
@@ -96,3 +92,9 @@ within 72 hours per DPDP / GDPR requirements.
 ---
 
 *Last updated: 2024-11-01 — version 1.0*
+
+## Acknowledgements
+
+Researchers who have responsibly disclosed vulnerabilities (listed with permission):
+
+- *(your name could be here)*

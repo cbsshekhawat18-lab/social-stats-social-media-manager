@@ -28,7 +28,7 @@ Examples of unacceptable behavior:
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the project maintainers at **conduct@socialstats.app**. All
+reported to the project maintainers at the project maintainers privately via GitHub ([open a private security advisory or contact @cbsshekhawat18-lab](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager)). All
 complaints will be reviewed and investigated promptly and fairly. Maintainers
 are obligated to respect the privacy and security of the reporter of any
 incident.

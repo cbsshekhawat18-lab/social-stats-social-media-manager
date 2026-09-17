@@ -31,7 +31,7 @@ from .security.throttles import (
 
 
 FRONTEND_URL = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-FROM_EMAIL   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app')
+FROM_EMAIL   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com')
 
 EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 

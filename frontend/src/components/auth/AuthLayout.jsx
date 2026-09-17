@@ -377,7 +377,7 @@ export default function AuthLayout({
           >
             <Link to="/privacy" style={legalLinkStyle}>Privacy</Link>
             <Link to="/terms"   style={legalLinkStyle}>Terms</Link>
-            <a href="mailto:support@socialstats.app" style={legalLinkStyle}>Support</a>
+            <a href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues" target="_blank" rel="noreferrer" style={legalLinkStyle}>Support</a>
           </div>
         </div>
       </main>

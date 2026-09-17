@@ -51,7 +51,7 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 FRONTEND_URL = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-FROM_EMAIL   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app')
+FROM_EMAIL   = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com')
 
 ALLOWED_AGENCY_ROLES = ('owner', 'admin', 'manager')
 

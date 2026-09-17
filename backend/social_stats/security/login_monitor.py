@@ -70,8 +70,8 @@ def notify_new_login(*, user, context: dict) -> None:
         return
     try:
         from django.core.mail import send_mail
-        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app')
-        frontend = getattr(settings, 'FRONTEND_URL', 'https://app.socialstats.app')
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com')
+        frontend = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
 
         when = timezone.now().strftime('%Y-%m-%d %H:%M UTC')
         subject = '[Social Stats] New login to your account'
@@ -85,7 +85,7 @@ def notify_new_login(*, user, context: dict) -> None:
             f'If you don\'t recognise this sign-in:\n'
             f'  1. Change your password immediately: {frontend}/u/settings/security\n'
             f'  2. Review and revoke active sessions on the same page\n'
-            f'  3. Contact support@socialstats.app\n\n'
+            f'  3. Contact your Social Stats administrator\n\n'
             f'— Social Stats Security'
         )
         send_mail(subject, body, from_email, [user.email], fail_silently=True)

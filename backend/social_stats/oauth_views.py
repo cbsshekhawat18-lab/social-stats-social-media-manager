@@ -40,7 +40,7 @@ FACEBOOK_CONSUMER_APP_ID = getattr(
 )
 FACEBOOK_CONSUMER_REDIRECT = getattr(
     settings, 'FACEBOOK_CONSUMER_REDIRECT_URI',
-    'https://socialstats.app/api/oauth/facebook/consumer/callback/',
+    'http://localhost:8000/api/oauth/facebook/consumer/callback/',
 )
 
 def _facebook_consumer_secret():

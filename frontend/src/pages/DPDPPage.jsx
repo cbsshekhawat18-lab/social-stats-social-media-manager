@@ -129,7 +129,7 @@ export default function DPDPPage() {
               </p>
               <p style={{ background: 'var(--surface-sunken)', padding: 16, borderRadius: 'var(--radius-md)', fontSize: 14 }}>
                 <strong>Grievance Officer, Social Stats</strong><br />
-                <a href="mailto:grievance@socialstats.app">grievance@socialstats.app</a><br />
+                the administrator of this Social Stats instance<br />
                 For postal correspondence, write to the Grievance Officer at the
                 address shared in our reply to your email.
               </p>

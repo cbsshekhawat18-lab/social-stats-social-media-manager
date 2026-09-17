@@ -171,7 +171,7 @@ def _readme_text(user, manifest: dict) -> str:
         f'Generated: {manifest["export_generated_at"]}\n\n'
         f'Files in this archive:\n'
         + '\n'.join(f'  • {f}' for f in manifest['files'])
-        + '\n\nQuestions? privacy@socialstats.app\n'
+        + '\n\nQuestions? Contact your Social Stats administrator.\n'
     )
 
 
@@ -187,13 +187,13 @@ def _email_export_link(user, req, manifest: dict) -> None:
         f'  {link}\n\n'
         f'Archive size: {req.archive_size_bytes:,} bytes\n'
         f'Files: {", ".join(manifest["files"])}\n\n'
-        f'If you did not request this export, please contact security@socialstats.app\n'
+        f'If you did not request this export, contact your Social Stats administrator immediately.\n'
     )
     try:
         send_mail(
             '[Social Stats] Your data export is ready',
             body,
-            getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app'),
+            getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com'),
             [user.email],
             fail_silently=True,
         )

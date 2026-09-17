@@ -63,7 +63,7 @@ export default function AnimatedDashboardMockup() {
           fontSize: 10, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)',
           background: 'rgba(255,255,255,0.06)',
           borderRadius: 'var(--radius-sm)',
-        }}>app.socialstats.app/dashboard</div>
+        }}>localhost:3000/dashboard</div>
       </div>
 
       <div style={{ display: 'flex', height: 'calc(100% - 28px)' }}>

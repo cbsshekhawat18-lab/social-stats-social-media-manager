@@ -112,7 +112,7 @@ export default function MaintenancePage({ expectedReturn }) {
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Button onClick={() => window.location.reload()} size="md" icon={RefreshCw}>Refresh</Button>
           <Button as="a" href="/status" variant="secondary" size="md" icon={Activity}>Check status</Button>
-          <Button as="a" href="mailto:hello@socialstats.app" variant="ghost" size="md" icon={Mail}>Email us</Button>
+          <Button as="a" href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues" variant="ghost" size="md" icon={Mail}>Email us</Button>
         </div>
 
         <p style={{ marginTop: 24, fontSize: 12, color: 'var(--text-tertiary)' }}>

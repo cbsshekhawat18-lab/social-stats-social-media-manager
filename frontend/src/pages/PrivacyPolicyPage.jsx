@@ -25,10 +25,10 @@ export default function PrivacyPolicyPage() {
               <p>
                 Social Stats is operated by Gigai Kripa Services, an early-stage product team
                 building marketing tooling. For corporate / registration details, write to
-                <a href="mailto:privacy@socialstats.app"> privacy@socialstats.app</a>.
+                 the administrator of this Social Stats instance.
               </p>
               <p>
-                This policy applies to <strong>socialstats.app</strong>, the Social Stats web app, our mobile apps, and any
+                This policy applies to the Social Stats web app and any
                 related services. For business customers (agencies, brands, creators), Social Stats is the
                 <strong> data processor</strong> for content and audience data they upload — they remain the data
                 controller for that data.
@@ -181,7 +181,7 @@ export default function PrivacyPolicyPage() {
             <p>
               SocialStats is a B2B product not intended for children under 18. We do not knowingly collect data from
               minors. If you believe a child has created an account, email{' '}
-              <a href="mailto:privacy@socialstats.app">privacy@socialstats.app</a> and we'll delete it.
+              the administrator of this Social Stats instance and it will be deleted.
             </p>
           ),
         },
@@ -213,7 +213,7 @@ export default function PrivacyPolicyPage() {
             <>
               <p>
                 Questions? Reach our DPO (Data Protection Officer) at{' '}
-                <a href="mailto:privacy@socialstats.app">privacy@socialstats.app</a> or our postal address:
+                the administrator of this Social Stats instance:
               </p>
               <p>
                 <strong>Gigai Kripa Services</strong><br />

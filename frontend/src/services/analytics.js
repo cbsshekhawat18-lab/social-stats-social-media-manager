@@ -12,8 +12,8 @@
  * Default vendor is Plausible (no third-party trackers, GDPR/DPDP friendly,
  * no cookie banner required for EU). Configure via env:
  *
- *   REACT_APP_PLAUSIBLE_DOMAIN  e.g. "socialstats.app"
- *   REACT_APP_PLAUSIBLE_HOST    optional, e.g. "https://plausible.socialstats.app"
+ *   REACT_APP_PLAUSIBLE_DOMAIN  e.g. "yourdomain.com"
+ *   REACT_APP_PLAUSIBLE_HOST    optional, e.g. "https://plausible.yourdomain.com"
  *
  * If REACT_APP_PLAUSIBLE_DOMAIN is missing, every method is a no-op.
  *

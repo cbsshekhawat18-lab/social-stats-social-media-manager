@@ -158,7 +158,7 @@ Beat schedule:
 
 Use Statuspage.io / Better Uptime / Instatus. The integration:
 
-1. Public URL: `https://status.socialstats.app`
+1. Public URL: `https://status.example.com`
 2. Components mirror our internal services: API · WhatsApp · AI · Composer
 3. Subscriber list: opt-in (CCPA-friendly)
 4. Incident automation: when an IC posts in `#incidents`, a Slack bot creates
@@ -176,4 +176,4 @@ curl -X POST -H "Authorization: OAuth $STATUSPAGE_TOKEN" \
 
 ---
 
-*Owners:* sre@socialstats.app · *Last reviewed:* 2024-11-01
+*Owners:* sre@example.com · *Last reviewed:* 2024-11-01

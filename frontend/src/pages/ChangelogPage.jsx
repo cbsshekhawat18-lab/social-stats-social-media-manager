@@ -104,7 +104,7 @@ export default function ChangelogPage() {
             What's new in Social Stats.
           </h1>
           <p style={{ margin: '0 auto', maxWidth: 560, fontSize: 16, lineHeight: 1.65, color: 'var(--text-secondary)' }}>
-            Every release, every fix. Subscribe to <a href="mailto:hello@socialstats.app?subject=Subscribe%20to%20changelog" style={{ color: 'var(--text-link)', fontWeight: 500 }}>get it in your inbox</a> monthly.
+            Every release, every fix. Watch <a href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/releases" target="_blank" rel="noreferrer" style={{ color: 'var(--text-link)', fontWeight: 500 }}>releases on GitHub</a> to get notified.
           </p>
         </div>
       </section>

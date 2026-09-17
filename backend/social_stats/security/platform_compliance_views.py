@@ -166,7 +166,7 @@ def platform_deletion_status(request, code: str):
             '<!doctype html><html><body style="font-family: sans-serif; max-width: 640px; margin: 60px auto; padding: 0 20px;">'
             '<h1>Deletion request not found</h1>'
             '<p>The confirmation code in this URL does not match any record. '
-            'If you believe this is a mistake, contact <a href="mailto:privacy@socialstats.app">privacy@socialstats.app</a>.</p>'
+            'If you believe this is a mistake, contact the administrator of this Social Stats instance.</p>'
             '</body></html>'
         )
         return HttpResponse(body, status=404, content_type='text/html')
@@ -177,7 +177,7 @@ def platform_deletion_status(request, code: str):
         'queued':     'Your deletion request has been received and is queued.',
         'processing': 'Your deletion is being processed right now.',
         'completed':  'Your data associated with this account has been deleted.',
-        'failed':     'We hit a snag — please contact privacy@socialstats.app.',
+        'failed':     'We hit a snag — please contact the administrator of this Social Stats instance.',
     }.get(req.status, 'Status unknown')
 
     body = f'''<!doctype html>
@@ -197,7 +197,7 @@ def platform_deletion_status(request, code: str):
     </table>
   </div>
   <p style="margin-top: 24px; font-size: 13px; color: #64748b;">
-    Questions? <a href="mailto:privacy@socialstats.app">privacy@socialstats.app</a>
+    Questions? Contact the administrator of this Social Stats instance.
   </p>
 </body>
 </html>'''

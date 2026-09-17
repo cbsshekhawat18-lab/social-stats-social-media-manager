@@ -230,11 +230,11 @@ export default function SecurityPage() {
             </h3>
             <p style={{ margin: '8px 0 16px', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.65 }}>
               We run a private bug bounty program with payouts up to <strong>₹1,00,000</strong> for critical issues.
-              Email <a href="mailto:security@socialstats.app" style={{ color: 'var(--text-link)' }}>security@socialstats.app</a>{' '}
+              Report privately via <a href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/security/advisories/new" target="_blank" rel="noreferrer" style={{ color: 'var(--text-link)' }}>GitHub security advisories</a>{' '}
               with reproduction steps and impact assessment. We acknowledge within 24 hours and triage within 72.
             </p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button as="a" href="mailto:security@socialstats.app" size="md" iconRight={ArrowRight}>
+              <Button as="a" href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/security/advisories/new" size="md" iconRight={ArrowRight}>
                 Report a vulnerability
               </Button>
               <Button as={Link} to="/status" variant="secondary" size="md">

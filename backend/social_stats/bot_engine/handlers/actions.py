@@ -217,7 +217,7 @@ def handle_send_email(executor, node):
     subject = render(data.get('subject', 'New lead'), executor.variables)[:200]
     body    = render(data.get('body', ''), executor.variables)
     html    = render(data.get('html', ''), executor.variables) or None
-    from_email = data.get('from_email') or getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app')
+    from_email = data.get('from_email') or getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com')
 
     try:
         send_mail(subject, body, from_email, recipients, html_message=html, fail_silently=True)

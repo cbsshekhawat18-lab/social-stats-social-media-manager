@@ -26,7 +26,7 @@ from .models import UserProfile, Client, ClientInvitation
 from .social_auth_views import _make_jwt
 
 FRONTEND_URL   = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-FROM_EMAIL     = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Social Stats <noreply@socialstats.app>')
+FROM_EMAIL     = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Social Stats <noreply@example.com>')
 
 
 # ── Get / Update profile ──────────────────────────────────────────────────────

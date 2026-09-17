@@ -72,7 +72,7 @@ export default function GDPRPage() {
           body: (
             <p>
               Customers who process EU personal data via SocialStats can sign our standard{' '}
-              <a href="mailto:legal@socialstats.app">DPA</a> at no cost. Our DPA includes EU Standard Contractual Clauses
+              <a href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/issues" target="_blank" rel="noreferrer">DPA</a> at no cost. Our DPA includes EU Standard Contractual Clauses
               (SCCs) for cross-border transfers and is updated annually.
             </p>
           ),
@@ -91,7 +91,7 @@ export default function GDPRPage() {
               </ul>
               <p>
                 We notify customers 30 days before adding new sub-processors. The current list is always available at{' '}
-                <a href="mailto:privacy@socialstats.app">privacy@socialstats.app</a>.
+                the administrator of this Social Stats instance.
               </p>
             </>
           ),
@@ -125,7 +125,7 @@ export default function GDPRPage() {
           title: '7. Contact our DPO',
           body: (
             <p>
-              Our Data Protection Officer can be reached at <a href="mailto:dpo@socialstats.app">dpo@socialstats.app</a>. EU
+              For data-protection questions, contact the administrator of this Social Stats instance. EU
               residents may also lodge a complaint with their local supervisory authority.
             </p>
           ),

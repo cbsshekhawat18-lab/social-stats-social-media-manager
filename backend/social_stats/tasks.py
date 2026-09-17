@@ -1154,7 +1154,7 @@ def send_scheduling_reminders():
         send_mail(
             subject=f"📅 Tomorrow: {posts.count()} post(s) going live",
             message=body,
-            from_email=getattr(djsettings, 'DEFAULT_FROM_EMAIL', 'noreply@socialstats.app'),
+            from_email=getattr(djsettings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com'),
             recipient_list=admins,
             fail_silently=True,
         )

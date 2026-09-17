@@ -243,8 +243,8 @@ export default function AboutPage() {
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)' }}>
                 Individual team profiles will appear here as we go public.
                 In the meantime, the easiest way to reach us is over email at{' '}
-                <a href="mailto:hello@socialstats.app" style={{ color: 'var(--text-link)', fontWeight: 600 }}>
-                  hello@socialstats.app
+                <a href="https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager" target="_blank" rel="noreferrer" style={{ color: 'var(--text-link)', fontWeight: 600 }}>
+                  github.com/cbsshekhawat18-lab/social-stats-social-media-manager
                 </a>.
               </p>
             </div>

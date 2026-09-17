@@ -7,7 +7,7 @@
  *  Released under the MIT License — see LICENSE. Keep this notice.
  * ========================================================================== */
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, AlertCircle, Briefcase, User as UserIcon, Shield } from 'lucide-react';
 
 import AuthLayout from '../components/auth/AuthLayout';
@@ -33,6 +33,7 @@ const DEMO_PASSWORD = 'demo';
 export default function LoginPage() {
   const { login, loginMfa } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,8 +41,9 @@ export default function LoginPage() {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
-  // MFA second-factor step (set when /auth/login/ returns mfa_required)
-  const [mfaToken, setMfaToken] = useState('');
+  // MFA second-factor step (set when /auth/login/ returns mfa_required,
+  // or handed over by /auth/callback when a social login needs a TOTP code)
+  const [mfaToken, setMfaToken] = useState(location.state?.mfaToken || '');
   const [mfaCode, setMfaCode] = useState('');
   const [useBackupCode, setUseBackupCode] = useState(false);
 

@@ -31,6 +31,15 @@ export default function AuthCallbackPage() {
       return;
     }
 
+    // Social login for an MFA-enabled account: the backend withholds JWTs
+    // and sends a short-lived handshake token — finish on the login page's
+    // second-factor step.
+    const mfaToken = params.get('mfa_token');
+    if (params.get('mfa_required') && mfaToken) {
+      navigate('/login', { state: { mfaToken } });
+      return;
+    }
+
     if (!access || !refresh) {
       setError('Missing tokens. Redirecting to login…');
       setTimeout(() => navigate('/login'), 2000);

@@ -54,6 +54,39 @@ def _frontend_error(msg):
     return redirect(f'{FRONTEND_URL}/login?error={urllib.parse.quote(msg)}')
 
 
+def _social_state_valid(request) -> bool:
+    """Login-CSRF guard: the callback's `state` must equal the one-time value
+    stored in this browser's session at /start. Pops the stored value so a
+    state can't be replayed. Mirrors _oauth_state_valid in oauth_views.py."""
+    import hmac as _hmac
+    returned = request.query_params.get('state', '') or ''
+    expected = request.session.pop('social_state', '') or ''
+    return bool(expected) and _hmac.compare_digest(returned, expected)
+
+
+def _finish_social_login(request, user):
+    """Issue tokens for a socially-authenticated user — via the same MFA
+    handshake the password login uses when the account has TOTP enabled.
+    Social login must not be a second-factor bypass."""
+    mfa = getattr(user, 'mfa', None)
+    if mfa and mfa.is_enabled:
+        from .security.mfa import issue_mfa_token
+        from .security.sessions import _client_ip
+        token = issue_mfa_token(user_id=user.id, ip=_client_ip(request))
+        return redirect(
+            f'{FRONTEND_CALLBACK}?mfa_required=1&mfa_token={urllib.parse.quote(token)}'
+        )
+
+    access, refresh = _make_jwt(user)
+    try:
+        has_client = user.profile.client_id is not None
+    except Exception:
+        has_client = False
+    if not has_client:
+        return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}&state=self')
+    return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}')
+
+
 
 
 def _make_jwt(user):
@@ -148,6 +181,9 @@ def google_social_callback(request):
     if error or not code:
         return _frontend_error('Google sign-in was cancelled.')
 
+    if not _social_state_valid(request):
+        return _frontend_error('Sign-in session expired or was invalid — please try again.')
+
     # Exchange code for tokens
     token_resp = http_requests.post(
         'https://oauth2.googleapis.com/token',
@@ -187,14 +223,7 @@ def google_social_callback(request):
     if err:
         return _frontend_error(err)
 
-    access, refresh = _make_jwt(user)
-    try:
-        has_client = user.profile.client_id is not None
-    except Exception:
-        has_client = False
-    if not has_client:
-        return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}&state=self')
-    return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}')
+    return _finish_social_login(request, user)
 
 
 # ── Facebook ───────────────────────────────────────────────────────────────────
@@ -225,6 +254,9 @@ def facebook_social_callback(request):
 
     if error or not code:
         return _frontend_error('Facebook sign-in was cancelled.')
+
+    if not _social_state_valid(request):
+        return _frontend_error('Sign-in session expired or was invalid — please try again.')
 
     # Exchange code for access token
     token_resp = http_requests.get(
@@ -266,14 +298,7 @@ def facebook_social_callback(request):
     if err:
         return _frontend_error(err)
 
-    access, refresh = _make_jwt(user)
-    try:
-        has_client = user.profile.client_id is not None
-    except Exception:
-        has_client = False
-    if not has_client:
-        return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}&state=self')
-    return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}')
+    return _finish_social_login(request, user)
 
 
 # ── Microsoft ──────────────────────────────────────────────────────────────────
@@ -308,6 +333,9 @@ def microsoft_social_callback(request):
 
     if error or not code:
         return _frontend_error('Microsoft sign-in was cancelled.')
+
+    if not _social_state_valid(request):
+        return _frontend_error('Sign-in session expired or was invalid — please try again.')
 
     # Exchange code for tokens
     token_resp = http_requests.post(
@@ -347,11 +375,4 @@ def microsoft_social_callback(request):
     if err:
         return _frontend_error(err)
 
-    access, refresh = _make_jwt(user)
-    try:
-        has_client = user.profile.client_id is not None
-    except Exception:
-        has_client = False
-    if not has_client:
-        return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}&state=self')
-    return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}')
+    return _finish_social_login(request, user)

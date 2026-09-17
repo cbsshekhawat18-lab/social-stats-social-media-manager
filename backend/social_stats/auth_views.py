@@ -257,9 +257,28 @@ def password_reset_confirm(request):
     token_obj.is_used = True
     token_obj.save(update_fields=['is_used'])
 
+    # A credential reset must end every session the old credential (or a
+    # session hijack) could have established: revoke all recorded sessions
+    # (which blacklists their refresh JTIs) and additionally blacklist any
+    # outstanding refresh tokens with no session row (e.g. social-login
+    # issues), so nothing issued before the reset can mint new access tokens.
+    from .security.sessions import revoke_all_for_user
+    revoked = revoke_all_for_user(user, reason='password_reset')
+    try:
+        from rest_framework_simplejwt.token_blacklist.models import (
+            OutstandingToken, BlacklistedToken,
+        )
+        for ot in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=ot)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).warning(
+            'password reset: simplejwt blacklist sweep unavailable for user=%s', user.id)
+
     from .security import audit
     audit.record(event_type='password_reset_completed', actor_user=user, request=request,
-                 target_object_type='User', target_object_id=user.id)
+                 target_object_type='User', target_object_id=user.id,
+                 metadata={'sessions_revoked': revoked})
     return Response({'detail': 'Password has been reset successfully. You can now sign in.'})
 
 

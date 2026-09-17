@@ -97,4 +97,4 @@ within 72 hours per DPDP / GDPR requirements.
 
 Researchers who have responsibly disclosed vulnerabilities (listed with permission):
 
-- *(your name could be here)*
+- **Dicky Mulia Fiqri** — OAuth state validation in social login callbacks, MFA bypass via social login, and missing session/refresh-token revocation on password reset (September 2026, fixed in `9d422bf`)

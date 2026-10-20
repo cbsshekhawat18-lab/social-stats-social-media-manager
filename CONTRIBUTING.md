@@ -69,11 +69,12 @@ to find something scoped for a first contribution.
   existing `ui/` primitives rather than introducing new component libraries.
 - Keep claims in docs and marketing copy truthful to what the code actually does.
 
-## Add a screenshot
+## Updating the screenshot
 
-The README references `docs/screenshot.png`. If you capture a clean screenshot or
-GIF of the analytics dashboard or composer, a PR adding it to `docs/` is a
-genuinely high-impact contribution — it's the first thing visitors see.
+`docs/screenshot.png` is the landing page. A capture of the product itself — the
+analytics dashboard or the composer, after `python manage.py demo_setup` so the
+charts are not empty — would serve visitors better; a short GIF in `docs/` is
+welcome too, and `scripts/record-demo.sh` has the recording recipe.
 
 ## Reporting bugs & requesting features
 

@@ -14,26 +14,32 @@ and the keys.
 [![Last commit](https://img.shields.io/github/last-commit/cbsshekhawat18-lab/social-stats-social-media-manager)](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/commits)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
-> **Status:** early-stage. The product is feature-complete enough to run
-> end-to-end (auth, OAuth onboarding, analytics, composer, AI features,
-> CTWA bot builder, marketplace), but customer-volume, testimonials, and
-> case studies on the marketing site are intentionally absent until we
-> onboard the first cohort of launch partners.
+> **Status:** early-stage. It runs end to end (auth, OAuth onboarding,
+> analytics, composer, AI features, the click-to-WhatsApp bot builder,
+> marketplace) and its 321 tests pass, but it has no launch partners yet:
+> expect rough edges, and please report them.
 
 ---
 
 ## Demo
 
-Spin up a fully-seeded local instance in two commands:
+![Social Stats: demo sign-in, the analytics page with 90 days of sample data, the dashboard](docs/demo.gif)
+
+Run it locally with Docker, seeded with three accounts and 90 days of sample analytics:
 
 ```bash
-python manage.py migrate
-python manage.py demo_setup    # seeds 3 accounts + 90 days of sample analytics
+git clone https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager.git
+cd social-stats-social-media-manager
+docker compose pull && docker compose up -d
+docker compose exec backend python manage.py demo_setup
 ```
 
-`demo_setup` is idempotent and creates three accounts (password `demo` for all),
-then chains into the sample-data seeder so the dashboards aren't empty. Sign in at
-`/login`, which surfaces one-click sign-in buttons for each:
+Then open <http://localhost:3000/login>. Without Docker, follow
+[Option B](#option-b--manual-local-dev): a Python 3.12 virtualenv for the
+backend and `npm start` for the frontend.
+
+`demo_setup` is idempotent. It creates three accounts (password `demo` for all)
+and seeds the sample data; the sign-in page has a one-click button for each:
 
 | Account | Email | Password | Lands on |
 |---|---|---|---|
@@ -42,8 +48,6 @@ then chains into the sample-data seeder so the dashboards aren't empty. Sign in 
 | End user | `enduser@demo.local` | `demo` | `/u` |
 
 > These are local-only demo credentials — never deploy them to a real environment.
-
-![The Social Stats landing page](docs/screenshot.png)
 
 > ⭐ **If Social Stats is useful to you, please star the repo** — it helps other
 > people building self-hosted social tooling find the project.

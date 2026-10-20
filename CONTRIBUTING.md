@@ -69,12 +69,12 @@ to find something scoped for a first contribution.
   existing `ui/` primitives rather than introducing new component libraries.
 - Keep claims in docs and marketing copy truthful to what the code actually does.
 
-## Updating the screenshot
+## Updating the demo GIF and screenshot
 
-`docs/screenshot.png` is the landing page. A capture of the product itself — the
-analytics dashboard or the composer, after `python manage.py demo_setup` so the
-charts are not empty — would serve visitors better; a short GIF in `docs/` is
-welcome too, and `scripts/record-demo.sh` has the recording recipe.
+`docs/demo.gif` (in the README) and `docs/screenshot.png` (the analytics page)
+are recorded by `scripts/record-demo.sh` from a running app seeded with
+`demo_setup`. The browser steps are scripted, so a re-take after a UI change
+shows the same thing; the script's header lists what to install first.
 
 ## Reporting bugs & requesting features
 

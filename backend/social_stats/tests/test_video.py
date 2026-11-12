@@ -4,6 +4,10 @@ Video Studio tests.
 moviepy is heavy + needs ffmpeg, so we patch the lazy import to either:
   - return a fake VideoFileClip class (subclasses MagicMock with the methods we hit)
   - raise ImportError to exercise the 503 path
+
+Every class saves files (seed clips, uploads, derived trims/thumbnails), so
+each one runs with a throwaway MEDIA_ROOT (TempMediaRootMixin) — nothing is
+written to backend/media/.
 """
 import io
 import sys
@@ -19,6 +23,8 @@ from rest_framework.test import APIClient
 
 from social_stats.models import Client, MediaAsset, PlatformCredential, UserProfile
 from social_stats.publishers import PublishResult
+
+from .utils import TempMediaRootMixin
 
 
 def _client_factory(label):
@@ -74,7 +80,7 @@ def _seed_video_asset(client, *, duration=5.0):
     return asset
 
 
-class UploadTests(TestCase):
+class UploadTests(TempMediaRootMixin, TestCase):
     def setUp(self):
         self.c = _client_factory('vid')
         self.u = _user_for(self.c)
@@ -92,7 +98,7 @@ class UploadTests(TestCase):
         self.assertEqual(res.status_code, 400)
 
 
-class MoviepyMissingTests(TestCase):
+class MoviepyMissingTests(TempMediaRootMixin, TestCase):
     """Exercise the 503 fallback when moviepy isn't installed."""
     def setUp(self):
         self.c = _client_factory('mvy')
@@ -111,7 +117,7 @@ class MoviepyMissingTests(TestCase):
         self.assertIn('moviepy', res.data['error'])
 
 
-class TrimTests(TestCase):
+class TrimTests(TempMediaRootMixin, TestCase):
     def setUp(self):
         self.c = _client_factory('trim')
         self.u = _user_for(self.c)
@@ -148,7 +154,7 @@ class TrimTests(TestCase):
         self.assertEqual(res.status_code, 400)
 
 
-class ResizeTests(TestCase):
+class ResizeTests(TempMediaRootMixin, TestCase):
     def setUp(self):
         self.c = _client_factory('rs')
         self.u = _user_for(self.c)
@@ -179,7 +185,7 @@ class ResizeTests(TestCase):
         self.assertEqual(res.status_code, 400)
 
 
-class ThumbnailTests(TestCase):
+class ThumbnailTests(TempMediaRootMixin, TestCase):
     def setUp(self):
         self.c = _client_factory('th')
         self.u = _user_for(self.c)
@@ -211,7 +217,7 @@ class ThumbnailTests(TestCase):
         self.assertEqual((new_asset.width, new_asset.height), (640, 360))
 
 
-class CaptionsTests(TestCase):
+class CaptionsTests(TempMediaRootMixin, TestCase):
     def setUp(self):
         self.c = _client_factory('cap')
         self.u = _user_for(self.c)
@@ -226,7 +232,7 @@ class CaptionsTests(TestCase):
         self.assertEqual(res.data['error'], 'captions_not_configured')
 
 
-class YouTubeUploadTests(TestCase):
+class YouTubeUploadTests(TempMediaRootMixin, TestCase):
     def setUp(self):
         self.c = _client_factory('yt')
         self.u = _user_for(self.c)
@@ -271,7 +277,7 @@ class YouTubeUploadTests(TestCase):
         self.assertEqual(res.status_code, 400)
 
 
-class TenantIsolationTests(TestCase):
+class TenantIsolationTests(TempMediaRootMixin, TestCase):
     def test_cannot_operate_on_other_tenants_asset(self):
         a = _client_factory('aa')
         b = _client_factory('bb')

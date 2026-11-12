@@ -127,6 +127,35 @@ ROOT_URLCONF = 'dashboard.urls'
 WSGI_APPLICATION = 'dashboard.wsgi.application'
 ASGI_APPLICATION = 'dashboard.asgi.application'
 
+# ── Cache ─────────────────────────────────────────────────────────────
+# Shared across every web/worker process: DRF throttles, one-time social-login
+# codes, AI response cache. A per-process LocMem cache would give each worker
+# its own throttle budget and lose one-time codes between processes, so it is
+# only used in DEBUG (when REDIS_CACHE_URL isn't set) and under the test
+# runner (hermetic, no Redis needed).
+_REDIS_CACHE_URL_ENV = os.environ.get('REDIS_CACHE_URL', '')
+REDIS_CACHE_URL = _REDIS_CACHE_URL_ENV or 'redis://localhost:6379/2'
+if _RUNNING_TESTS or (DEBUG and not _REDIS_CACHE_URL_ENV):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'socialstats-local',
+        },
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_CACHE_URL,
+            'KEY_PREFIX': 'socialstats',
+            'OPTIONS': {
+                # Fail fast instead of hanging requests if Redis is down.
+                'socket_connect_timeout': 3,
+                'socket_timeout': 3,
+            },
+        },
+    }
+
 # ── Channels (WebSocket) layer ────────────────────────────────────────
 # In dev, the in-memory layer is sufficient (single process, no redis needed).
 # In prod, set CHANNEL_LAYERS_REDIS_URL to use a redis-backed layer that

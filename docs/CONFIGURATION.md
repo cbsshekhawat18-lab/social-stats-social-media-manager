@@ -58,6 +58,8 @@ OAuth tokens and manual credentials are encrypted at rest using these keys.
 |---|---|---|---|
 | `CELERY_BROKER_URL` | **Yes (for background tasks)** | `redis://localhost:6379/0` | Where Celery queues jobs. Without Redis + this, scheduled publishing, metric sync, and notifications won't run. |
 | `CELERY_RESULT_BACKEND` | No | `redis://localhost:6379/0` | Where task results are stored. |
+| `CHANNEL_LAYERS_REDIS_URL` | **Yes (prod)** | empty (in-memory) | Redis for WebSocket fan-out across workers. |
+| `REDIS_CACHE_URL` | **Yes (prod)** | `redis://localhost:6379/2` | Shared Django cache: login/signup/MFA throttles, one-time social-login codes, AI response cache. Always Redis when `DEBUG=False`; with `DEBUG=True` and this unset, an in-process cache is used. Docker sets `redis://redis:6379/2`. |
 
 ## Meta (Facebook + Instagram)
 

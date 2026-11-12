@@ -16,7 +16,7 @@ whitenoise==6.12.0
 psycopg2-binary==2.9.13
 Pillow==13.0.0
 weasyprint==70.0
-anthropic>=0.112.0
+anthropic>=1.17.0,<2          # 2.x moves to API version 2026-10-21 — separate migration
 cryptography==50.0.2
 tenacity==9.2.1
 phonenumbers==9.0.42

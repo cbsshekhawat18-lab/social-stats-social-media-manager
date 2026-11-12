@@ -55,6 +55,26 @@ from .rate_limiter import RateLimited
 logger = logging.getLogger(__name__)
 
 
+
+# ── Sampling parameters ────────────────────────────────────────────────────
+# anthropic 1.x removed `temperature` / `top_p` / `top_k` from the method
+# signatures. On API version 2023-06-01 (what 1.x sends) models before Opus 4.7
+# still honour `temperature`, and features here rely on it, so it travels in
+# `extra_body` for those. Opus 4.7 and later reject any sampling parameter
+# with a 400, so it is omitted for them (and for unknown/newer model ids).
+_SAMPLING_ACCEPTING_PREFIXES = ('claude-3', 'claude-sonnet-4', 'claude-haiku-4', 'claude-opus-4')
+_SAMPLING_REJECTING_PREFIXES = ('claude-opus-4-7', 'claude-opus-4-8')
+
+
+def sampling_kwargs(model: str, temperature) -> dict:
+    """Extra request kwargs carrying `temperature` where the model accepts it."""
+    if temperature is None:
+        return {}
+    m = (model or '').lower()
+    if m.startswith(_SAMPLING_REJECTING_PREFIXES) or not m.startswith(_SAMPLING_ACCEPTING_PREFIXES):
+        return {}
+    return {'extra_body': {'temperature': temperature}}
+
 class AIError(Exception):
     """Wraps Anthropic SDK errors with friendly messages."""
 
@@ -125,6 +145,18 @@ class AIClient:
             'temperature':    temperature,
             'max_tokens':     max_tokens,
         }
+
+    @staticmethod
+    def _request_kwargs(model: str, max_tokens: int, temperature, prompt: str, system: str) -> dict:
+        kwargs = {
+            'model': model,
+            'max_tokens': max_tokens,
+            'messages': [{'role': 'user', 'content': prompt}],
+            **sampling_kwargs(model, temperature),
+        }
+        if system:
+            kwargs['system'] = system
+        return kwargs
 
     def _call_with_retry(self, sdk_client, **kwargs):
         """Retry transient errors (overload, network) with exponential backoff."""
@@ -210,14 +242,7 @@ class AIClient:
 
         # 3. SDK call
         sdk = self._sdk_client()
-        kwargs = {
-            'model': chosen_model,
-            'max_tokens': max_tokens,
-            'temperature': temperature,
-            'messages': [{'role': 'user', 'content': prompt}],
-        }
-        if system:
-            kwargs['system'] = system
+        kwargs = self._request_kwargs(chosen_model, max_tokens, temperature, prompt, system)
 
         t0 = time.monotonic()
         status = 'success'
@@ -288,14 +313,7 @@ class AIClient:
         rate_limiter.check(client_id, feature=self.feature)
 
         sdk = self._sdk_client()
-        kwargs = {
-            'model': chosen_model,
-            'max_tokens': max_tokens,
-            'temperature': temperature,
-            'messages': [{'role': 'user', 'content': prompt}],
-        }
-        if system:
-            kwargs['system'] = system
+        kwargs = self._request_kwargs(chosen_model, max_tokens, temperature, prompt, system)
 
         t0 = time.monotonic()
         full_text = []

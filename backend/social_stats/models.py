@@ -13,6 +13,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
 from .fields import EncryptedTextField
+from .security.uploads import validate_image_upload
 
 PLATFORM_CHOICES = [
     ('facebook',          'Facebook'),
@@ -45,7 +46,8 @@ class Client(models.Model):
     whatsapp_number = models.CharField(max_length=30, blank=True)
     website    = models.URLField(blank=True)
     gmb_url    = models.URLField(blank=True, help_text="Google My Business profile URL")
-    logo       = models.ImageField(upload_to='logos/', blank=True, null=True)
+    logo       = models.ImageField(upload_to='logos/', blank=True, null=True,
+                                   validators=[validate_image_upload])
     is_active  = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -73,7 +75,8 @@ class Client(models.Model):
     business_location = models.CharField(max_length=200, blank=True)
     target_locations = models.JSONField(default=list, blank=True, help_text="List of target countries/cities")
     brand_assets = models.JSONField(default=dict, blank=True, help_text="Logo URL, email, phone, etc.")
-    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
+    profile_image = models.ImageField(upload_to='profile_images/', blank=True, null=True,
+                                      validators=[validate_image_upload])
     product_images = models.JSONField(default=list, blank=True, help_text="List of product image URLs")
 
     # Onboarding status
@@ -186,7 +189,8 @@ class UserProfile(models.Model):
     role              = models.CharField(max_length=20, choices=ROLE_CHOICES, default='client')
     client            = models.ForeignKey(Client, null=True, blank=True, on_delete=models.SET_NULL)
     assigned_clients  = models.ManyToManyField(Client, blank=True, related_name='staff_assigned')
-    avatar            = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    avatar            = models.ImageField(upload_to='avatars/', blank=True, null=True,
+                                          validators=[validate_image_upload])
     created_at        = models.DateTimeField(auto_now_add=True)
     terms_accepted    = models.BooleanField(default=False)
     terms_accepted_at = models.DateTimeField(null=True, blank=True)

@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import io
 import logging
-import mimetypes
 import os
 import uuid
 from dataclasses import dataclass
@@ -41,6 +40,7 @@ from django.utils.text import slugify
 from PIL import Image, ImageOps
 
 from .models import MediaAsset
+from .security.uploads import storage_extension, validate_media_upload
 
 logger = logging.getLogger(__name__)
 
@@ -107,12 +107,18 @@ def upload_media(
     Persist `file` and return a MediaAsset row. Generates a thumbnail when the
     file is an image; extracts image dimensions; for video, attempts to read
     duration via moviepy (lazy-imported, optional).
+
+    The file type is detected from its content and checked against the
+    upload allow-list (see ``security.uploads``); the client's Content-Type
+    and extension are ignored. Raises ``django.core.exceptions.ValidationError``
+    when the file is rejected.
     """
     if not file:
         raise ValueError('file is required')
 
-    mime = file.content_type or mimetypes.guess_type(file.name)[0] or 'application/octet-stream'
-    name = _safe_filename(file.name)
+    detected = validate_media_upload(file)
+    mime = detected.mime
+    name = _safe_filename(file.name, storage_extension(file.name, detected))
     asset = MediaAsset(
         client_id=client_id,
         uploaded_by_id=uploaded_by_id,
@@ -302,11 +308,11 @@ def presigned_url(asset: MediaAsset, *, expires: int = 3600) -> str:
 
 
 # ── Internals ─────────────────────────────────────────────────────────────────
-def _safe_filename(original: str) -> str:
-    base, ext = os.path.splitext(original or 'upload')
-    base = slugify(base) or 'upload'
+def _safe_filename(original: str, ext: str) -> str:
+    base = os.path.splitext(os.path.basename(original or 'upload'))[0]
+    base = slugify(base)[:80] or 'upload'
     short = uuid.uuid4().hex[:8]
-    return f'{base}_{short}{ext.lower()}'
+    return f'{base}_{short}{ext}'
 
 
 def _probe_video_duration(path: Optional[str]) -> float:

@@ -23,6 +23,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 
 from .models import UserProfile, Client, ClientInvitation
+from .security.uploads import validate_image_upload
 from .social_auth_views import _make_jwt
 
 FRONTEND_URL   = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
@@ -70,6 +71,11 @@ def user_profile(request):
 
     # Avatar upload
     avatar_file = request.FILES.get('avatar')
+    if avatar_file:
+        try:
+            validate_image_upload(avatar_file)
+        except ValidationError as e:
+            return Response({'error': ' '.join(e.messages)}, status=400)
     if avatar_file and profile:
         # Delete old avatar
         if profile.avatar:

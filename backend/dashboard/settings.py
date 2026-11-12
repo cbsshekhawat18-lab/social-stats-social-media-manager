@@ -165,6 +165,10 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Hard cap for any user upload (media library, video import, logos, avatars).
+# Keep nginx's client_max_body_size at least this large.
+MEDIA_MAX_UPLOAD_MB = int(os.environ.get('MEDIA_MAX_UPLOAD_MB', '100'))
+
 # ── Security headers + HTTPS enforcement () ──────────────────────────
 # Defaults flip ON when DEBUG is False. Each can still be overridden per env
 # (useful for staging that runs HTTP-only behind a private LB).

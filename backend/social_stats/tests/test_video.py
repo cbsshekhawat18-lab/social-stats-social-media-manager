@@ -81,7 +81,8 @@ class UploadTests(TestCase):
         self.api = _api(self.u)
 
     def test_multipart_upload_creates_asset(self):
-        f = SimpleUploadedFile('vid.mp4', b'\x00' * 1024, content_type='video/mp4')
+        mp4 = b'\x00\x00\x00\x14ftypmp42\x00\x00\x00\x00mp42isom' + b'\x00' * 1024
+        f = SimpleUploadedFile('vid.mp4', mp4, content_type='video/mp4')
         res = self.api.post('/api/video/upload/', {'file': f}, format='multipart')
         self.assertEqual(res.status_code, 201, res.content)
         self.assertTrue(MediaAsset.objects.filter(client=self.c).exists())

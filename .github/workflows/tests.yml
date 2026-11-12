@@ -139,6 +139,10 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Build and start the stack
+        env:
+          # Smoke-test stack only: bake the one-click demo logins into the
+          # frontend bundle. Never set this for real deployments.
+          REACT_APP_SHOW_DEMO: "true"
         run: docker compose up -d --build
 
       - name: Wait for backend health
@@ -159,7 +163,7 @@ jobs:
           [ "$code" = "401" ] || { echo "expected 401 from /api/auth/me/, got $code"; exit 1; }
 
       - name: Seed demo data inside the container
-        run: docker compose exec -T backend python manage.py demo_setup
+        run: docker compose exec -T backend python manage.py demo_setup --i-know-this-is-not-production
 
       - name: Worker and beat are running
         run: |

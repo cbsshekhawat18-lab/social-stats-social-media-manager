@@ -15,6 +15,10 @@ RUN npm ci --no-audit --no-fund
 COPY . .
 ARG REACT_APP_API_URL=/api
 ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+# One-click demo logins on /login. Off unless explicitly built with "true"
+# (the CI smoke-test stack does; published images never do).
+ARG REACT_APP_SHOW_DEMO=false
+ENV REACT_APP_SHOW_DEMO=${REACT_APP_SHOW_DEMO}
 RUN CI=true npm run build
 
 # ── Runtime ─────────────────────────────────────────────────────────────────

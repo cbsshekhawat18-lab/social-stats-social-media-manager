@@ -38,8 +38,10 @@ python manage.py demo_setup    # seeds 3 accounts + 90 days of sample analytics
 ```
 
 `demo_setup` is idempotent and creates three accounts (password `demo` for all),
-then chains into the sample-data seeder so the dashboards aren't empty. Sign in at
-`/login`, which surfaces one-click sign-in buttons for each:
+then chains into the sample-data seeder so the dashboards aren't empty. It only
+runs with `DEBUG=True` unless you pass `--i-know-this-is-not-production`. Sign in
+at `/login`; set `REACT_APP_SHOW_DEMO=true` in `frontend/.env` to get one-click
+sign-in buttons for each:
 
 | Account | Email | Password | Lands on |
 |---|---|---|---|
@@ -193,8 +195,8 @@ API, a Celery worker + beat, and the React app served by nginx on one origin:
 docker compose pull && docker compose up -d
 # — or build from source instead: docker compose up -d --build
 
-# optional: seed 3 demo accounts + 90 days of analytics
-docker compose exec backend python manage.py demo_setup
+# optional: seed 3 demo accounts + 90 days of analytics (throwaway stacks only)
+docker compose exec backend python manage.py demo_setup --i-know-this-is-not-production
 # app:          http://localhost:3000
 # Django admin: http://localhost:8000/admin/
 ```

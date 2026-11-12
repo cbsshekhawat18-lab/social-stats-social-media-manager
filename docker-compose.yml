@@ -4,7 +4,8 @@
 #      docker compose up -d --build      # build from source
 #        — or pull the prebuilt multi-arch images instead of building:
 #      docker compose pull && docker compose up -d
-#      docker compose exec backend python manage.py demo_setup   # optional demo data
+#      docker compose exec backend python manage.py demo_setup \
+#          --i-know-this-is-not-production                       # optional demo data
 #
 #  App:            http://localhost:3000          (React SPA + API proxy)
 #  Django admin:   http://localhost:8000/admin/   (backend service, direct)
@@ -109,7 +110,11 @@ services:
 
   frontend:
     image: ghcr.io/cbsshekhawat18-lab/social-stats-frontend:latest
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # Build-time only: "true" adds the one-click demo logins to /login.
+        REACT_APP_SHOW_DEMO: ${REACT_APP_SHOW_DEMO:-false}
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     volumes:

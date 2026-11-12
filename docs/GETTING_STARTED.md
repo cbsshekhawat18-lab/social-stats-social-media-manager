@@ -41,7 +41,7 @@ worker + beat, frontend) runs with one command from the repo root:
 ```bash
 docker compose pull && docker compose up -d   # prebuilt images (amd64/arm64)
 # or build from source: docker compose up -d --build
-docker compose exec backend python manage.py demo_setup   # demo data
+docker compose exec backend python manage.py demo_setup --i-know-this-is-not-production   # demo data
 # app: http://localhost:3000
 ```
 
@@ -80,7 +80,10 @@ The backend now serves the API at `http://localhost:8000`.
 
 ### Demo login credentials
 
-`demo_setup` creates three accounts (all with password `demo`):
+`demo_setup` creates three accounts (all with password `demo`). It refuses to
+run when `DEBUG=False` unless you pass `--i-know-this-is-not-production`. For
+the one-click sign-in buttons on `/login`, add `REACT_APP_SHOW_DEMO=true` to
+`frontend/.env` (off by default; never set it for production builds):
 
 | Account type | Email | Password | Lands on |
 |---|---|---|---|

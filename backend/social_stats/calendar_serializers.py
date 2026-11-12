@@ -13,7 +13,7 @@ from datetime import date as date_cls
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import CalendarPost, CalendarNote, PostingSchedule, PLATFORM_CHOICES
+from .models import CalendarPost, CalendarNote, PostingSchedule
 
 PLATFORM_META = {
     'facebook':          {'label': 'Facebook',            'color': '#1877F2', 'icon': '📘'},

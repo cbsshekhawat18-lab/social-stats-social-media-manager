@@ -44,7 +44,6 @@ from .models import (
     AgencyMembership,
     Client,
     ManageRequest,
-    UserProfile,
 )
 
 

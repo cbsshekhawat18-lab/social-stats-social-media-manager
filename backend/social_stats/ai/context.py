@@ -43,7 +43,6 @@ gradually backfill.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from django.utils import timezone
 
@@ -207,7 +206,6 @@ class AIContextProvider:
         """Top-line audience summary. Lighter than the full audience module —
         this is a hint for the AI, not a full pull."""
         try:
-            from ..models import Client
             c = self.client
             # Try common fields without forcing a hard dependency.
             audience_size = getattr(c, 'total_followers', None)

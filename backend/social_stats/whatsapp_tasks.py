@@ -13,7 +13,6 @@ Mirrors the style of `social_stats/tasks.py`:
     @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 """
 import logging
-from datetime import timedelta
 
 from celery import shared_task
 from django.db import transaction
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def send_whatsapp_message(self, message_id):
     """Send one WhatsAppMessage row through Pinbot."""
-    from .models import WhatsAppMessage, WhatsAppCampaign
+    from .models import WhatsAppMessage
     from .whatsapp_service import (
         get_pinbot_for_client, PinbotError, PinbotRateLimitError, PinbotAPIError,
     )
@@ -136,7 +135,7 @@ def _bump_campaign_failed(campaign_id):
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def run_whatsapp_campaign(self, campaign_id):
     """Materialize messages for a campaign and queue them for sending."""
-    from .models import WhatsAppCampaign, WhatsAppMessage, WhatsAppContact
+    from .models import WhatsAppCampaign, WhatsAppMessage
 
     try:
         campaign = WhatsAppCampaign.objects.select_related('template', 'contact_list').get(id=campaign_id)
@@ -242,7 +241,7 @@ def _resolve_variable(raw, contact):
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def process_whatsapp_webhook(self, log_id):
     """Process a queued WhatsAppWebhookLog row idempotently."""
-    from .models import WhatsAppWebhookLog, WhatsAppMessage, WhatsAppContact, WhatsAppCampaign
+    from .models import WhatsAppWebhookLog
 
     try:
         log = WhatsAppWebhookLog.objects.get(id=log_id)
@@ -274,7 +273,7 @@ def process_whatsapp_webhook(self, log_id):
 
 
 def _process_status_updates(value):
-    from .models import WhatsAppMessage, WhatsAppCampaign
+    from .models import WhatsAppMessage
 
     statuses = value.get('statuses') or []
     for st in statuses:
@@ -319,7 +318,7 @@ def _process_status_updates(value):
 
 
 def _process_inbound_messages(value):
-    from .models import WhatsAppMessage, WhatsAppContact, Client
+    from .models import WhatsAppMessage, WhatsAppContact
 
     messages = value.get('messages') or []
     if not messages:

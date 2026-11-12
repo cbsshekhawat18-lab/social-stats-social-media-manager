@@ -35,6 +35,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from . import audit
+from .client_ip import get_client_ip
 from .privacy_models import (
     DataExportRequest, AccountDeletionRequest, UserConsent, CONSENT_TYPES,
 )
@@ -243,9 +244,8 @@ def consents_collection(request):
         return Response({'error': f'unknown consent_type — must be one of {sorted(valid_types)}'},
                         status=400)
 
-    # XFF-aware IP capture for the consent record (regulator-friendly)
-    xff = request.META.get('HTTP_X_FORWARDED_FOR') or ''
-    ip  = xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR')
+    # Proxy-aware IP capture for the consent record (regulator-friendly)
+    ip = get_client_ip(request)
 
     row = UserConsent.objects.create(
         user         = request.user,

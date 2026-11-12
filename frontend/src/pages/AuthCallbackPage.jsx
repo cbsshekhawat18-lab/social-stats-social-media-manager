@@ -7,71 +7,76 @@
  *  Released under the MIT License — see LICENSE. Keep this notice.
  * ========================================================================== */
 /**
- * AuthCallbackPage — handles the redirect from social login (Google / Microsoft).
- * The backend redirects here with ?access=...&refresh=... in the URL.
- * We store the tokens, fetch /me, then send the user to the right place.
+ * AuthCallbackPage — handles the redirect from social login (Google /
+ * Microsoft / Facebook). The backend redirects here with a one-time
+ * ?code=… (never the tokens themselves); we strip it from the address bar,
+ * swap it for tokens via POST /auth/social/exchange/, load the user into the
+ * auth context and send them to the right place.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
+  const { refreshAuth } = useAuth();
   const [error, setError] = useState('');
+  // The code is single-use; React StrictMode runs effects twice in dev.
+  const started = useRef(false);
 
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+
     const params   = new URLSearchParams(window.location.search);
-    const access   = params.get('access');
-    const refresh  = params.get('refresh');
+    const code     = params.get('code');
     const errorMsg = params.get('error');
+    // Keep the code out of browser history, bookmarks and Referer headers.
+    window.history.replaceState(window.history.state, '', window.location.pathname);
+
+    const fail = (msg, delay = 2000) => {
+      setError(msg);
+      setTimeout(() => navigate('/login', { replace: true }), delay);
+    };
 
     if (errorMsg) {
-      setError(decodeURIComponent(errorMsg));
-      setTimeout(() => navigate('/login'), 3500);
+      fail(errorMsg, 3500);
+      return;
+    }
+    if (!code) {
+      fail('Missing sign-in code. Redirecting to login…');
       return;
     }
 
-    // Social login for an MFA-enabled account: the backend withholds JWTs
-    // and sends a short-lived handshake token — finish on the login page's
-    // second-factor step.
-    const mfaToken = params.get('mfa_token');
-    if (params.get('mfa_required') && mfaToken) {
-      navigate('/login', { state: { mfaToken } });
-      return;
-    }
+    authAPI.socialExchange(code)
+      .then(async ({ data }) => {
+        // MFA-enabled account: no JWTs yet — finish on the login page's
+        // second-factor step with the short-lived handshake token.
+        if (data.mfa_required && data.mfa_token) {
+          navigate('/login', { replace: true, state: { mfaToken: data.mfa_token } });
+          return;
+        }
+        if (!data.access || !data.refresh) throw new Error('missing tokens');
 
-    if (!access || !refresh) {
-      setError('Missing tokens. Redirecting to login…');
-      setTimeout(() => navigate('/login'), 2000);
-      return;
-    }
-
-    localStorage.setItem('access_token',  access);
-    localStorage.setItem('refresh_token', refresh);
-
-    const state = params.get('state');
-
-    authAPI.me()
-      .then(res => {
-        const role = res.data.role;
-        const onboardingComplete = res.data.onboarding_complete;
-        const clientId = res.data.client_id;
+        const me = await refreshAuth(data.access, data.refresh);
+        const { role, onboarding_complete: onboardingComplete, client_id: clientId } = me;
         if (role === 'superadmin' || role === 'staff') {
-          navigate('/admin');
-        } else if (state === 'self' || (role === 'client' && !clientId)) {
-          navigate('/pending');
+          navigate('/admin', { replace: true });
+        } else if (data.state === 'self' || (role === 'client' && !clientId)) {
+          navigate('/pending', { replace: true });
         } else if (!onboardingComplete) {
-          navigate('/dashboard/onboarding');
+          navigate('/dashboard/onboarding', { replace: true });
         } else {
-          navigate('/dashboard');
+          navigate('/dashboard', { replace: true });
         }
       })
       .catch(() => {
-        localStorage.clear();
-        setError('Authentication failed. Redirecting to login…');
-        setTimeout(() => navigate('/login'), 2000);
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        fail('Authentication failed. Redirecting to login…');
       });
-  }, [navigate]);
+  }, [navigate, refreshAuth]);
 
 
   return (

@@ -43,7 +43,7 @@ import hashlib
 import json
 import logging
 import time
-from typing import Any, Iterable, Optional
+from typing import Iterable, Optional
 
 from django.conf import settings
 

@@ -176,12 +176,8 @@ DEFAULT_SEVERITIES = {
 
 
 def _client_ip_from_request(request) -> Optional[str]:
-    if not request:
-        return None
-    xff = request.META.get('HTTP_X_FORWARDED_FOR') or ''
-    if xff:
-        return xff.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR')
+    from .client_ip import get_client_ip
+    return get_client_ip(request)
 
 
 def record(

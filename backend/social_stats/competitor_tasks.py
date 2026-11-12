@@ -25,7 +25,7 @@ Stubs (logged + skipped — require additional setup):
 from __future__ import annotations
 
 import logging
-from datetime import date, timedelta
+from datetime import date
 from typing import Optional
 
 import requests
@@ -169,7 +169,7 @@ def _fetch_facebook(page_id_or_username: str) -> Optional[dict]:
     handle = (page_id_or_username or '').strip().lstrip('@')
     try:
         resp = requests.get(
-            f'https://graph.facebook.com/v21.0/{handle}',
+            f'https://graph.facebook.com/{settings.META_API_VERSION}/{handle}',
             params={'fields': 'name,fan_count,about,category', 'access_token': app_token},
             timeout=DEFAULT_TIMEOUT,
         )

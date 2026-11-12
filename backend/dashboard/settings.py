@@ -8,12 +8,33 @@
 # ============================================================================
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-in-production')
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+# `manage.py test` — the production guard at the bottom is skipped and a dev
+# SECRET_KEY is allowed (CI runs the suite with DEBUG=False).
+_RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == 'test'
+
+# Safe by default: production behaviour unless DEBUG=True is set explicitly
+# (backend/.env.example sets it for local development).
+DEBUG = _env_bool('DEBUG', False)
+
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if not SECRET_KEY and (DEBUG or _RUNNING_TESTS):
+    SECRET_KEY = 'django-insecure-dev-only-key-never-use-in-production'
 
 # Independent keys for field-level encryption of OAuth tokens ( security).
 # Preferred form: FIELD_ENCRYPTION_KEYS — comma-separated, primary first.
@@ -27,8 +48,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-in-production'
 FIELD_ENCRYPTION_KEYS = os.environ.get('FIELD_ENCRYPTION_KEYS', '')
 FIELD_ENCRYPTION_KEY  = os.environ.get('FIELD_ENCRYPTION_KEY',  '')
 
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = [
+    h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if h.strip()
+]
 
 INSTALLED_APPS = [
     # daphne replaces the runserver with a Channels-aware ASGI dev server.
@@ -85,6 +108,17 @@ AXES_LOCKOUT_PARAMETERS  = ['username', 'ip_address']
 AXES_RESET_ON_SUCCESS    = True
 AXES_ENABLE_ADMIN        = True
 AXES_ENABLED             = os.environ.get('AXES_ENABLED', 'True') == 'True'  # toggle in dev/test
+
+# ── Client IP behind reverse proxies ──────────────────────────────────────────
+# Number of reverse proxies in front of Django that append to X-Forwarded-For.
+# 0 (default) = ignore the header and use REMOTE_ADDR. docker-compose sets 1
+# (the frontend nginx). Only raise it when Django is reachable *exclusively*
+# through those proxies — see social_stats/security/client_ip.py.
+TRUSTED_PROXY_COUNT = int(os.environ.get('TRUSTED_PROXY_COUNT', '0'))
+# axes resolves IPs through the same helper as the DRF throttles. The ipware
+# count is kept in sync for completeness; AXES_CLIENT_IP_CALLABLE wins.
+AXES_CLIENT_IP_CALLABLE  = 'social_stats.security.client_ip.get_client_ip'
+AXES_IPWARE_PROXY_COUNT  = TRUSTED_PROXY_COUNT or None
 # When DRF returns JSON (most paths), axes returns plain text — we override
 # the lockout response below from a custom view if needed. For now the default
 # plain-text 403 is acceptable for a security message.
@@ -92,6 +126,35 @@ AXES_ENABLED             = os.environ.get('AXES_ENABLED', 'True') == 'True'  # t
 ROOT_URLCONF = 'dashboard.urls'
 WSGI_APPLICATION = 'dashboard.wsgi.application'
 ASGI_APPLICATION = 'dashboard.asgi.application'
+
+# ── Cache ─────────────────────────────────────────────────────────────
+# Shared across every web/worker process: DRF throttles, one-time social-login
+# codes, AI response cache. A per-process LocMem cache would give each worker
+# its own throttle budget and lose one-time codes between processes, so it is
+# only used in DEBUG (when REDIS_CACHE_URL isn't set) and under the test
+# runner (hermetic, no Redis needed).
+_REDIS_CACHE_URL_ENV = os.environ.get('REDIS_CACHE_URL', '')
+REDIS_CACHE_URL = _REDIS_CACHE_URL_ENV or 'redis://localhost:6379/2'
+if _RUNNING_TESTS or (DEBUG and not _REDIS_CACHE_URL_ENV):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'socialstats-local',
+        },
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': REDIS_CACHE_URL,
+            'KEY_PREFIX': 'socialstats',
+            'OPTIONS': {
+                # Fail fast instead of hanging requests if Redis is down.
+                'socket_connect_timeout': 3,
+                'socket_timeout': 3,
+            },
+        },
+    }
 
 # ── Channels (WebSocket) layer ────────────────────────────────────────
 # In dev, the in-memory layer is sufficient (single process, no redis needed).
@@ -165,23 +228,20 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Hard cap for any user upload (media library, video import, logos, avatars).
+# Keep nginx's client_max_body_size at least this large.
+MEDIA_MAX_UPLOAD_MB = int(os.environ.get('MEDIA_MAX_UPLOAD_MB', '100'))
+
 # ── Security headers + HTTPS enforcement () ──────────────────────────
 # Defaults flip ON when DEBUG is False. Each can still be overridden per env
 # (useful for staging that runs HTTP-only behind a private LB).
-def _env_bool(name: str, default: bool) -> bool:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    return raw.strip().lower() in ('1', 'true', 'yes', 'on')
-
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT     = _env_bool('SECURE_SSL_REDIRECT',     not DEBUG)
 
 # Running the test suite (e.g. CI with DEBUG=False): never force an HTTPS
 # redirect — the Django test client speaks http:// and a 301→https turns every
 # API response into an HttpResponsePermanentRedirect (no `.data`), failing tests.
-import sys as _sys
-if 'test' in _sys.argv:
+if _RUNNING_TESTS:
     SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE   = _env_bool('SESSION_COOKIE_SECURE',   not DEBUG)
 CSRF_COOKIE_SECURE      = _env_bool('CSRF_COOKIE_SECURE',      not DEBUG)
@@ -349,7 +409,11 @@ CELERY_BEAT_SCHEDULE = {
 META_APP_ID        = os.environ.get('META_APP_ID', '')
 META_APP_SECRET    = os.environ.get('META_APP_SECRET', '')
 META_REDIRECT_URI  = os.environ.get('META_REDIRECT_URI', 'http://localhost:8000/api/oauth/facebook/callback/')
-META_API_VERSION   = 'v18.0'
+# Graph API version for every Meta call (Graph, Marketing, CAPI, the OAuth
+# dialog). Bump deliberately: check the changelog for removed metrics first.
+META_API_VERSION   = os.environ.get('META_API_VERSION', 'v24.0').strip()
+if not __import__('re').fullmatch(r'v\d+\.\d+', META_API_VERSION):
+    raise ImproperlyConfigured(f"META_API_VERSION must look like 'v24.0' (got {META_API_VERSION!r}).")
 
 # ── Google OAuth (YouTube + GMB) ─────────────────────
 GOOGLE_CLIENT_ID      = os.environ.get('GOOGLE_CLIENT_ID', '')
@@ -418,3 +482,27 @@ PINBOT_BASE_URL              = os.environ.get('PINBOT_BASE_URL', 'https://partne
 WHATSAPP_ENCRYPTION_KEY      = os.environ.get('WHATSAPP_ENCRYPTION_KEY', '')
 WHATSAPP_WEBHOOK_SECRET      = os.environ.get('WHATSAPP_WEBHOOK_SECRET', '')
 WHATSAPP_RATE_LIMIT_PER_SEC  = int(os.environ.get('WHATSAPP_RATE_LIMIT_PER_SEC', '20'))
+
+# Deployments that don't use Meta / WhatsApp webhooks can boot without their
+# secrets. This does NOT make those endpoints accept unsigned requests: with
+# DEBUG=False and no secret they reject every delivery.
+ALLOW_UNSIGNED_WEBHOOKS = _env_bool('ALLOW_UNSIGNED_WEBHOOKS', False)
+
+
+# ── Production configuration guard ────────────────────────────────────────────
+# Must stay at the bottom so every setting it inspects is defined. Skipped
+# for `manage.py test`. See dashboard/prod_checks.py and docs/GOING_LIVE.md.
+if not DEBUG and not _RUNNING_TESTS:
+    from dashboard.prod_checks import format_errors, production_config_errors
+
+    _prod_errors = production_config_errors(
+        secret_key=SECRET_KEY,
+        field_encryption_keys=FIELD_ENCRYPTION_KEYS,
+        allowed_hosts=ALLOWED_HOSTS,
+        meta_webhook_secret=META_WEBHOOK_SECRET,
+        whatsapp_webhook_secret=WHATSAPP_WEBHOOK_SECRET,
+        allow_unsigned_webhooks=ALLOW_UNSIGNED_WEBHOOKS,
+        legacy_field_encryption_key=FIELD_ENCRYPTION_KEY,
+    )
+    if _prod_errors:
+        raise ImproperlyConfigured(format_errors(_prod_errors))

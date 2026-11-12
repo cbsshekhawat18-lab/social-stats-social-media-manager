@@ -32,7 +32,7 @@ from rest_framework.test import APIClient
 from social_stats.events.publisher import EventPublisher
 from social_stats.models import (
     Client, UserProfile, Notification, EventLog, UnifiedPost,
-    Conversation, ActivityLog, ApprovalRequest, WhatsAppContact,
+    ActivityLog, WhatsAppContact,
     Agency, AgencyMembership, AgencyClientRelation,
 )
 from social_stats.bot_models import (

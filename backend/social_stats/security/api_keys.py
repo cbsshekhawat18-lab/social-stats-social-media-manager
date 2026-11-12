@@ -26,17 +26,17 @@ so DRF's ``request.user`` is a real user (the key's creator) and
 from __future__ import annotations
 
 import hashlib
-import hmac
 import ipaddress
 import logging
 import secrets
-from datetime import timedelta
 from typing import Optional
 
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from rest_framework import authentication, exceptions
+
+from .client_ip import get_client_ip
 
 
 logger = logging.getLogger(__name__)
@@ -198,7 +198,7 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
         if not api_key or not api_key.is_usable:
             raise exceptions.AuthenticationFailed('invalid or revoked API key')
 
-        ip = _client_ip(request)
+        ip = get_client_ip(request)
         if not verify_ip(api_key, ip):
             raise exceptions.AuthenticationFailed('IP not in API-key allowlist')
 
@@ -223,12 +223,3 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
 
     def authenticate_header(self, request):
         return 'Bearer'
-
-
-def _client_ip(request) -> Optional[str]:
-    if not request:
-        return None
-    xff = request.META.get('HTTP_X_FORWARDED_FOR') or ''
-    if xff:
-        return xff.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR')

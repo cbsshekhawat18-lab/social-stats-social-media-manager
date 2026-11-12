@@ -32,12 +32,13 @@ import re
 import time
 
 import requests
+from django.conf import settings
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
 
-GRAPH_BASE = 'https://graph.facebook.com/v21.0'
+GRAPH_BASE = f'https://graph.facebook.com/{settings.META_API_VERSION}'
 
 
 def _sha256(value: str) -> str:

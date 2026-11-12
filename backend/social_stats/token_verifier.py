@@ -23,14 +23,15 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Optional
 
 import requests
+from django.conf import settings
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-GRAPH_VERSION = 'v21.0'  # match the version used by oauth_views.py / tasks.py
+GRAPH_VERSION = settings.META_API_VERSION  # one version for every Meta call
 
 DEFAULT_TIMEOUT = (8, 15)  # connect, read
 

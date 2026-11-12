@@ -13,9 +13,36 @@ import logging
 import requests
 from datetime import date, timedelta
 from celery import shared_task
+from django.conf import settings
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+
+GRAPH_BASE = f'https://graph.facebook.com/{settings.META_API_VERSION}'
+
+
+def _graph_insights(url, metrics, params, timeout=15):
+    """GET an insights edge for `metrics`. Graph rejects the whole request
+    (error #100) if any one metric has been removed, so on that error retry
+    each metric alone and keep the ones that still work — one dead metric
+    must not blank the dashboard. Returns {'data': [...]} like Graph does."""
+    resp = requests.get(url, params={**params, 'metric': ','.join(metrics)}, timeout=timeout).json()
+    err = resp.get('error') if isinstance(resp, dict) else None
+    if not err:
+        return resp
+    if err.get('code') != 100 or len(metrics) == 1:
+        logger.warning('Graph insights %s failed for %s: %s', url, metrics, err.get('message'))
+        return {'data': []}
+    logger.warning('Graph insights %s rejected %s (%s); retrying per metric',
+                   url, metrics, err.get('message'))
+    data = []
+    for metric in metrics:
+        one = requests.get(url, params={**params, 'metric': metric}, timeout=timeout).json()
+        if isinstance(one, dict) and one.get('error'):
+            logger.warning('Graph metric %s unavailable: %s', metric, one['error'].get('message'))
+            continue
+        data.extend(one.get('data', []))
+    return {'data': data}
 
 
 def _date_range(days=30):
@@ -42,38 +69,40 @@ def _refresh_google_token(cred):
 # ── Facebook ──────────────────────────────────────────────────────────────────
 @shared_task(bind=True, max_retries=3, default_retry_delay=300)
 def sync_facebook(self, client_id, days=30):
-    from .models import Client, PlatformCredential, DailyMetric, SyncLog
+    from .models import PlatformCredential, DailyMetric, SyncLog
     log = SyncLog.objects.create(platform='facebook', client_id=client_id, status='running')
     try:
         cred  = PlatformCredential.objects.get(client_id=client_id, platform='facebook', is_active=True)
         since, until = _date_range(days)
 
-        # page_impressions, page_fan_adds/removes, page_consumptions,
-        # page_negative_feedback, page_video_view_time deprecated in v18+
-        metrics_to_fetch = ','.join([
-            'page_impressions_unique',  # daily reach (impressions deprecated)
-            'page_post_engagements',    # engagements
-            'page_views_total',         # page views
-            'page_daily_follows',       # new followers (page_fan_adds deprecated)
-            'page_daily_unfollows',     # unfollows (page_fan_removes deprecated)
-            'page_video_views',         # video views
-            'page_total_actions',       # total actions on page
-        ])
+        # page_impressions*, page_fan_adds/removes, page_consumptions,
+        # page_negative_feedback, page_video_view_time are gone. Meta removed
+        # page_impressions_unique on ALL versions in 2026 — the replacement is
+        # the "views" family (page_total_media_view_unique, not a 1:1 match).
+        metrics_to_fetch = [
+            'page_total_media_view_unique',  # daily unique viewers (≈ old reach)
+            'page_post_engagements',         # engagements
+            'page_views_total',              # page views
+            'page_daily_follows',            # new followers (page_fan_adds removed)
+            'page_daily_unfollows_unique',   # unfollows (page_fan_removes removed)
+            'page_video_views',              # video views
+            'page_total_actions',            # total actions on page
+        ]
 
-        insights = requests.get(
-            f"https://graph.facebook.com/v21.0/{cred.page_id}/insights",
-            params={
-                'metric': metrics_to_fetch,
+        insights = _graph_insights(
+            f"{GRAPH_BASE}/{cred.page_id}/insights",
+            metrics_to_fetch,
+            {
                 'period': 'day',
                 'since':  since.isoformat(),
                 'until':  (until + timedelta(days=1)).isoformat(),
                 'access_token': cred.access_token,
-            }, timeout=15
-        ).json()
+            },
+        )
 
         # Fetch reactions breakdown separately
         reactions_resp = requests.get(
-            f"https://graph.facebook.com/v21.0/{cred.page_id}/insights",
+            f"{GRAPH_BASE}/{cred.page_id}/insights",
             params={
                 'metric': 'page_actions_post_reactions_total',
                 'period': 'day',
@@ -85,11 +114,11 @@ def sync_facebook(self, client_id, days=30):
 
         daily = {}
         metric_map = {
-            'page_impressions_unique': 'reach',
+            'page_total_media_view_unique': 'reach',
             'page_post_engagements':   'likes',
             'page_views_total':        'profile_views',
             'page_daily_follows':      'followers',
-            'page_daily_unfollows':    'followers_lost',
+            'page_daily_unfollows_unique': 'followers_lost',
             'page_video_views':        'fb_video_views',
             'page_total_actions':      'clicks',
         }
@@ -127,7 +156,7 @@ def sync_facebook(self, client_id, days=30):
         # ── Per-post metrics ──────────────────────────────────────────────────
         from .models import PostMetric
         fb_posts = requests.get(
-            f"https://graph.facebook.com/v21.0/{cred.page_id}/posts",
+            f"{GRAPH_BASE}/{cred.page_id}/posts",
             params={
                 'fields': 'id,message,story,created_time,permalink_url,full_picture',
                 'limit':  25,
@@ -137,19 +166,19 @@ def sync_facebook(self, client_id, days=30):
 
         for post in fb_posts.get('data', []):
             try:
-                # v21+ only supports post_impressions_unique and post_clicks
-                pi = requests.get(
-                    f"https://graph.facebook.com/v21.0/{post['id']}/insights",
-                    params={
-                        'metric': 'post_impressions_unique,post_clicks',
-                        'access_token': cred.access_token,
-                    }, timeout=10
-                ).json()
+                # post_impressions_unique was removed on all versions (2026);
+                # post_total_media_view_unique (lifetime) replaces it.
+                pi = _graph_insights(
+                    f"{GRAPH_BASE}/{post['id']}/insights",
+                    ['post_total_media_view_unique', 'post_clicks'],
+                    {'access_token': cred.access_token},
+                    timeout=10,
+                )
                 pm = {x['name']: x['values'][0]['value'] for x in pi.get('data', []) if x.get('values')}
 
                 # Get likes, comments, shares from the post object directly
                 post_detail = requests.get(
-                    f"https://graph.facebook.com/v21.0/{post['id']}",
+                    f"{GRAPH_BASE}/{post['id']}",
                     params={
                         'fields': 'shares,reactions.summary(true),comments.summary(true)',
                         'access_token': cred.access_token,
@@ -168,8 +197,8 @@ def sync_facebook(self, client_id, days=30):
                         'caption':       caption,
                         'published_at':  post.get('created_time'),
                         'thumbnail_url': post.get('full_picture', ''),
-                        'impressions':   pm.get('post_impressions_unique', 0),
-                        'reach':         pm.get('post_impressions_unique', 0),
+                        'impressions':   pm.get('post_total_media_view_unique', 0),
+                        'reach':         pm.get('post_total_media_view_unique', 0),
                         'likes':         likes,
                         'comments':      comments,
                         'clicks':        pm.get('post_clicks', 0),
@@ -196,38 +225,42 @@ def sync_instagram(self, client_id, days=30):
         cred  = PlatformCredential.objects.get(client_id=client_id, platform='instagram', is_active=True)
         since, until = _date_range(days)
 
-        # In API v18+, metrics are split into two groups:
-        # Group 1: period=day (standard)
-        # Group 2: period=day + metric_type=total_value (new requirement)
+        # Metrics are split into two groups:
+        # Group 1: period=day (time series)
+        # Group 2: period=day + metric_type=total_value
+        # follower_count / follows_and_unfollows are only returned for
+        # accounts with 100+ followers. profile_views / website_clicks lost
+        # time-series support in v21 and are no longer in the reference;
+        # _graph_insights drops them per-metric if Graph rejects them.
 
         # Group 1 — standard day metrics
-        day_insights = requests.get(
-            f"https://graph.facebook.com/v21.0/{cred.instagram_account_id}/insights",
-            params={
-                'metric': 'reach,follower_count',
+        day_insights = _graph_insights(
+            f"{GRAPH_BASE}/{cred.instagram_account_id}/insights",
+            ['reach', 'follower_count'],
+            {
                 'period': 'day',
                 'since':  since.isoformat(),
                 'until':  (until + timedelta(days=1)).isoformat(),
                 'access_token': cred.access_token,
-            }, timeout=15
-        ).json()
+            },
+        )
 
-        # Group 2 — total_value metrics (profile_views, website_clicks, etc.)
-        total_insights = requests.get(
-            f"https://graph.facebook.com/v21.0/{cred.instagram_account_id}/insights",
-            params={
-                'metric': ','.join([
-                    'profile_views', 'website_clicks', 'accounts_engaged',
-                    'total_interactions', 'likes', 'comments', 'shares', 'saves',
-                    'follows_and_unfollows',
-                ]),
+        # Group 2 — total_value metrics
+        total_insights = _graph_insights(
+            f"{GRAPH_BASE}/{cred.instagram_account_id}/insights",
+            [
+                'profile_views', 'website_clicks', 'accounts_engaged',
+                'total_interactions', 'likes', 'comments', 'shares', 'saves',
+                'follows_and_unfollows',
+            ],
+            {
                 'period':      'day',
                 'metric_type': 'total_value',
                 'since':  since.isoformat(),
                 'until':  (until + timedelta(days=1)).isoformat(),
                 'access_token': cred.access_token,
-            }, timeout=15
-        ).json()
+            },
+        )
 
         daily = {}
 
@@ -273,7 +306,7 @@ def sync_instagram(self, client_id, days=30):
 
         # Per-post metrics
         posts = requests.get(
-            f"https://graph.facebook.com/v21.0/{cred.instagram_account_id}/media",
+            f"{GRAPH_BASE}/{cred.instagram_account_id}/media",
             params={
                 'fields': 'id,caption,media_type,permalink,timestamp,media_url,thumbnail_url',
                 'limit':  25,
@@ -286,24 +319,15 @@ def sync_instagram(self, client_id, days=30):
                 media_type = post.get('media_type', '').upper()  # IMAGE, VIDEO, CAROUSEL_ALBUM, REEL
                 thumb = post.get('thumbnail_url') or post.get('media_url', '')
 
-                # In v18.0, valid metrics differ by media type:
-                # - IMAGE/CAROUSEL: reach, saved, shares  (impressions deprecated)
-                # - VIDEO: reach, saved, shares, video_views
-                # - REEL: reach, saved, shares, plays  (impressions/video_views not valid)
-                if media_type == 'VIDEO':
-                    insight_metrics = 'reach,saved,shares,video_views'
-                elif media_type in ('REEL', 'IG_REEL'):
-                    insight_metrics = 'reach,saved,shares,plays'
-                else:
-                    insight_metrics = 'reach,saved,shares'
-
-                pi = requests.get(
-                    f"https://graph.facebook.com/v21.0/{post['id']}/insights",
-                    params={
-                        'metric': insight_metrics,
-                        'access_token': cred.access_token,
-                    }, timeout=10
-                ).json()
+                # `views` replaced impressions, video_views (removed 2025-01)
+                # and plays (removed 2025-04) for feed posts, reels and stories.
+                is_video = media_type in ('VIDEO', 'REEL', 'IG_REEL')
+                pi = _graph_insights(
+                    f"{GRAPH_BASE}/{post['id']}/insights",
+                    ['reach', 'saved', 'shares', 'views'],
+                    {'access_token': cred.access_token},
+                    timeout=10,
+                )
                 m = {}
                 for x in pi.get('data', []):
                     vals = x.get('values', [])
@@ -311,7 +335,7 @@ def sync_instagram(self, client_id, days=30):
 
                 # likes and comments come from the media node directly in v18+
                 post_detail = requests.get(
-                    f"https://graph.facebook.com/v21.0/{post['id']}",
+                    f"{GRAPH_BASE}/{post['id']}",
                     params={
                         'fields': 'like_count,comments_count',
                         'access_token': cred.access_token,
@@ -326,12 +350,12 @@ def sync_instagram(self, client_id, days=30):
                         'caption':       (post.get('caption') or '')[:500],
                         'published_at':  post.get('timestamp'),
                         'thumbnail_url': thumb,
-                        'impressions':   m.get('plays', m.get('video_views', 0)),  # plays for reels
+                        'impressions':   m.get('views', 0),
                         'reach':         m.get('reach', 0),
                         'likes':         post_detail.get('like_count', 0),
                         'comments':      post_detail.get('comments_count', 0),
                         'saves':         m.get('saved', 0),
-                        'video_views':   m.get('video_views', m.get('plays', 0)),
+                        'video_views':   m.get('views', 0) if is_video else 0,
                         'shares':        m.get('shares', 0),
                     }
                 )
@@ -1005,7 +1029,7 @@ def generate_monthly_roi_reports():
     Runs on 2nd of every month at 8am.
     Calculates ROI for the previous month for all active clients with ROISettings.
     """
-    from .models import Client, ROIReport, ROISettings
+    from .models import Client, ROIReport
     from .roi_calculator import calculate_roi
     from decimal import Decimal
 

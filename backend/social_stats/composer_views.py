@@ -26,9 +26,10 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.utils import timezone
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
@@ -347,14 +348,17 @@ class MediaAssetViewSet(TenantScopedMixin, viewsets.ModelViewSet):
         if not upload:
             return Response({'detail': 'file is required (multipart "file")'}, status=400)
 
-        asset = media_service.upload_media(
-            upload,
-            client_id=client_id,
-            uploaded_by_id=request.user.id,
-            folder=request.data.get('folder', ''),
-            alt_text=request.data.get('alt_text', ''),
-            tags=request.data.getlist('tags') if hasattr(request.data, 'getlist') else (request.data.get('tags') or []),
-        )
+        try:
+            asset = media_service.upload_media(
+                upload,
+                client_id=client_id,
+                uploaded_by_id=request.user.id,
+                folder=request.data.get('folder', ''),
+                alt_text=request.data.get('alt_text', ''),
+                tags=request.data.getlist('tags') if hasattr(request.data, 'getlist') else (request.data.get('tags') or []),
+            )
+        except DjangoValidationError as e:
+            return Response({'detail': ' '.join(e.messages)}, status=400)
         return Response(MediaAssetSerializer(asset).data, status=201)
 
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
@@ -373,6 +377,8 @@ class MediaAssetViewSet(TenantScopedMixin, viewsets.ModelViewSet):
                     f, client_id=client_id, uploaded_by_id=request.user.id, folder=folder,
                 )
                 out.append(MediaAssetSerializer(asset).data)
+            except DjangoValidationError as e:
+                errors.append({'file': f.name, 'error': ' '.join(e.messages)})
             except Exception as e:
                 logger.exception('bulk_upload failed for %s', f.name)
                 errors.append({'file': f.name, 'error': str(e)})

@@ -114,8 +114,8 @@ class LoginView(TokenObtainPairView):
             mfa_user = authenticate(request, username=username, password=password_for_mfa)
             if mfa_user:
                 from .security.mfa import issue_mfa_token
-                from .security.sessions import _client_ip
-                ip = _client_ip(request)
+                from .security.client_ip import get_client_ip
+                ip = get_client_ip(request)
                 token = issue_mfa_token(user_id=mfa_user.id, ip=ip)
                 return Response(
                     {

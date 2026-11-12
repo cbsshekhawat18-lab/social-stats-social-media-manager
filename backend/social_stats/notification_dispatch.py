@@ -149,7 +149,7 @@ def _send_whatsapp(client: Optional[Client], user, title: str, body: str):
     if not phone:
         raise RuntimeError('No phone number on user profile')
 
-    from .models import WhatsAppAccount, WhatsAppContact
+    from .models import WhatsAppContact
     if not hasattr(client, 'whatsapp_account'):
         raise RuntimeError('No WhatsApp account configured for this client')
     contact = WhatsAppContact.objects.filter(client=client, phone=phone).first()

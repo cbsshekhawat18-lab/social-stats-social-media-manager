@@ -8,7 +8,9 @@
 # ============================================================================
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep, Competitor, ONBOARDING_STEP_DESCRIPTIONS, ROISettings, ROIReport, SiteContent, LookupCollection, LookupItem, GMBBusinessInfo, GMBReview
+
+from .security.uploads import validate_image_upload
+from .models import Client, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep, Competitor, ONBOARDING_STEP_DESCRIPTIONS, ROISettings, ROIReport, SiteContent, LookupCollection, LookupItem, GMBBusinessInfo, GMBReview
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -22,8 +24,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ClientSerializer(serializers.ModelSerializer):
-    logo = serializers.ImageField(required=False)
-    profile_image = serializers.ImageField(required=False)
+    logo = serializers.ImageField(required=False, validators=[validate_image_upload])
+    profile_image = serializers.ImageField(required=False, validators=[validate_image_upload])
     competitors = serializers.SerializerMethodField()
 
     class Meta:

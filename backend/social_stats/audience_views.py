@@ -31,7 +31,6 @@ sync layer. Frontend renders an explanatory placeholder.
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Optional
 
 from django.db.models import Avg, Max, Sum
 from django.utils import timezone

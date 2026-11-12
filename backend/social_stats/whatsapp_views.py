@@ -13,16 +13,14 @@ import logging
 from datetime import date, timedelta
 from typing import Optional
 
-from django.db import transaction
 from django.db.models import Count, Q
 from django.utils import timezone
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import (
-    Client,
     WhatsAppAccount, WhatsAppContact, WhatsAppContactList,
     WhatsAppTemplate, WhatsAppCampaign, WhatsAppMessage,
 )
@@ -506,7 +504,6 @@ class WhatsAppDashboardView(APIView):
 
         # Daily timeseries for the last 30 days
         time_series = []
-        from collections import Counter
         rows = (outbound.filter(created_at__date__gte=month_ago)
                 .extra({'d': "date(created_at)"})
                 .values('d')

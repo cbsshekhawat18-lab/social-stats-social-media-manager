@@ -16,7 +16,7 @@ and the keys.
 
 > **Status:** early-stage. It runs end to end (auth, OAuth onboarding,
 > analytics, composer, AI features, the click-to-WhatsApp bot builder,
-> marketplace) and its 321 tests pass, but it has no launch partners yet:
+> marketplace) and its 390+ backend tests pass, but it has no launch partners yet:
 > expect rough edges, and please report them.
 
 ---
@@ -30,8 +30,16 @@ Run it locally with Docker, seeded with three accounts and 90 days of sample ana
 ```bash
 git clone https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager.git
 cd social-stats-social-media-manager
-docker compose pull && docker compose up -d
-docker compose exec backend python manage.py demo_setup
+
+# Throwaway config for a local trial (for a real install, start from .env.docker.example)
+cat > .env.docker <<EOF
+SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(64))')
+FIELD_ENCRYPTION_KEYS=$(python3 -c 'import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())')
+ALLOW_UNSIGNED_WEBHOOKS=True
+EOF
+
+docker compose --env-file .env.docker pull && docker compose --env-file .env.docker up -d
+docker compose --env-file .env.docker exec backend python manage.py demo_setup --i-know-this-is-not-production
 ```
 
 Then open <http://localhost:3000/login>. Without Docker, follow
@@ -39,7 +47,12 @@ Then open <http://localhost:3000/login>. Without Docker, follow
 backend and `npm start` for the frontend.
 
 `demo_setup` is idempotent. It creates three accounts (password `demo` for all)
-and seeds the sample data; the sign-in page has a one-click button for each:
+and seeds the sample data. It only runs with `DEBUG=True` unless you pass
+`--i-know-this-is-not-production` — the Docker stack runs with `DEBUG=False`,
+hence the flag above. Sign in with the accounts below; for one-click sign-in
+buttons on `/login`, build the frontend with `REACT_APP_SHOW_DEMO=true`
+(`REACT_APP_SHOW_DEMO=true docker compose --env-file .env.docker up -d --build`,
+or set it in `frontend/.env` without Docker):
 
 | Account | Email | Password | Lands on |
 |---|---|---|---|
@@ -72,7 +85,7 @@ Full guides live in [`docs/`](docs/):
 ## Features
 
 Social Stats leads with the three capabilities its test suite covers best
-(`python manage.py test social_stats`: 321 tests, all passing on Python 3.12).
+(`python manage.py test social_stats`: 390+ tests, all passing on Python 3.12).
 
 ### 📅 Publishing to five platforms — 59 tests
 - Publishers for Facebook, Instagram, YouTube, LinkedIn and Google Business behind one
@@ -173,7 +186,7 @@ for the full picture.
 
 | Layer | What |
 |---|---|
-| Backend | Django 4.2 + Django REST Framework |
+| Backend | Django 5.2 LTS + Django REST Framework |
 | Auth | JWT (SimpleJWT) + Argon2 hasher + django-axes brute-force protection |
 | Task queue | Celery + Redis |
 | Realtime | Django Channels (WebSockets) |
@@ -196,12 +209,14 @@ One command brings up the full stack — PostgreSQL, Redis, the Django/Channels
 API, a Celery worker + beat, and the React app served by nginx on one origin:
 
 ```bash
-# Pull the prebuilt multi-arch images (amd64 + arm64) and start:
-docker compose pull && docker compose up -d
-# — or build from source instead: docker compose up -d --build
+cp .env.docker.example .env.docker   # set SECRET_KEY + FIELD_ENCRYPTION_KEYS (see comments inside)
 
-# optional: seed 3 demo accounts + 90 days of analytics
-docker compose exec backend python manage.py demo_setup
+# Pull the prebuilt multi-arch images (amd64 + arm64) and start:
+docker compose --env-file .env.docker pull && docker compose --env-file .env.docker up -d
+# — or build from source instead: docker compose --env-file .env.docker up -d --build
+
+# optional: seed 3 demo accounts + 90 days of analytics (throwaway stacks only)
+docker compose --env-file .env.docker exec backend python manage.py demo_setup --i-know-this-is-not-production
 # app:          http://localhost:3000
 # Django admin: http://localhost:8000/admin/
 ```
@@ -210,12 +225,14 @@ Images are published to GHCR on every release:
 `ghcr.io/cbsshekhawat18-lab/social-stats-backend` and
 `ghcr.io/cbsshekhawat18-lab/social-stats-frontend` (`:latest` + semver tags).
 
-Set at least `SECRET_KEY` (and `ANTHROPIC_API_KEY` for AI) in a `.env.docker`
-file at the repo root — see `backend/.env.example` for every variable.
+Fill in `.env.docker` from the template: `SECRET_KEY`, `FIELD_ENCRYPTION_KEYS`,
+and the webhook secrets (or `ALLOW_UNSIGNED_WEBHOOKS=True`) are required —
+the backend refuses to start without them — and `ANTHROPIC_API_KEY` enables AI.
+[docs/CONFIGURATION.md](docs/CONFIGURATION.md) lists every variable.
 
 ### Option B — manual (local dev)
 
-You'll need: Python 3.11–3.12 (Django 4.2 does not support 3.13+), Node 18+,
+You'll need: Python 3.11–3.13 (the Docker image and CI use 3.12), Node 18+,
 Redis, and an Anthropic API key for AI features (everything else works
 without external credentials).
 

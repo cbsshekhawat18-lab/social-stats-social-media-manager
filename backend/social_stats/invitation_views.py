@@ -10,7 +10,6 @@
 Invitation and Notification views.
 Agency users invite clients; clients accept/reject.
 """
-import uuid
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -18,9 +17,8 @@ from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework import status
 
-from .models import ClientInvitation, Notification, Client, UserProfile, OnboardingStep
+from .models import ClientInvitation, Notification, Client, OnboardingStep
 from .social_auth_views import _make_jwt
 from .auth_views import _email_html
 

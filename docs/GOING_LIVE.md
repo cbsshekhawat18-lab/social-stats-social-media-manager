@@ -78,16 +78,48 @@ These are the scopes Social Stats requests in code — apply for exactly these:
 
 ## Production environment checklist
 
-> Self-hosting with Docker? `docker compose up -d` from the repo root runs the
-> full stack (PostgreSQL, Redis, API, Celery worker + beat, frontend) — put
-> your production values in `.env.docker` and front it with your own
-> TLS-terminating proxy (see `infra/nginx/` for a reference config).
+> Self-hosting with Docker? Copy `.env.docker.example` to `.env.docker`, put
+> your production values there, and run
+> `docker compose --env-file .env.docker up -d` from the repo root (full
+> stack: PostgreSQL, Redis, API, Celery worker + beat, frontend). Front it
+> with your own TLS-terminating proxy (see `infra/nginx/` for a reference
+> config) and set `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE` and
+> `CSRF_COOKIE_SECURE` to `True` in `.env.docker`.
 
-- [ ] `DEBUG=False`
+### Enforced at startup
+
+With `DEBUG=False` (now the default when `DEBUG` is unset) the backend — web,
+Celery worker and beat, and every management command — **refuses to start**
+with `ImproperlyConfigured` listing each problem, if:
+
+| Check | Fix |
+|---|---|
+| `SECRET_KEY` missing, shorter than 50 characters, or containing `insecure` / `change-me` | `python -c "import secrets; print(secrets.token_urlsafe(64))"` |
+| `FIELD_ENCRYPTION_KEYS` empty | Generate a Fernet key (see [CONFIGURATION.md](CONFIGURATION.md#field-level-encryption)). **Existing installs:** see the migration note below. |
+| `ALLOWED_HOSTS` contains `*` | List your real hostnames (keep `localhost` for the Docker healthcheck). |
+| `META_WEBHOOK_SECRET` or `WHATSAPP_WEBHOOK_SECRET` empty | Set them, or set `ALLOW_UNSIGNED_WEBHOOKS=True` if you don't use those webhooks. That only skips this check: without a secret the webhook endpoints reject every delivery. |
+
+The check is skipped under `manage.py test`. For local development set
+`DEBUG=True` (as `backend/.env.example` does).
+
+> **Migrating an existing install.** If `FIELD_ENCRYPTION_KEYS` was never set,
+> stored OAuth tokens are encrypted with a key derived from your current
+> `SECRET_KEY` (or from `FIELD_ENCRYPTION_KEY`). Before changing either:
+> 1. Set `FIELD_ENCRYPTION_KEYS=<new Fernet key>,<old FIELD_ENCRYPTION_KEY or old SECRET_KEY>`
+>    — every listed key can decrypt; the first encrypts new writes.
+> 2. Deploy, then run the `social_stats.security.tasks.rotate_encryption_keys` task.
+> 3. Only then replace a short/placeholder `SECRET_KEY` (this also signs users
+>    out — JWTs and sessions are signed with it) and drop the old key from the list.
+
+### Checklist
+
+- [ ] `DEBUG=False` (or unset)
 - [ ] `ALLOWED_HOSTS` set to your real domain(s)
 - [ ] `DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT` point at PostgreSQL (not SQLite)
 - [ ] `FIELD_ENCRYPTION_KEYS` set to a real Fernet key (stored in a secrets manager)
-- [ ] `SECRET_KEY` set to a strong random value
+- [ ] `SECRET_KEY` set to a strong random value (50+ characters)
+- [ ] `META_WEBHOOK_SECRET` (your Meta App Secret) and `WHATSAPP_WEBHOOK_SECRET` set — or `ALLOW_UNSIGNED_WEBHOOKS=True` if unused
+- [ ] `TRUSTED_PROXY_COUNT` matches the number of reverse proxies in front of Django
 - [ ] `FRONTEND_URL` set to your HTTPS domain
 - [ ] All `*_REDIRECT_URI` values use **HTTPS** + your domain and match the
       platform app settings exactly

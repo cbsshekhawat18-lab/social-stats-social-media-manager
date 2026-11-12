@@ -23,6 +23,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='subscription',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('client__isnull', False), ('agency__isnull', True)), models.Q(('client__isnull', True), ('agency__isnull', False)), _connector='OR'), name='subscription_exactly_one_subject'),
+            constraint=models.CheckConstraint(condition=models.Q(models.Q(('client__isnull', False), ('agency__isnull', True)), models.Q(('client__isnull', True), ('agency__isnull', False)), _connector='OR'), name='subscription_exactly_one_subject'),
         ),
     ]

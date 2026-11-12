@@ -8,7 +8,9 @@
 #
 # Before running:
 #   1. Start the app with seeded data (README → "Demo"), at http://localhost:3000
-#      (or set BASE_URL).
+#      (or set BASE_URL). The script clicks the one-click demo button, so the
+#      frontend must be built with it:
+#        REACT_APP_SHOW_DEMO=true docker compose --env-file .env.docker up -d --build
 #   2. Install Playwright once:  npm install --no-save playwright && npx playwright install chromium
 #   3. Have ffmpeg on PATH.
 set -euo pipefail

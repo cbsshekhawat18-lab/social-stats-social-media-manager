@@ -579,7 +579,7 @@ class Subscription(models.Model):
         constraints = [
             # Exactly one subject — XOR enforced at the DB layer.
             models.CheckConstraint(
-                check=(
+                condition=(
                     (models.Q(client__isnull=False) & models.Q(agency__isnull=True))
                     | (models.Q(client__isnull=True) & models.Q(agency__isnull=False))
                 ),

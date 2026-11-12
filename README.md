@@ -191,12 +191,14 @@ One command brings up the full stack — PostgreSQL, Redis, the Django/Channels
 API, a Celery worker + beat, and the React app served by nginx on one origin:
 
 ```bash
+cp .env.docker.example .env.docker   # set SECRET_KEY + FIELD_ENCRYPTION_KEYS (see comments inside)
+
 # Pull the prebuilt multi-arch images (amd64 + arm64) and start:
-docker compose pull && docker compose up -d
-# — or build from source instead: docker compose up -d --build
+docker compose --env-file .env.docker pull && docker compose --env-file .env.docker up -d
+# — or build from source instead: docker compose --env-file .env.docker up -d --build
 
 # optional: seed 3 demo accounts + 90 days of analytics (throwaway stacks only)
-docker compose exec backend python manage.py demo_setup --i-know-this-is-not-production
+docker compose --env-file .env.docker exec backend python manage.py demo_setup --i-know-this-is-not-production
 # app:          http://localhost:3000
 # Django admin: http://localhost:8000/admin/
 ```

@@ -8,12 +8,33 @@
 # ============================================================================
 from pathlib import Path
 import os
+import sys
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-in-production')
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+# `manage.py test` — the production guard at the bottom is skipped and a dev
+# SECRET_KEY is allowed (CI runs the suite with DEBUG=False).
+_RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == 'test'
+
+# Safe by default: production behaviour unless DEBUG=True is set explicitly
+# (backend/.env.example sets it for local development).
+DEBUG = _env_bool('DEBUG', False)
+
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if not SECRET_KEY and (DEBUG or _RUNNING_TESTS):
+    SECRET_KEY = 'django-insecure-dev-only-key-never-use-in-production'
 
 # Independent keys for field-level encryption of OAuth tokens ( security).
 # Preferred form: FIELD_ENCRYPTION_KEYS — comma-separated, primary first.
@@ -27,8 +48,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-in-production'
 FIELD_ENCRYPTION_KEYS = os.environ.get('FIELD_ENCRYPTION_KEYS', '')
 FIELD_ENCRYPTION_KEY  = os.environ.get('FIELD_ENCRYPTION_KEY',  '')
 
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = [
+    h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if h.strip()
+]
 
 INSTALLED_APPS = [
     # daphne replaces the runserver with a Channels-aware ASGI dev server.
@@ -183,20 +206,13 @@ MEDIA_MAX_UPLOAD_MB = int(os.environ.get('MEDIA_MAX_UPLOAD_MB', '100'))
 # ── Security headers + HTTPS enforcement () ──────────────────────────
 # Defaults flip ON when DEBUG is False. Each can still be overridden per env
 # (useful for staging that runs HTTP-only behind a private LB).
-def _env_bool(name: str, default: bool) -> bool:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    return raw.strip().lower() in ('1', 'true', 'yes', 'on')
-
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT     = _env_bool('SECURE_SSL_REDIRECT',     not DEBUG)
 
 # Running the test suite (e.g. CI with DEBUG=False): never force an HTTPS
 # redirect — the Django test client speaks http:// and a 301→https turns every
 # API response into an HttpResponsePermanentRedirect (no `.data`), failing tests.
-import sys as _sys
-if 'test' in _sys.argv:
+if _RUNNING_TESTS:
     SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE   = _env_bool('SESSION_COOKIE_SECURE',   not DEBUG)
 CSRF_COOKIE_SECURE      = _env_bool('CSRF_COOKIE_SECURE',      not DEBUG)
@@ -433,3 +449,27 @@ PINBOT_BASE_URL              = os.environ.get('PINBOT_BASE_URL', 'https://partne
 WHATSAPP_ENCRYPTION_KEY      = os.environ.get('WHATSAPP_ENCRYPTION_KEY', '')
 WHATSAPP_WEBHOOK_SECRET      = os.environ.get('WHATSAPP_WEBHOOK_SECRET', '')
 WHATSAPP_RATE_LIMIT_PER_SEC  = int(os.environ.get('WHATSAPP_RATE_LIMIT_PER_SEC', '20'))
+
+# Deployments that don't use Meta / WhatsApp webhooks can boot without their
+# secrets. This does NOT make those endpoints accept unsigned requests: with
+# DEBUG=False and no secret they reject every delivery.
+ALLOW_UNSIGNED_WEBHOOKS = _env_bool('ALLOW_UNSIGNED_WEBHOOKS', False)
+
+
+# ── Production configuration guard ────────────────────────────────────────────
+# Must stay at the bottom so every setting it inspects is defined. Skipped
+# for `manage.py test`. See dashboard/prod_checks.py and docs/GOING_LIVE.md.
+if not DEBUG and not _RUNNING_TESTS:
+    from dashboard.prod_checks import format_errors, production_config_errors
+
+    _prod_errors = production_config_errors(
+        secret_key=SECRET_KEY,
+        field_encryption_keys=FIELD_ENCRYPTION_KEYS,
+        allowed_hosts=ALLOWED_HOSTS,
+        meta_webhook_secret=META_WEBHOOK_SECRET,
+        whatsapp_webhook_secret=WHATSAPP_WEBHOOK_SECRET,
+        allow_unsigned_webhooks=ALLOW_UNSIGNED_WEBHOOKS,
+        legacy_field_encryption_key=FIELD_ENCRYPTION_KEY,
+    )
+    if _prod_errors:
+        raise ImproperlyConfigured(format_errors(_prod_errors))

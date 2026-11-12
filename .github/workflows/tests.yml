@@ -138,12 +138,21 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Generate .env.docker for the throwaway stack
+        run: |
+          {
+            echo "SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(64))')"
+            echo "FIELD_ENCRYPTION_KEYS=$(python3 -c 'import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())')"
+            # No Meta/WhatsApp webhooks in CI — boot without their secrets.
+            echo "ALLOW_UNSIGNED_WEBHOOKS=True"
+          } > .env.docker
+
       - name: Build and start the stack
         env:
           # Smoke-test stack only: bake the one-click demo logins into the
           # frontend bundle. Never set this for real deployments.
           REACT_APP_SHOW_DEMO: "true"
-        run: docker compose up -d --build
+        run: docker compose --env-file .env.docker up -d --build
 
       - name: Wait for backend health
         run: |
@@ -153,24 +162,24 @@ jobs:
             fi
             sleep 5
           done
-          echo "backend never became healthy"; docker compose logs backend | tail -50; exit 1
+          echo "backend never became healthy"; docker compose --env-file .env.docker logs backend | tail -50; exit 1
 
       - name: Frontend serves the SPA through nginx
         run: |
-          curl -fsS http://localhost:3000/ | grep -qi "<title>" || { docker compose logs frontend | tail -30; exit 1; }
+          curl -fsS http://localhost:3000/ | grep -qi "<title>" || { docker compose --env-file .env.docker logs frontend | tail -30; exit 1; }
           # API reachable through the same-origin proxy (401 = auth wall, which is correct)
           code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/auth/me/)
           [ "$code" = "401" ] || { echo "expected 401 from /api/auth/me/, got $code"; exit 1; }
 
       - name: Seed demo data inside the container
-        run: docker compose exec -T backend python manage.py demo_setup --i-know-this-is-not-production
+        run: docker compose --env-file .env.docker exec -T backend python manage.py demo_setup --i-know-this-is-not-production
 
       - name: Worker and beat are running
         run: |
-          docker compose ps --format '{{.Service}} {{.State}}' | tee /tmp/ps.txt
+          docker compose --env-file .env.docker ps --format '{{.Service}} {{.State}}' | tee /tmp/ps.txt
           grep -q "worker running" /tmp/ps.txt
           grep -q "beat running" /tmp/ps.txt
 
       - name: Teardown
         if: always()
-        run: docker compose down -v
+        run: docker compose --env-file .env.docker down -v

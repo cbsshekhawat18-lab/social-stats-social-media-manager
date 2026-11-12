@@ -37,7 +37,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev \
 COPY . .
 
 # Collect Django admin static assets (served by whitenoise at runtime).
-RUN SECRET_KEY=build-only python manage.py collectstatic --noinput
+# DEBUG=True only for this build step, so the production config guard in
+# settings.py doesn't demand real secrets at image build time.
+RUN DEBUG=True SECRET_KEY=build-only python manage.py collectstatic --noinput
 
 # Non-root runtime user; media dir must be writable (uploads).
 RUN useradd -r -u 999 socialstats \

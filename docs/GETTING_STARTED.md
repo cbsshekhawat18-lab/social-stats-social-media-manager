@@ -39,11 +39,18 @@ If you have Docker, the entire stack (PostgreSQL, Redis, API, Celery
 worker + beat, frontend) runs with one command from the repo root:
 
 ```bash
-docker compose pull && docker compose up -d   # prebuilt images (amd64/arm64)
-# or build from source: docker compose up -d --build
-docker compose exec backend python manage.py demo_setup --i-know-this-is-not-production   # demo data
+cp .env.docker.example .env.docker            # set SECRET_KEY + FIELD_ENCRYPTION_KEYS
+docker compose --env-file .env.docker pull && docker compose --env-file .env.docker up -d
+# or build from source: docker compose --env-file .env.docker up -d --build
+docker compose --env-file .env.docker exec backend \
+  python manage.py demo_setup --i-know-this-is-not-production   # demo data
 # app: http://localhost:3000
 ```
+
+The stack runs with `DEBUG=False`, so the backend refuses to boot until
+`.env.docker` has a real `SECRET_KEY`, `FIELD_ENCRYPTION_KEYS`, and either the
+two webhook secrets or `ALLOW_UNSIGNED_WEBHOOKS=True` — the template explains
+each. Pass `--env-file .env.docker` to every `docker compose` command.
 
 The rest of this guide covers the manual (non-Docker) path.
 

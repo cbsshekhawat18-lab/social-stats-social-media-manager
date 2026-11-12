@@ -27,10 +27,7 @@ function renderAt(search) {
   window.history.pushState({}, '', `/auth/callback${search}`);
   return render(
     <StrictMode>
-      <MemoryRouter
-        initialEntries={['/auth/callback']}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
+      <MemoryRouter initialEntries={['/auth/callback']}>
         <Routes>
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/dashboard" element={<div>dashboard</div>} />

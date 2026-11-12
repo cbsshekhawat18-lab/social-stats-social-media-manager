@@ -1,5 +1,5 @@
-Django==4.2.9
-djangorestframework==3.17.1
+Django==5.2.19
+djangorestframework==3.18.3
 djangorestframework-simplejwt==5.5.1
 django-cors-headers==4.9.0
 celery==5.6.3
@@ -11,13 +11,13 @@ google-analytics-data==0.23.0
 google-auth==2.55.1
 google-auth-oauthlib==1.4.0
 python-dotenv==1.2.2
-gunicorn==21.2.0
+gunicorn==27.0.0
 whitenoise==6.11.0
 psycopg2-binary==2.9.12
-Pillow==12.3.0
-weasyprint==60.2
+Pillow==13.0.0
+weasyprint==70.0
 anthropic>=0.112.0
-cryptography==49.0.0
+cryptography==50.0.2
 tenacity==9.1.4
 phonenumbers==9.0.33
 boto3==1.43.36
@@ -26,7 +26,8 @@ python-dateutil==2.9.0.post0
 croniter==2.0.5
 channels==4.3.2
 channels-redis==4.3.0
-daphne==4.2.2
+daphne==4.2.3
+autobahn==26.11.1            # daphne dependency — pinned for security fixes
 
 # ── Stage 2 security build-out (auth hardening) ──────────────────────────────
 argon2-cffi==23.1.0          # password hashing (replaces PBKDF2 default)

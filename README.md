@@ -168,7 +168,7 @@ for the full picture.
 
 | Layer | What |
 |---|---|
-| Backend | Django 4.2 + Django REST Framework |
+| Backend | Django 5.2 LTS + Django REST Framework |
 | Auth | JWT (SimpleJWT) + Argon2 hasher + django-axes brute-force protection |
 | Task queue | Celery + Redis |
 | Realtime | Django Channels (WebSockets) |
@@ -212,7 +212,7 @@ file at the repo root — see `backend/.env.example` for every variable.
 
 ### Option B — manual (local dev)
 
-You'll need: Python 3.11–3.12 (Django 4.2 does not support 3.13+), Node 18+,
+You'll need: Python 3.11–3.13 (the Docker image and CI use 3.12), Node 18+,
 Redis, and an Anthropic API key for AI features (everything else works
 without external credentials).
 

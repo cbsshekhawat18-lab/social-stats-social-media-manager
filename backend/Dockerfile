@@ -1,7 +1,7 @@
 # ============================================================================
-#  Social Stats — backend image (Django 4.2 / Channels / Celery)
+#  Social Stats — backend image (Django 5.2 LTS / Channels / Celery)
 #
-#  Django 4.2 supports Python 3.8–3.12 — pin 3.12, do not float to latest.
+#  Django 5.2 supports Python 3.10–3.13 — pin 3.12 (matches CI), don't float to latest.
 #  Serves ASGI via daphne (HTTP + WebSockets). The same image runs the
 #  Celery worker and beat — see docker-compose.yml for the three services.
 # ============================================================================

@@ -7,7 +7,7 @@
  *  Released under the MIT License — see LICENSE. Keep this notice.
  * ========================================================================== */
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { format, parseISO } from 'date-fns';
 import { PLATFORMS, fmt } from './platforms';
@@ -157,7 +157,7 @@ export async function exportPDF({
     { label: 'Phone Calls', value: fmt(totals.total_phone_calls) },
   ], 62);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: cardEndY + 6,
     head: [['Highlights', 'Value']],
     body: [
@@ -175,7 +175,7 @@ export async function exportPDF({
 
   if (byPlatform.length > 0) {
     setSectionTitle(doc, 'Platform Breakdown', doc.lastAutoTable.finalY + 12);
-    doc.autoTable({
+    autoTable(doc, {
       startY: doc.lastAutoTable.finalY + 16,
       head: [['Platform', 'Impressions', 'Reach', 'Clicks', 'Likes', 'Video Views', 'Followers']],
       body: byPlatform.map((platform) => [
@@ -202,7 +202,7 @@ export async function exportPDF({
 
   if (posts.length > 0) {
     setSectionTitle(doc, 'Recent Post Performance', 48);
-    doc.autoTable({
+    autoTable(doc, {
       startY: 54,
       head: [['Post', 'Platform', 'Account', 'Published', 'Impr.', 'Reach', 'Likes', 'Comments']],
       body: posts.slice(0, 12).map((post) => [

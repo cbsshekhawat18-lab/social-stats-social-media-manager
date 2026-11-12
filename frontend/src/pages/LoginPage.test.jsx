@@ -13,10 +13,7 @@ jest.mock('../hooks/useAuth', () => ({
 
 function renderLogin() {
   return render(
-    <MemoryRouter
-      initialEntries={['/login']}
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
+    <MemoryRouter initialEntries={['/login']}>
       <LoginPage />
     </MemoryRouter>,
   );

@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import logging
 
-from django.utils import timezone
 
 from .models import ActivityLog, PlatformCredential, PlatformPublishLog, UnifiedPost
 
@@ -68,7 +67,7 @@ def _exec_revert_post_published(row: ActivityLog, user) -> tuple[bool, str, dict
         try:
             delete_fn(cred, plog.platform_post_id)
             deleted_platforms.append(plog.platform)
-        except Exception as e:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
             logger.exception('revert delete failed for platform=%s post=%s', plog.platform, post.id)
             failed_platforms.append(plog.platform)
 
@@ -76,7 +75,7 @@ def _exec_revert_post_published(row: ActivityLog, user) -> tuple[bool, str, dict
     post.save(update_fields=['status'])
 
     msg = (
-        f'Cancelled post locally'
+        'Cancelled post locally'
         + (f'; deleted on {", ".join(deleted_platforms)}' if deleted_platforms else '')
         + (f'; manual cleanup needed on {", ".join(failed_platforms)}' if failed_platforms else '')
     )

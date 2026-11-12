@@ -17,7 +17,7 @@ import uuid
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
-from social_stats.ai.context import AIContextProvider, build_context
+from social_stats.ai.context import build_context
 from social_stats.ai.tools import (
     TOOL_SCHEMA, CONFIRMATION_REQUIRED, _DISPATCH, execute_tool,
 )

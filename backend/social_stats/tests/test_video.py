@@ -9,10 +9,8 @@ Every class saves files (seed clips, uploads, derived trims/thumbnails), so
 each one runs with a throwaway MEDIA_ROOT (TempMediaRootMixin) — nothing is
 written to backend/media/.
 """
-import io
 import sys
 import uuid
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User

@@ -3,7 +3,7 @@ Tests for: audit log + notification dispatch + smart watchers
 + approval queue + preferences API.
 """
 import uuid
-from datetime import datetime, timedelta, timezone as dt_tz
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -12,7 +12,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from social_stats.models import (
-    Client, UserProfile, ActionLog, Notification, NotificationPreference,
+    Client, UserProfile, Notification, NotificationPreference,
     PlatformCredential, PostMetric, DailyMetric, UnifiedPost, Alert,
 )
 

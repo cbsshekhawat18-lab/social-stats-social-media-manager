@@ -34,10 +34,8 @@ import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.base import ContentFile
-from django.utils import timezone
 from PIL import Image
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 

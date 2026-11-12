@@ -69,7 +69,7 @@ def _refresh_google_token(cred):
 # ── Facebook ──────────────────────────────────────────────────────────────────
 @shared_task(bind=True, max_retries=3, default_retry_delay=300)
 def sync_facebook(self, client_id, days=30):
-    from .models import Client, PlatformCredential, DailyMetric, SyncLog
+    from .models import PlatformCredential, DailyMetric, SyncLog
     log = SyncLog.objects.create(platform='facebook', client_id=client_id, status='running')
     try:
         cred  = PlatformCredential.objects.get(client_id=client_id, platform='facebook', is_active=True)
@@ -1029,7 +1029,7 @@ def generate_monthly_roi_reports():
     Runs on 2nd of every month at 8am.
     Calculates ROI for the previous month for all active clients with ROISettings.
     """
-    from .models import Client, ROIReport, ROISettings
+    from .models import Client, ROIReport
     from .roi_calculator import calculate_roi
     from decimal import Decimal
 

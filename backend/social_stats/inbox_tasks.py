@@ -35,7 +35,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from .models import (
-    Client, PlatformCredential, UnifiedReview,
+    PlatformCredential, UnifiedReview,
     Conversation, Message,
 )
 from . import sentiment as _sentiment

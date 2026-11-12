@@ -9,7 +9,6 @@ Covers:
   - tenant isolation (rules from one client never run on another's events)
   - viewset CRUD + toggle action + templates collection action
 """
-from datetime import timedelta
 from unittest.mock import patch, MagicMock
 
 from django.contrib.auth.models import User

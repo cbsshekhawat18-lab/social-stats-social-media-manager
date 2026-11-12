@@ -31,7 +31,7 @@ import logging
 import os
 import uuid
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 from django.conf import settings
 from django.core.files.base import ContentFile

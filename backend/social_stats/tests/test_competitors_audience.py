@@ -8,7 +8,7 @@ Covers:
   - UnifiedAudienceView aggregation, heatmap normalization, top content types
 """
 import uuid
-from datetime import date, datetime, timedelta, timezone as dt_tz
+from datetime import datetime, timedelta, timezone as dt_tz
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User

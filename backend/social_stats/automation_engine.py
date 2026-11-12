@@ -27,11 +27,10 @@ Supported actions:
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 import requests
 from celery import shared_task
-from django.contrib.auth.models import User
 from django.db import transaction
 from django.utils import timezone
 

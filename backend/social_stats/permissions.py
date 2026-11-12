@@ -18,7 +18,7 @@ class PermissionChecker:
             return False
         if user_profile.role == 'superadmin':
             return True
-        from .models import UserPermission, RolePermission, Permission
+        from .models import UserPermission, RolePermission
         try:
             override = UserPermission.objects.get(
                 user_profile=user_profile,

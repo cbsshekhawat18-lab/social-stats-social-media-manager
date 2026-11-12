@@ -15,7 +15,7 @@ Endpoints:
   GET  /api/composer/posts/?status=pending_approval  — already supported by UnifiedPostViewSet
   GET  /api/composer/approvals/               — convenience: queue across the user's tenant
 """
-from rest_framework import serializers, status, viewsets
+from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response

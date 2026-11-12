@@ -10,7 +10,9 @@
 OAuth 2.0 handlers for all 5 platforms:
   Facebook, Instagram, YouTube, Google My Business, LinkedIn
 """
-import secrets, requests, logging
+import secrets
+import requests
+import logging
 from urllib.parse import urlencode
 from datetime import timedelta
 
@@ -19,14 +21,12 @@ logger = logging.getLogger(__name__)
 from django.conf import settings
 from django.shortcuts import redirect
 from django.utils import timezone
-from django.contrib.auth.decorators import login_required
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from .models import PlatformCredential, Client
-from django.contrib.auth.models import User
 from .marketplace_permissions import (
     resolve_acting_context, check_action, deny_response, approval_pending_response,
 )

@@ -30,7 +30,6 @@ import json
 import logging
 import re
 
-from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -38,10 +37,9 @@ from rest_framework.response import Response
 from .ai.client import AIClient
 from .bot_views import _validate_flow
 from .models import (
-    BotConversation, BotConversationStep, BotFlow,
+    BotConversation, BotFlow,
     NODE_TYPES,
 )
-from .whatsapp_views import TenantScopedMixin
 
 
 logger = logging.getLogger(__name__)

@@ -10,19 +10,16 @@
 User profile, password change, and agency disconnect views.
 """
 import os
-from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.conf import settings
-from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 
-from .models import UserProfile, Client, ClientInvitation
 from .security.uploads import validate_image_upload
 from .social_auth_views import _make_jwt
 

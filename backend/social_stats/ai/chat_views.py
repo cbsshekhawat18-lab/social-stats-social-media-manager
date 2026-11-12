@@ -47,10 +47,10 @@ from rest_framework.response import Response
 from ..models import AIConversation, AIMessage
 from ..ai_helpers import brand_voice_prompt
 from ..ai_views import _resolved_client
-from . import AIError, RateLimited, prompts
+from . import RateLimited, prompts
 from .client import _anthropic_or_none
 from . import cost_tracker, rate_limiter
-from .tools import TOOL_SCHEMA, execute_tool, CONFIRMATION_REQUIRED
+from .tools import TOOL_SCHEMA, execute_tool
 
 logger = logging.getLogger(__name__)
 

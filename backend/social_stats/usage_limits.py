@@ -19,7 +19,6 @@ A limit value of `0` blocks the action entirely.
 """
 from __future__ import annotations
 
-from datetime import timedelta
 
 from django.utils import timezone
 

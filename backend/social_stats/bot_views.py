@@ -32,7 +32,7 @@ from collections import Counter
 
 from django.db.models import F, Count, Q
 from django.utils import timezone
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -44,8 +44,8 @@ from .bot_serializers import (
     CTWACampaignSerializer,
 )
 from .models import (
-    BotConversation, BotConversationStep, BotFlow, BotFlowTemplate,
-    CTWACampaign, NODE_TYPES, Notification,
+    BotConversation, BotFlow, BotFlowTemplate,
+    CTWACampaign, NODE_TYPES,
 )
 from .whatsapp_views import TenantScopedMixin
 

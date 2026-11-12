@@ -23,7 +23,7 @@ from social_stats.models import (
     WhatsAppContact, ApprovalRequest,
     Agency, AgencyMembership, AgencyClientRelation,
 )
-from social_stats.bot_models import Lead, BotFlow, BotConversation
+from social_stats.bot_models import Lead
 
 
 def _client(label='c'):

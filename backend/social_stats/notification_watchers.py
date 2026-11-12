@@ -27,7 +27,7 @@ from datetime import timedelta
 from celery import shared_task
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.db.models import Avg, F, Sum
+from django.db.models import Avg, F
 from django.utils import timezone
 
 from .models import (

@@ -28,13 +28,12 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any
 
 from django.utils import timezone
 
 from ..models import (
     Client, PostMetric, UnifiedPost, Conversation, Message,
-    Competitor, CompetitorSnapshot, WeeklyTopPost, CalendarPost,
+    Competitor, CompetitorSnapshot, CalendarPost,
 )
 
 logger = logging.getLogger(__name__)
@@ -741,7 +740,7 @@ def _t_reply_to_message(ti, *, client, user):
     from ..publishers import (
         get_publisher, PublishError, TokenExpiredError, RateLimitError,
     )
-    from ..models import Conversation, Message, PlatformCredential
+    from ..models import Conversation, PlatformCredential
     from ..marketplace_permissions import check_action
     from ..events.publisher import EventPublisher
 

@@ -27,7 +27,6 @@ from the children's statuses after each child task finishes.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from celery import shared_task
 from django.utils import timezone

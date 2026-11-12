@@ -26,11 +26,9 @@ so DRF's ``request.user`` is a real user (the key's creator) and
 from __future__ import annotations
 
 import hashlib
-import hmac
 import ipaddress
 import logging
 import secrets
-from datetime import timedelta
 from typing import Optional
 
 from django.conf import settings

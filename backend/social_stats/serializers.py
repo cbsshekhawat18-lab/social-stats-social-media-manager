@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from .security.uploads import validate_image_upload
-from .models import Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep, Competitor, ONBOARDING_STEP_DESCRIPTIONS, ROISettings, ROIReport, SiteContent, LookupCollection, LookupItem, GMBBusinessInfo, GMBReview
+from .models import Client, PlatformCredential, DailyMetric, PostMetric, SyncLog, ClientGoal, Alert, AIInsight, WeeklyTopPost, SharedReport, OnboardingStep, Competitor, ONBOARDING_STEP_DESCRIPTIONS, ROISettings, ROIReport, SiteContent, LookupCollection, LookupItem, GMBBusinessInfo, GMBReview
 
 
 class UserSerializer(serializers.ModelSerializer):

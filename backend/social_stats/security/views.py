@@ -37,12 +37,11 @@ from .throttles import MFAVerifyThrottle
 from .client_ip import get_client_ip
 from .sessions import UserSession, revoke_session, revoke_all_for_user, record_session
 from .mfa import (
-    UserMFA, BACKUP_CODE_COUNT,
     provision_secret, qr_data_uri, verify_totp,
     generate_backup_codes, consume_backup_code,
-    issue_mfa_token, parse_mfa_token,
+    parse_mfa_token,
 )
-from .api_keys import APIKey, generate_key, KEY_PREFIX_LIVE, KEY_PREFIX_TEST
+from .api_keys import APIKey, generate_key
 from . import audit as security_audit
 
 

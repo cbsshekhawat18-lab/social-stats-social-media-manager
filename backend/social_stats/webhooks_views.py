@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import json
 import logging
 
 from django.conf import settings

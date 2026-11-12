@@ -27,7 +27,7 @@ Error mapping cheatsheet (see Meta Graph API error codes):
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 import requests
 from django.conf import settings

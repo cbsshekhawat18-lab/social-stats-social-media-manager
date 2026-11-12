@@ -409,7 +409,11 @@ CELERY_BEAT_SCHEDULE = {
 META_APP_ID        = os.environ.get('META_APP_ID', '')
 META_APP_SECRET    = os.environ.get('META_APP_SECRET', '')
 META_REDIRECT_URI  = os.environ.get('META_REDIRECT_URI', 'http://localhost:8000/api/oauth/facebook/callback/')
-META_API_VERSION   = 'v18.0'
+# Graph API version for every Meta call (Graph, Marketing, CAPI, the OAuth
+# dialog). Bump deliberately: check the changelog for removed metrics first.
+META_API_VERSION   = os.environ.get('META_API_VERSION', 'v24.0').strip()
+if not __import__('re').fullmatch(r'v\d+\.\d+', META_API_VERSION):
+    raise ImproperlyConfigured(f"META_API_VERSION must look like 'v24.0' (got {META_API_VERSION!r}).")
 
 # ── Google OAuth (YouTube + GMB) ─────────────────────
 GOOGLE_CLIENT_ID      = os.environ.get('GOOGLE_CLIENT_ID', '')

@@ -72,6 +72,7 @@ App (Business type) → add **Pages API** + **Instagram Graph API**. See
 | `META_APP_ID` | For Quick Connect | placeholder | Meta App ID (Settings → Basic). |
 | `META_APP_SECRET` | For Quick Connect | placeholder | Meta App Secret. |
 | `META_REDIRECT_URI` | For Quick Connect | `http://localhost:8000/api/oauth/facebook/callback/` | Must match the redirect URI registered in the Meta app exactly. |
+| `META_API_VERSION` | No | `v24.0` | Graph API version used for every Meta call (Graph, Marketing API, Conversions API, the Facebook Login dialog). Format `vNN.N`; anything else fails at startup. Before bumping, check Meta's changelog for removed insights metrics, and set your Meta app's Webhooks subscriptions to the same version. |
 
 ## Google (YouTube + Google Business Profile)
 

@@ -57,7 +57,7 @@ The rest of this guide covers the manual (non-Docker) path.
 ## 2. Clone the repository
 
 ```bash
-git clone <your-fork-or-repo-url> social-stats
+git clone https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager.git social-stats
 cd social-stats
 ```
 

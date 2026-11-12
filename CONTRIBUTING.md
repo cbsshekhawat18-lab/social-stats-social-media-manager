@@ -69,11 +69,12 @@ to find something scoped for a first contribution.
   existing `ui/` primitives rather than introducing new component libraries.
 - Keep claims in docs and marketing copy truthful to what the code actually does.
 
-## Add a screenshot
+## Updating the demo GIF and screenshot
 
-The README references `docs/screenshot.png`. If you capture a clean screenshot or
-GIF of the analytics dashboard or composer, a PR adding it to `docs/` is a
-genuinely high-impact contribution — it's the first thing visitors see.
+`docs/demo.gif` (in the README) and `docs/screenshot.png` (the analytics page)
+are recorded by `scripts/record-demo.sh` from a running app seeded with
+`demo_setup`. The browser steps are scripted, so a re-take after a UI change
+shows the same thing; the script's header lists what to install first.
 
 ## Reporting bugs & requesting features
 

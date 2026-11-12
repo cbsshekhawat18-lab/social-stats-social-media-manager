@@ -2,46 +2,57 @@
 
 > An open-source, self-hostable alternative to Hootsuite, Buffer & Sprout Social.
 
-**Social Stats** is an open-source **social media management** and marketing platform for
-agencies and teams. One product unifies a **social media scheduler** and **content calendar**,
-cross-platform **analytics dashboards**, a unified conversation inbox, a click-to-WhatsApp
-**bot builder**, and an **AI social media assistant** — across **Facebook**, **Instagram**,
-**YouTube**, **LinkedIn**, and **Google Business**, with WhatsApp Business as a first-class
-messaging module. It's built on **Django + React** and is fully self-hostable.
+**Social Stats** is an open-source, self-hostable **social media scheduler** for agencies
+and teams: publish to **Facebook**, **Instagram**, **YouTube**, **LinkedIn** and **Google
+Business** from one composer, run many client workspaces with enforced tenant isolation, and
+let automations answer and notify for you. It's built on **Django + React**; you own the data
+and the keys.
 
-<!-- Badges — replace `cbsshekhawat18` with your GitHub org/username if different,
-     and the repo slug if you don't use `social-stats-social-media-manager`. -->
 [![Tests](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/actions/workflows/tests.yml/badge.svg)](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Stars](https://img.shields.io/github/stars/cbsshekhawat18-lab/social-stats-social-media-manager?style=social)](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/cbsshekhawat18-lab/social-stats-social-media-manager)](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/commits)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
-> **Status:** early-stage. The product is feature-complete enough to run
-> end-to-end (auth, OAuth onboarding, analytics, composer, AI features,
-> CTWA bot builder, marketplace), but customer-volume, testimonials, and
-> case studies on the marketing site are intentionally absent until we
-> onboard the first cohort of launch partners.
-
-> ⭐ **If Social Stats is useful to you, please star the repo** — it helps other
-> people building self-hosted social tooling find the project.
+> **Status:** early-stage. It runs end to end (auth, OAuth onboarding,
+> analytics, composer, AI features, the click-to-WhatsApp bot builder,
+> marketplace) and its 390+ backend tests pass, but it has no launch partners yet:
+> expect rough edges, and please report them.
 
 ---
 
 ## Demo
 
-Spin up a fully-seeded local instance in two commands:
+![Social Stats: demo sign-in, the analytics page with 90 days of sample data, the dashboard](docs/demo.gif)
+
+Run it locally with Docker, seeded with three accounts and 90 days of sample analytics:
 
 ```bash
-python manage.py migrate
-python manage.py demo_setup    # seeds 3 accounts + 90 days of sample analytics
+git clone https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager.git
+cd social-stats-social-media-manager
+
+# Throwaway config for a local trial (for a real install, start from .env.docker.example)
+cat > .env.docker <<EOF
+SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(64))')
+FIELD_ENCRYPTION_KEYS=$(python3 -c 'import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())')
+ALLOW_UNSIGNED_WEBHOOKS=True
+EOF
+
+docker compose --env-file .env.docker pull && docker compose --env-file .env.docker up -d
+docker compose --env-file .env.docker exec backend python manage.py demo_setup --i-know-this-is-not-production
 ```
 
-`demo_setup` is idempotent and creates three accounts (password `demo` for all),
-then chains into the sample-data seeder so the dashboards aren't empty. It only
-runs with `DEBUG=True` unless you pass `--i-know-this-is-not-production`. Sign in
-at `/login`; set `REACT_APP_SHOW_DEMO=true` in `frontend/.env` to get one-click
-sign-in buttons for each:
+Then open <http://localhost:3000/login>. Without Docker, follow
+[Option B](#option-b--manual-local-dev): a Python 3.12 virtualenv for the
+backend and `npm start` for the frontend.
+
+`demo_setup` is idempotent. It creates three accounts (password `demo` for all)
+and seeds the sample data. It only runs with `DEBUG=True` unless you pass
+`--i-know-this-is-not-production` — the Docker stack runs with `DEBUG=False`,
+hence the flag above. Sign in with the accounts below; for one-click sign-in
+buttons on `/login`, build the frontend with `REACT_APP_SHOW_DEMO=true`
+(`REACT_APP_SHOW_DEMO=true docker compose --env-file .env.docker up -d --build`,
+or set it in `frontend/.env` without Docker):
 
 | Account | Email | Password | Lands on |
 |---|---|---|---|
@@ -51,11 +62,8 @@ sign-in buttons for each:
 
 > These are local-only demo credentials — never deploy them to a real environment.
 
-![Dashboard screenshot](docs/screenshot.png)
-
-> 📸 _Screenshot placeholder._ Capture a real shot or GIF of the analytics dashboard
-> and save it to `docs/screenshot.png` — a live screenshot dramatically increases
-> click-through and stars. (See "Add a screenshot" in `CONTRIBUTING.md`.)
+> ⭐ **If Social Stats is useful to you, please star the repo** — it helps other
+> people building self-hosted social tooling find the project.
 
 ---
 
@@ -76,50 +84,60 @@ Full guides live in [`docs/`](docs/):
 
 ## Features
 
-Social Stats is a full product, not a single dashboard. It ships a public
-**marketing website**, an **admin shell**, **multi-client dashboards**, and the
-modules below — all in one codebase.
+Social Stats leads with the three capabilities its test suite covers best
+(`python manage.py test social_stats`: 390+ tests, all passing on Python 3.12).
 
-### 📊 Analytics & reporting
-- Cross-platform analytics dashboards (Facebook, Instagram, YouTube, LinkedIn, Google Business)
-- KPI overview — impressions, reach, clicks, video views, followers — per client and aggregated
-- Per-platform performance tables, distribution & comparison charts, date-range filters
-- Reports (exportable) + **AI-narrated** monthly summaries
-- Sync-activity logs and performance alerts
+### 📅 Publishing to five platforms — 59 tests
+- Publishers for Facebook, Instagram, YouTube, LinkedIn and Google Business behind one
+  orchestrator, each unit-tested against a mocked platform API
+- Driven from the **composer** and **content calendar**: write once, format per platform,
+  schedule, and route agency posts through client **approval** first
+- Covered by `test_publishers_facebook` (13), `test_publishers_instagram` (13),
+  `test_publishers_remaining` (25), `test_orchestrator` (8)
 
-### ✍️ Content & publishing
-- **Composer** — write once, format per platform, schedule
-- **Content calendar** + **Queue manager** for scheduled posting
-- **Media Library** for reusable assets
-- **Video Studio** — trim/resize, captions, thumbnails, direct YouTube upload
-- Agency **approval flows** before client posts go live
+### 🏢 Multi-client agency workspaces — 56 tests
+- One agency, many client brands: per-client workspaces, **granular per-client
+  permissions**, invites and manage-requests
+- Tenant isolation enforced on every endpoint, not just in the UI
+- Covered by `test_tenant_isolation` (31), `test_unified_permission` (16),
+  `test_tenant_scoped_agency` (9)
 
-### 💬 Engage
-- **Unified inbox** — DMs, comments, and Google reviews in one queue, AI reply suggestions
-- **Reviews** management
-- **Automations** — IF-this-THEN-that rules (e.g. keyword → template reply)
+### ⚡ Automations and notifications — 55 tests
+- **Automations**: IF-this-THEN-that rules, e.g. a keyword in a comment triggers a
+  template reply
+- An internal event bus that drives in-app and e-mail **notifications**, smart watchers
+  and an **audit log**
+- Covered by `test_automation` (21), `test_event_bus` (14),
+  `test_audit_notifications` (14), `test_notification_centralization` (6)
 
-### 🤖 AI Studio (powered by Anthropic Claude)
-- Cmd/Ctrl+J **AI assistant** with tool use + chat history
-- Smart Composer, Caption Writer, Post Ideas, Hashtag Research
-- **Brand Voice** training, **AI Insights** (trends/anomalies/forecasts), AI Audit & usage tracking
+<details>
+<summary><strong>Also included</strong> — the rest of the product, with lighter test coverage</summary>
 
-### 📱 WhatsApp & CTWA bots
-- WhatsApp dashboard, inbox, contacts, lists, **templates**, **campaigns**
-- **Click-to-WhatsApp bot builder** — visual flow editor with conditional branches & AI nodes
-- Bot conversations, human-handoff queue, bot analytics, template gallery
-
-### 👥 CRM, marketplace & agencies
+- **Analytics** — daily-metric ingestion across the five platforms into per-client
+  dashboards (impressions, reach, clicks, video views, followers), per-platform
+  tables and charts, date-range filters, exportable reports, sync logs and alerts
+- **Unified inbox** — DMs, comments and Google reviews in one queue with AI reply
+  suggestions; **reviews** management
+- **AI Studio** (Anthropic Claude) — Cmd/Ctrl+J assistant with tool use, Smart
+  Composer, Caption Writer, Post Ideas, Hashtag Research, Brand Voice training,
+  AI Insights, AI-narrated monthly reports, usage tracking
+- **WhatsApp & click-to-WhatsApp bots** — WhatsApp dashboard, inbox, contacts,
+  lists, templates, campaigns; a visual bot-flow editor with conditional branches
+  and AI nodes; human hand-off queue, bot analytics, template gallery
 - **Leads/CRM** — captured leads with conversation history
-- **Agency marketplace** — two-sided directory; profiles, reviews, invites, manage-requests, disputes
-- Multi-client agency workspaces with **granular per-client permissions**
+- **Agency marketplace** — two-sided directory with profiles, reviews, invites,
+  manage-requests and disputes
+- **Admin shell** (`/admin`) — users, clients, staff access, audit log, approval
+  and trust queues
+- **Public marketing site** — home, features, solutions, customers, blog, help
+  center, status, changelog and legal pages
+- **Platform** — realtime updates (WebSockets / Django Channels), PWA/offline
+  support, JWT + Argon2, MFA/TOTP, session management, django-axes,
+  Fernet-encrypted tokens, GDPR/DPDP tooling, light and dark theme, mobile layout
 
-### 🛠️ Admin & platform
-- **Admin shell** (`/admin`) — manage all users, clients, staff access, audit log, approval & trust queues
-- **Public marketing site** — home, features, solutions, customers, blog, help center, status, changelog, legal pages
-- **Realtime** updates (WebSockets / Django Channels), **PWA**/offline support
-- Security: JWT + Argon2, MFA/TOTP, session management, django-axes, Fernet-encrypted tokens, GDPR/DPDP tooling
-- **Light & dark theme** toggle, fully responsive (mobile PWA layout)
+Every module is described in the [User Guide](docs/USER_GUIDE.md).
+
+</details>
 
 ### Account types
 
@@ -207,8 +225,10 @@ Images are published to GHCR on every release:
 `ghcr.io/cbsshekhawat18-lab/social-stats-backend` and
 `ghcr.io/cbsshekhawat18-lab/social-stats-frontend` (`:latest` + semver tags).
 
-Set at least `SECRET_KEY` (and `ANTHROPIC_API_KEY` for AI) in a `.env.docker`
-file at the repo root — see `backend/.env.example` for every variable.
+Fill in `.env.docker` from the template: `SECRET_KEY`, `FIELD_ENCRYPTION_KEYS`,
+and the webhook secrets (or `ALLOW_UNSIGNED_WEBHOOKS=True`) are required —
+the backend refuses to start without them — and `ANTHROPIC_API_KEY` enables AI.
+[docs/CONFIGURATION.md](docs/CONFIGURATION.md) lists every variable.
 
 ### Option B — manual (local dev)
 

@@ -43,8 +43,9 @@ approved. See [GOING_LIVE.md](GOING_LIVE.md).
 ### WhatsApp webhook not verifying (403)
 - The GET handshake returns `403` unless `hub.verify_token` equals
   `WHATSAPP_WEBHOOK_SECRET`.
-- POST events return `403` unless the `X-Webhook-Secret` header (or `?secret=`)
-  equals `WHATSAPP_WEBHOOK_SECRET`.
+- POST events return `403` unless the `X-Webhook-Secret` header equals
+  `WHATSAPP_WEBHOOK_SECRET`. The `?secret=` query parameter is no longer
+  accepted — send the header.
 - Make sure `WHATSAPP_WEBHOOK_SECRET` is **set** (an empty value rejects all
   calls) and matches what you configured in Pinbot. See
   [CONNECT_WHATSAPP.md](CONNECT_WHATSAPP.md).

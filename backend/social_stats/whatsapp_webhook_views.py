@@ -11,6 +11,8 @@ Pinbot webhook receiver — accepts delivery/read receipts and inbound messages.
 
 Authentication: shared-secret header `X-Webhook-Secret` checked against
 `settings.WHATSAPP_WEBHOOK_SECRET`. Configure this URL + secret in Pinbot.
+The secret is only accepted in the header — never in the query string, where
+it would end up in proxy/access logs and browser history.
 """
 import logging
 
@@ -29,19 +31,20 @@ logger = logging.getLogger(__name__)
 @authentication_classes([])
 @permission_classes([AllowAny])
 def pinbot_webhook(request):
+    import hmac as _hmac
+    expected = getattr(settings, 'WHATSAPP_WEBHOOK_SECRET', '')
+
     # GET = Meta-style verification handshake (returns hub.challenge if supported)
     if request.method == 'GET':
         challenge = request.query_params.get('hub.challenge')
-        verify_token = request.query_params.get('hub.verify_token')
-        if challenge and verify_token == getattr(settings, 'WHATSAPP_WEBHOOK_SECRET', ''):
+        verify_token = request.query_params.get('hub.verify_token') or ''
+        if challenge and expected and _hmac.compare_digest(verify_token.encode(), expected.encode()):
             from django.http import HttpResponse
             return HttpResponse(challenge, content_type='text/plain')
         return Response(status=403)
 
-    import hmac as _hmac
-    expected = getattr(settings, 'WHATSAPP_WEBHOOK_SECRET', '')
-    secret = request.headers.get('X-Webhook-Secret', '') or request.query_params.get('secret', '')
-    if not expected or not _hmac.compare_digest(secret, expected):
+    secret = request.headers.get('X-Webhook-Secret', '')
+    if not expected or not _hmac.compare_digest(secret.encode(), expected.encode()):
         logger.warning('Pinbot webhook rejected: bad secret')
         return Response(status=403)
 

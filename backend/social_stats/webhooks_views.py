@@ -110,11 +110,17 @@ def _meta_event(request):
 
 
 def _verify_meta_signature(request, secret: str) -> bool:
-    """Verify X-Hub-Signature-256 against the request body."""
+    """Verify X-Hub-Signature-256 against the request body.
+
+    Fails closed: with no META_WEBHOOK_SECRET every event is rejected, except
+    under DEBUG (local development without a Meta app).
+    """
     if not secret:
-        # No secret configured → accept anything (dev mode). Production
-        # deployments should always set META_WEBHOOK_SECRET.
-        return True
+        if settings.DEBUG:
+            logger.warning('META_WEBHOOK_SECRET unset — accepting unsigned Meta webhook (DEBUG only)')
+            return True
+        logger.error('META_WEBHOOK_SECRET is not set — rejecting Meta webhook event')
+        return False
     sig = request.headers.get('X-Hub-Signature-256') or ''
     if not sig.startswith('sha256='):
         return False

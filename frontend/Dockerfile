@@ -19,6 +19,9 @@ ENV REACT_APP_API_URL=${REACT_APP_API_URL}
 # (the CI smoke-test stack does; published images never do).
 ARG REACT_APP_SHOW_DEMO=false
 ENV REACT_APP_SHOW_DEMO=${REACT_APP_SHOW_DEMO}
+# Never inline webpack's runtime into index.html — nginx serves a CSP with
+# script-src 'self', which would block it.
+ENV INLINE_RUNTIME_CHUNK=false
 RUN CI=true npm run build
 
 # ── Runtime ─────────────────────────────────────────────────────────────────

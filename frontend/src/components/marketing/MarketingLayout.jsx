@@ -10,11 +10,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Menu, X, ChevronDown,
-  Github, Linkedin, Twitter, Youtube,
   BarChart3, PenSquare, Inbox, MessageCircle, Bot, Sparkles, FileText,
   Zap, Building2, Users, Star, Calendar, MessagesSquare,
   Briefcase, Stethoscope, UtensilsCrossed, Palette, ShoppingBag, GraduationCap,
 } from 'lucide-react';
+import { Github, Linkedin, Twitter, Youtube } from '../ui/BrandIcons';
 
 import Logo from '../ui/Logo';
 import Button from '../ui/Button';

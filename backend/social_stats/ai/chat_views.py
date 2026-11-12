@@ -46,6 +46,7 @@ from rest_framework.response import Response
 
 from ..models import AIConversation, AIMessage
 from ..ai_helpers import brand_voice_prompt
+from .client import sampling_kwargs
 from ..ai_views import _resolved_client
 from . import RateLimited, prompts
 from .client import _anthropic_or_none
@@ -323,7 +324,7 @@ def chat(request):
             response = sdk.messages.create(
                 model=model_id,
                 max_tokens=sys_cfg.get('max_tokens', 2048),
-                temperature=sys_cfg.get('temperature', 0.6),
+                **sampling_kwargs(model_id, sys_cfg.get('temperature', 0.6)),
                 system=sys_cfg['system'],
                 tools=TOOL_SCHEMA,
                 messages=history,
@@ -436,7 +437,7 @@ def chat(request):
                 response = sdk.messages.create(
                     model=model_id,
                     max_tokens=1024,
-                    temperature=sys_cfg.get('temperature', 0.6),
+                    **sampling_kwargs(model_id, sys_cfg.get('temperature', 0.6)),
                     system=sys_cfg['system'],
                     tools=TOOL_SCHEMA,
                     messages=history,

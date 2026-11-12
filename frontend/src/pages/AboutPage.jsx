@@ -8,7 +8,8 @@
  * ========================================================================== */
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Heart, Compass, Layers, Globe, Linkedin, Twitter } from 'lucide-react';
+import { ArrowRight, Heart, Compass, Layers, Globe } from 'lucide-react';
+import { Linkedin, Twitter } from '../components/ui/BrandIcons';
 
 import MarketingLayout from '../components/marketing/MarketingLayout';
 import Button from '../components/ui/Button';

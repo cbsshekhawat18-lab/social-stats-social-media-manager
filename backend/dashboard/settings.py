@@ -85,6 +85,17 @@ AXES_LOCKOUT_PARAMETERS  = ['username', 'ip_address']
 AXES_RESET_ON_SUCCESS    = True
 AXES_ENABLE_ADMIN        = True
 AXES_ENABLED             = os.environ.get('AXES_ENABLED', 'True') == 'True'  # toggle in dev/test
+
+# ── Client IP behind reverse proxies ──────────────────────────────────────────
+# Number of reverse proxies in front of Django that append to X-Forwarded-For.
+# 0 (default) = ignore the header and use REMOTE_ADDR. docker-compose sets 1
+# (the frontend nginx). Only raise it when Django is reachable *exclusively*
+# through those proxies — see social_stats/security/client_ip.py.
+TRUSTED_PROXY_COUNT = int(os.environ.get('TRUSTED_PROXY_COUNT', '0'))
+# axes resolves IPs through the same helper as the DRF throttles. The ipware
+# count is kept in sync for completeness; AXES_CLIENT_IP_CALLABLE wins.
+AXES_CLIENT_IP_CALLABLE  = 'social_stats.security.client_ip.get_client_ip'
+AXES_IPWARE_PROXY_COUNT  = TRUSTED_PROXY_COUNT or None
 # When DRF returns JSON (most paths), axes returns plain text — we override
 # the lockout response below from a custom view if needed. For now the default
 # plain-text 403 is acceptable for a security message.

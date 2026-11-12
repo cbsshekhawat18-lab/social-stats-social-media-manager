@@ -71,8 +71,8 @@ def _finish_social_login(request, user):
     mfa = getattr(user, 'mfa', None)
     if mfa and mfa.is_enabled:
         from .security.mfa import issue_mfa_token
-        from .security.sessions import _client_ip
-        token = issue_mfa_token(user_id=user.id, ip=_client_ip(request))
+        from .security.client_ip import get_client_ip
+        token = issue_mfa_token(user_id=user.id, ip=get_client_ip(request))
         return redirect(
             f'{FRONTEND_CALLBACK}?mfa_required=1&mfa_token={urllib.parse.quote(token)}'
         )

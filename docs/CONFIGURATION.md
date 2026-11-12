@@ -136,6 +136,7 @@ These have working defaults and rarely need changing:
 |---|---|---|
 | `AXES_FAILURE_LIMIT` | `5` | Failed logins before lockout (django-axes). |
 | `AXES_COOLOFF_HOURS` | `1` | Lockout duration in hours. |
+| `TRUSTED_PROXY_COUNT` | `0` | Number of reverse proxies in front of Django that append to `X-Forwarded-For`. `0` ignores the header and uses the socket address. Set it to the exact number of your proxies (docker-compose sets `1` for its nginx) — and only if Django can't be reached around them, or clients could forge their IP. Used by login/signup/MFA throttles, django-axes, session records and API-key IP allow-lists. |
 | `JWT_ACCESS_MIN` | `15` | Access-token lifetime (minutes). |
 | `JWT_REFRESH_DAYS` | `7` | Refresh-token lifetime (days). |
 | `JWT_AUDIENCE` / `JWT_ISSUER` | `socialstats-app` / `socialstats.com` | JWT claims. |

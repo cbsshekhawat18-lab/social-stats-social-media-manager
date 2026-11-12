@@ -56,6 +56,8 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       CHANNEL_LAYERS_REDIS_URL: redis://redis:6379/1
+      # One reverse proxy (the frontend nginx) appends to X-Forwarded-For.
+      TRUSTED_PROXY_COUNT: "1"
       # Single-origin behind the frontend nginx → plain HTTP inside the network
       SECURE_SSL_REDIRECT: "False"
       SESSION_COOKIE_SECURE: "False"

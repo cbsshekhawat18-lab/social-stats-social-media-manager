@@ -26,6 +26,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from .client_ip import get_client_ip
+
 
 logger = logging.getLogger(__name__)
 
@@ -94,15 +96,6 @@ def _parse_user_agent(ua_string: str) -> tuple[str, str, str]:
         return ('', '', '')
 
 
-def _client_ip(request) -> str | None:
-    if not request:
-        return None
-    xff = request.META.get('HTTP_X_FORWARDED_FOR') or ''
-    if xff:
-        return xff.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR')
-
-
 def record_session(*, user, refresh_jti: str, expires_at, request=None,
                    parent_jti: str = '') -> UserSession:
     """Create or update a UserSession row from an authenticated request.
@@ -112,7 +105,7 @@ def record_session(*, user, refresh_jti: str, expires_at, request=None,
     """
     ua_string = request.META.get('HTTP_USER_AGENT', '')[:1000] if request else ''
     browser, os_, device = _parse_user_agent(ua_string)
-    ip = _client_ip(request)
+    ip = get_client_ip(request)
 
     sess, _ = UserSession.objects.update_or_create(
         refresh_jti=refresh_jti,

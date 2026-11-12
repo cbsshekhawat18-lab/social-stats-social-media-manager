@@ -34,7 +34,8 @@ from rest_framework.response import Response
 
 from .throttles import MFAVerifyThrottle
 
-from .sessions import UserSession, revoke_session, revoke_all_for_user, _client_ip, record_session
+from .client_ip import get_client_ip
+from .sessions import UserSession, revoke_session, revoke_all_for_user, record_session
 from .mfa import (
     UserMFA, BACKUP_CODE_COUNT,
     provision_secret, qr_data_uri, verify_totp,
@@ -195,7 +196,7 @@ def mfa_login(request):
     if not mfa_token or (not code and not backup_code):
         return Response({'error': 'mfa_token and code (or backup_code) required'}, status=400)
 
-    expected_ip = _client_ip(request)
+    expected_ip = get_client_ip(request)
     user_id = parse_mfa_token(mfa_token, expected_ip=expected_ip)
     if not user_id:
         return Response({'error': 'mfa session expired or invalid — sign in again'}, status=401)

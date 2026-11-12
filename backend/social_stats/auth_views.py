@@ -24,6 +24,7 @@ from rest_framework.response import Response
 
 from .models import UserProfile, EmailVerificationToken, PasswordResetToken
 from .social_auth_views import _make_jwt
+from .security.client_ip import get_client_ip
 from .security.throttles import (
     SignupBurstThrottle, SignupDailyThrottle, PasswordResetThrottle,
     ResendVerificationThrottle,
@@ -70,7 +71,7 @@ def signup(request):
     from .security.turnstile import is_enabled as _turnstile_on, verify_turnstile_token
     if _turnstile_on():
         token = (data.get('captcha_token') or data.get('turnstile_token') or '').strip()
-        ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR')
+        ip = get_client_ip(request)
         if not verify_turnstile_token(token, remote_ip=ip):
             return Response({'errors': {'captcha': 'Captcha verification failed. Please try again.'}}, status=400)
 
@@ -201,7 +202,7 @@ def password_reset_request(request):
     from .security.turnstile import is_enabled as _turnstile_on, verify_turnstile_token
     if _turnstile_on():
         token = (request.data.get('captcha_token') or request.data.get('turnstile_token') or '').strip()
-        ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR')
+        ip = get_client_ip(request)
         if not verify_turnstile_token(token, remote_ip=ip):
             return Response({'errors': {'captcha': 'Captcha verification failed.'}}, status=400)
 

@@ -10,7 +10,7 @@
 DRF views for the Content Calendar feature.
 """
 from collections import defaultdict
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 import calendar as cal_module
 
 from django.utils import timezone

@@ -43,7 +43,6 @@ import hmac
 import json
 import logging
 import secrets
-import uuid
 from typing import Optional
 
 from django.conf import settings

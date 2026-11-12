@@ -29,7 +29,7 @@ from __future__ import annotations
 import ipaddress
 import logging
 import socket
-from typing import Iterable, Optional
+from typing import Iterable
 from urllib.parse import urlparse
 
 

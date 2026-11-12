@@ -24,9 +24,11 @@ records. Existing accounts keep their existing passwords (so re-running
 won't reset a password the operator changed). Pass --reset to force.
 
 These are local-only demo credentials. NEVER deploy this command's output
-to a real environment.
+to a real environment. The command refuses to run when DEBUG=False unless
+--i-know-this-is-not-production is passed (e.g. a throwaway Docker stack).
 """
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.utils import timezone
@@ -71,8 +73,19 @@ class Command(BaseCommand):
             '--no-metrics', action='store_true',
             help='Skip the seed_demo_data call (faster; analytics dashboards will be empty).',
         )
+        parser.add_argument(
+            '--i-know-this-is-not-production', action='store_true', dest='not_production',
+            help='Allow running with DEBUG=False (throwaway/evaluation stacks only).',
+        )
 
     def handle(self, *args, **options):
+        if not settings.DEBUG and not options['not_production']:
+            raise CommandError(
+                'demo_setup creates a superuser and two other accounts whose password is '
+                '"demo". Refusing to run with DEBUG=False. If this is a throwaway, '
+                'non-production stack, re-run with --i-know-this-is-not-production.'
+            )
+
         from social_stats.models import UserProfile, Client, Agency, AgencyMembership
 
         reset = options['reset']

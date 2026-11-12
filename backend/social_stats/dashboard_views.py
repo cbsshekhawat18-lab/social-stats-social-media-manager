@@ -35,8 +35,7 @@ from rest_framework.response import Response
 
 from .models import (
     Client, Conversation, Notification, UnifiedPost,
-    AgencyClientRelation, AgencyMembership, ApprovalRequest,
-    UnifiedReview,
+    AgencyClientRelation, ApprovalRequest,
 )
 from .bot_models import Lead
 
@@ -303,7 +302,7 @@ def dashboard_today(request):
         }
     """
     from datetime import datetime, time as dtime
-    from django.db.models import Sum, Avg, F, Count
+    from django.db.models import Sum, F
 
     # Lazy imports — these models aren't always touched, keeps cold-start
     # cheap for the simpler counts/search endpoints above.

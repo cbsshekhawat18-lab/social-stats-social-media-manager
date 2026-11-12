@@ -28,11 +28,9 @@ All use the saved BrandVoiceProfile when generating content.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, time, timedelta
+from datetime import timedelta
 
-from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Avg, Count
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -45,7 +43,7 @@ from .ai_helpers import (
 )
 from .ai_context import build_client_ai_context
 from .models import (
-    Client, BrandVoiceProfile, PostMetric, Message, Conversation,
+    Client, BrandVoiceProfile, PostMetric, Message,
 )
 
 logger = logging.getLogger(__name__)

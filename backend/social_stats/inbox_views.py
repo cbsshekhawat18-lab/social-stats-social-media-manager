@@ -28,9 +28,9 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
-from django.db.models import Avg, Count, F, Q
+from django.db.models import Count, Q
 from django.utils import timezone
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView

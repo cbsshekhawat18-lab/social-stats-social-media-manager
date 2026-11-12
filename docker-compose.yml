@@ -1,17 +1,23 @@
 # ============================================================================
 #  Social Stats — one-command self-hosted stack
 #
-#      docker compose up -d --build      # build from source
+#      cp .env.docker.example .env.docker   # fill in SECRET_KEY etc. first
+#      docker compose --env-file .env.docker up -d --build   # build from source
 #        — or pull the prebuilt multi-arch images instead of building:
-#      docker compose pull && docker compose up -d
-#      docker compose exec backend python manage.py demo_setup   # optional demo data
+#      docker compose --env-file .env.docker pull
+#      docker compose --env-file .env.docker up -d
+#      docker compose --env-file .env.docker exec backend \
+#          python manage.py demo_setup --i-know-this-is-not-production   # optional demo data
 #
 #  App:            http://localhost:3000          (React SPA + API proxy)
 #  Django admin:   http://localhost:8000/admin/   (backend service, direct)
 #
-#  Configuration: copy backend/.env.example → .env.docker and set at least
-#  SECRET_KEY (and ANTHROPIC_API_KEY for AI). DB/Redis/host settings are
-#  provided below and override the file. See docs/GETTING_STARTED.md.
+#  Configuration lives in .env.docker (template: .env.docker.example). Pass
+#  it with --env-file on EVERY compose command: the ${VAR:?…} checks below
+#  are resolved from it, and compose refuses to run if a required value is
+#  missing. (Tip: `export COMPOSE_ENV_FILES=.env.docker` saves the flag on
+#  recent Compose versions.) DB/Redis wiring is fixed below. See
+#  docs/GETTING_STARTED.md and docs/GOING_LIVE.md.
 # ============================================================================
 
 services:
@@ -45,9 +51,19 @@ services:
         required: false
     environment: &backend-env
       DEBUG: "False"
-      ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
-      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
-      SECRET_KEY: "${SECRET_KEY:-change-me-generate-a-real-secret-key}"
+      # ── From .env.docker (required → compose stops with this message) ──
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY (50+ random chars) in .env.docker and run compose with --env-file .env.docker}
+      FIELD_ENCRYPTION_KEYS: ${FIELD_ENCRYPTION_KEYS:?Set FIELD_ENCRYPTION_KEYS (a Fernet key) in .env.docker and run compose with --env-file .env.docker}
+      # ── From .env.docker (optional, local-friendly defaults) ──
+      # Keep localhost listed: the healthcheck below calls http://localhost:8000.
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      # Plain HTTP inside the network; set all three to True in .env.docker
+      # when a TLS-terminating proxy sits in front.
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-False}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-False}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE:-False}
+      # ── Stack wiring (fixed) ──
       DB_NAME: socialstats
       DB_USER: socialstats
       DB_PASSWORD: ${POSTGRES_PASSWORD:-socialstats}
@@ -56,17 +72,19 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       CHANNEL_LAYERS_REDIS_URL: redis://redis:6379/1
-      # Single-origin behind the frontend nginx → plain HTTP inside the network
-      SECURE_SSL_REDIRECT: "False"
-      SESSION_COOKIE_SECURE: "False"
-      CSRF_COOKIE_SECURE: "False"
+      REDIS_CACHE_URL: redis://redis:6379/2
+      # One reverse proxy (the frontend nginx) appends to X-Forwarded-For.
+      TRUSTED_PROXY_COUNT: "1"
     command: >
       sh -c "python manage.py migrate --noinput &&
              daphne -b 0.0.0.0 -p 8000 dashboard.asgi:application"
     volumes:
       - media:/app/media
     ports:
-      - "127.0.0.1:8000:8000"   # direct API + Django admin access
+      # Direct API + Django admin access, loopback only. Keep it that way:
+      # with TRUSTED_PROXY_COUNT=1 anything reaching this port directly can
+      # choose its own X-Forwarded-For.
+      - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,7 +125,11 @@ services:
 
   frontend:
     image: ghcr.io/cbsshekhawat18-lab/social-stats-frontend:latest
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # Build-time only: "true" adds the one-click demo logins to /login.
+        REACT_APP_SHOW_DEMO: ${REACT_APP_SHOW_DEMO:-false}
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     volumes:

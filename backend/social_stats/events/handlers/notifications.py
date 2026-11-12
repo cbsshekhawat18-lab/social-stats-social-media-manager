@@ -202,7 +202,7 @@ def notify_post_failed(event):
         _create_notification(
             user=user,
             client=event.client,
-            title=f'Post failed to publish'[:200],
+            title='Post failed to publish'[:200],
             body=f'{reason}\n\n{(post.content or "")[:300]}',
             data={
                 'event_type': 'post.failed',
@@ -452,7 +452,7 @@ def notify_token_expired(event):
             'event_type': 'token.expired',
             'platform': platform,
             'credential_id': event.payload.get('credential_id'),
-            'link': f'/admin/settings/integrations',
+            'link': '/admin/settings/integrations',
         },
     )
 
@@ -480,6 +480,6 @@ def notify_sync_failed(event):
             'event_type': 'platform.sync_failed',
             'platform': platform,
             'consecutive_failures': consecutive,
-            'link': f'/admin/settings/integrations',
+            'link': '/admin/settings/integrations',
         },
     )

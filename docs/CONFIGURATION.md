@@ -24,9 +24,9 @@ and the platform credentials only when you want to connect real accounts.
 
 | Variable | Required | Default | What it does / how to set |
 |---|---|---|---|
-| `SECRET_KEY` | **Yes (prod)** | dev fallback | Django cryptographic signing key. Dev has an insecure fallback; in production set a long random value. Generate: `python -c "import secrets; print(secrets.token_urlsafe(50))"`. |
-| `DEBUG` | No | `False` | `True` enables Django debug pages. **Keep `False` in production.** |
-| `ALLOWED_HOSTS` | **Yes (prod)** | `app.example.com,api.example.com` | Comma-separated hostnames Django will serve. For local dev add `localhost,127.0.0.1`. Requests to other hosts are rejected. |
+| `SECRET_KEY` | **Yes (prod)** | dev fallback only when `DEBUG=True` | Django cryptographic signing key (also signs JWTs). With `DEBUG=False` startup fails unless it is set, at least 50 characters, and free of `insecure` / `change-me`. Generate: `python -c "import secrets; print(secrets.token_urlsafe(64))"`. |
+| `DEBUG` | No | `False` | `True` enables Django debug pages, eager Celery and permissive CORS. **Unset means `False`.** `backend/.env.example` sets `True` for local development. With `False`, the startup guard in [GOING_LIVE.md](GOING_LIVE.md#enforced-at-startup) applies. |
+| `ALLOWED_HOSTS` | **Yes (prod)** | `localhost,127.0.0.1` | Comma-separated hostnames Django will serve. `*` is rejected at startup when `DEBUG=False`. In Docker keep `localhost` listed (container healthcheck). |
 | `FRONTEND_URL` | **Yes** | `https://app.example.com` | Base URL of the React app. Used to build links in emails and OAuth redirects back to the UI. For local dev set `http://localhost:3000`. |
 
 ## Field-level encryption
@@ -35,10 +35,12 @@ OAuth tokens and manual credentials are encrypted at rest using these keys.
 
 | Variable | Required | Default | What it does / how to set |
 |---|---|---|---|
-| `FIELD_ENCRYPTION_KEYS` | **Yes (prod)** | empty | Comma-separated Fernet keys. The **first** key encrypts new writes; every key can decrypt (supports rotation). Generate: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`. |
+| `FIELD_ENCRYPTION_KEYS` | **Yes (prod)** — startup fails without it when `DEBUG=False` | empty | Comma-separated Fernet keys. The **first** key encrypts new writes; every key can decrypt (supports rotation). Generate: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`. |
 | `FIELD_ENCRYPTION_KEY` | No | empty | Legacy single-key fallback used only if `FIELD_ENCRYPTION_KEYS` is empty. |
 
-> If both are empty, `SECRET_KEY` is stretched into a key (dev-only fallback).
+> If both are empty, `SECRET_KEY` is stretched into a key (dev-only fallback;
+> production refuses to start — see the migration note in
+> [GOING_LIVE.md](GOING_LIVE.md#enforced-at-startup)).
 > **Production must set `FIELD_ENCRYPTION_KEYS`** — otherwise rotating `SECRET_KEY`
 > would make stored tokens undecryptable. Affected fields:
 > `PlatformCredential.access_token` / `refresh_token`,
@@ -56,6 +58,8 @@ OAuth tokens and manual credentials are encrypted at rest using these keys.
 |---|---|---|---|
 | `CELERY_BROKER_URL` | **Yes (for background tasks)** | `redis://localhost:6379/0` | Where Celery queues jobs. Without Redis + this, scheduled publishing, metric sync, and notifications won't run. |
 | `CELERY_RESULT_BACKEND` | No | `redis://localhost:6379/0` | Where task results are stored. |
+| `CHANNEL_LAYERS_REDIS_URL` | **Yes (prod)** | empty (in-memory) | Redis for WebSocket fan-out across workers. |
+| `REDIS_CACHE_URL` | **Yes (prod)** | `redis://localhost:6379/2` | Shared Django cache: login/signup/MFA throttles, one-time social-login codes, AI response cache. Always Redis when `DEBUG=False`; with `DEBUG=True` and this unset, an in-process cache is used. Docker sets `redis://redis:6379/2`. |
 
 ## Meta (Facebook + Instagram)
 
@@ -68,6 +72,7 @@ App (Business type) → add **Pages API** + **Instagram Graph API**. See
 | `META_APP_ID` | For Quick Connect | placeholder | Meta App ID (Settings → Basic). |
 | `META_APP_SECRET` | For Quick Connect | placeholder | Meta App Secret. |
 | `META_REDIRECT_URI` | For Quick Connect | `http://localhost:8000/api/oauth/facebook/callback/` | Must match the redirect URI registered in the Meta app exactly. |
+| `META_API_VERSION` | No | `v24.0` | Graph API version used for every Meta call (Graph, Marketing API, Conversions API, the Facebook Login dialog). Format `vNN.N`; anything else fails at startup. Before bumping, check Meta's changelog for removed insights metrics, and set your Meta app's Webhooks subscriptions to the same version. |
 
 ## Google (YouTube + Google Business Profile)
 
@@ -117,8 +122,33 @@ See [CONNECT_WHATSAPP.md](CONNECT_WHATSAPP.md) for the full setup.
 |---|---|---|---|
 | `PINBOT_BASE_URL` | For WhatsApp | `https://partnersv1.pinbot.ai/v3` | Pinbot Partners API base URL. |
 | `WHATSAPP_ENCRYPTION_KEY` | For WhatsApp | empty | Fernet key encrypting WhatsApp credentials at rest. Generate like `FIELD_ENCRYPTION_KEYS`. |
-| `WHATSAPP_WEBHOOK_SECRET` | For WhatsApp | empty | Random 32+ char string. Verifies inbound webhook calls to `/api/whatsapp/webhook/` (sent as `X-Webhook-Secret` header, or matched as `hub.verify_token` on the GET handshake). |
+| `WHATSAPP_WEBHOOK_SECRET` | **Yes (prod)** unless `ALLOW_UNSIGNED_WEBHOOKS=True` | empty | Random 32+ char string. Verifies inbound webhook calls to `/api/whatsapp/webhook/` (sent as `X-Webhook-Secret` header, or matched as `hub.verify_token` on the GET handshake). |
 | `WHATSAPP_RATE_LIMIT_PER_SEC` | No | `20` | Outbound WhatsApp send rate cap. |
+
+## Webhook signing
+
+| Variable | Required | Default | What it does |
+|---|---|---|---|
+| `META_WEBHOOK_SECRET` | **Yes (prod)** unless `ALLOW_UNSIGNED_WEBHOOKS=True` | empty | Your Meta app's **App Secret** — Meta signs webhook POSTs to `/api/webhooks/meta/` with it (`X-Hub-Signature-256`). |
+| `META_WEBHOOK_VERIFY_TOKEN` | For Meta webhooks | empty | Token you enter on the Meta app's Webhooks page for the GET subscription handshake. |
+| `ALLOW_UNSIGNED_WEBHOOKS` | No | `False` | `True` lets a `DEBUG=False` deployment boot without `META_WEBHOOK_SECRET` / `WHATSAPP_WEBHOOK_SECRET`. It does **not** open the endpoints: without a secret they reject every delivery. Use it when you don't use those webhooks. |
+
+## Uploads
+
+| Variable | Required | Default | What it does |
+|---|---|---|---|
+| `MEDIA_MAX_UPLOAD_MB` | No | `100` | Largest accepted upload (media library, video import, logos, avatars). Allowed types are fixed: JPEG/PNG/GIF/WebP, MP4/MOV/WebM, PDF — detected from file content. Keep nginx `client_max_body_size` at least this large. |
+
+## Docker (`.env.docker`)
+
+`docker-compose.yml` reads `SECRET_KEY` and `FIELD_ENCRYPTION_KEYS` (required —
+compose stops if they're missing), plus `ALLOWED_HOSTS`, `FRONTEND_URL`,
+`SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE` and
+`POSTGRES_PASSWORD` (optional, local-friendly defaults) from `.env.docker`.
+Start from [`.env.docker.example`](../.env.docker.example) and pass
+`--env-file .env.docker` to every `docker compose` command. Everything else in
+the file (API keys, OAuth apps, webhook secrets) is handed to the containers
+as-is. `REACT_APP_SHOW_DEMO` is a frontend **build** argument (default `false`).
 
 ## Quick Connect toggle
 
@@ -136,6 +166,7 @@ These have working defaults and rarely need changing:
 |---|---|---|
 | `AXES_FAILURE_LIMIT` | `5` | Failed logins before lockout (django-axes). |
 | `AXES_COOLOFF_HOURS` | `1` | Lockout duration in hours. |
+| `TRUSTED_PROXY_COUNT` | `0` | Number of reverse proxies in front of Django that append to `X-Forwarded-For`. `0` ignores the header and uses the socket address. Set it to the exact number of your proxies (docker-compose sets `1` for its nginx) — and only if Django can't be reached around them, or clients could forge their IP. Used by login/signup/MFA throttles, django-axes, session records and API-key IP allow-lists. |
 | `JWT_ACCESS_MIN` | `15` | Access-token lifetime (minutes). |
 | `JWT_REFRESH_DAYS` | `7` | Refresh-token lifetime (days). |
 | `JWT_AUDIENCE` / `JWT_ISSUER` | `socialstats-app` / `socialstats.com` | JWT claims. |

@@ -26,7 +26,6 @@ import tempfile
 import uuid
 import zipfile
 from datetime import timedelta
-from typing import Iterable
 
 from celery import shared_task
 from django.conf import settings
@@ -43,7 +42,7 @@ logger = logging.getLogger(__name__)
 @shared_task(bind=True, ignore_result=True, max_retries=2, default_retry_delay=300)
 def assemble_data_export(self, request_id: int):
     """Build a ZIP of the user's data, store it on disk, email a download link."""
-    from ..models import DataExportRequest, Client
+    from ..models import DataExportRequest
     req = DataExportRequest.objects.filter(pk=request_id).first()
     if not req:
         return
@@ -93,7 +92,7 @@ def assemble_data_export(self, request_id: int):
 def _build_export_zip(user) -> tuple[bytes, dict]:
     """Pack the user's data into a ZIP. Returns ``(zip_bytes, manifest_dict)``."""
     from ..models import (
-        Client, UserProfile, UserConsent, AccountDeletionRequest, DataExportRequest,
+        Client, UserConsent, AccountDeletionRequest, DataExportRequest,
     )
     profile = getattr(user, 'profile', None)
     profile_data = {

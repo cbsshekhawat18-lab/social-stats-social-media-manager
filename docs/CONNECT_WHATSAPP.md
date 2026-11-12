@@ -68,9 +68,11 @@ The endpoint (`pinbot_webhook`) verifies callers two ways:
 
 - **GET handshake** (Meta-style): returns `hub.challenge` only when
   `hub.verify_token` equals your `WHATSAPP_WEBHOOK_SECRET`; otherwise `403`.
-- **POST events**: requires the `X-Webhook-Secret` header (or a `?secret=` query
-  param) to equal `WHATSAPP_WEBHOOK_SECRET`. If the secret is unset or wrong, the
-  call is rejected with `403`.
+- **POST events**: requires the `X-Webhook-Secret` header to equal
+  `WHATSAPP_WEBHOOK_SECRET`. If the secret is unset or wrong, the call is
+  rejected with `403`. A `?secret=` query parameter is **not** accepted (it
+  would leak into access logs) — if your Pinbot webhook URL still carries one,
+  move the value to the header.
 
 So set the **verify token** (GET) and the **secret header** (POST) in Pinbot to
 the exact value of `WHATSAPP_WEBHOOK_SECRET`.

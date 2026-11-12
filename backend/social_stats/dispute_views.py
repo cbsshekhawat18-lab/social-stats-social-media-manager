@@ -24,7 +24,7 @@ from rest_framework.response import Response
 
 from .activity_logger import log_activity
 from .marketplace_permissions import _is_owner, _is_superadmin
-from .models import AgencyClientRelation, Dispute, Notification
+from .models import AgencyClientRelation, Dispute
 from .notification_dispatcher import dispatch as dispatch_notification
 
 

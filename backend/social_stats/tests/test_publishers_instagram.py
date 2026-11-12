@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 from django.test import SimpleTestCase
 
 from social_stats.publishers import (
-    get_publisher, PublishError, TokenExpiredError, RateLimitError,
+    get_publisher, PublishError, TokenExpiredError,
 )
 
 

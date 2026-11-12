@@ -20,11 +20,10 @@ Verifies:
 import uuid
 from unittest.mock import patch
 
-from django.contrib.auth.models import User
 from django.test import TestCase
 
 from social_stats.ai_helpers import unified_voice_prompt, brand_voice_prompt
-from social_stats.models import Client, UserProfile, BrandVoiceProfile, DailyMetric
+from social_stats.models import Client, BrandVoiceProfile, DailyMetric
 
 
 def _client(label='c'):

@@ -27,9 +27,10 @@ Error mapping cheatsheet (see Meta Graph API error codes):
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 
 import requests
+from django.conf import settings
 
 from .base import (
     PublishError, TokenExpiredError, RateLimitError, PermissionDeniedError,
@@ -38,7 +39,7 @@ from .base import (
 
 logger = logging.getLogger(__name__)
 
-GRAPH_VERSION = 'v21.0'
+GRAPH_VERSION = settings.META_API_VERSION
 GRAPH_BASE = f'https://graph.facebook.com/{GRAPH_VERSION}'
 
 # (connect, read) — videos take longer to upload, callers can override per call.

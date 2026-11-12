@@ -16,7 +16,7 @@ window (1 hour). DRF throttles cap burst rate over a much shorter window
 in 10 seconds and probe before axes catches up.
 
 The throttles are keyed off:
-    • client IP (X-Forwarded-For aware)  → AnonAuthThrottle
+    • client IP (see security.client_ip)  → LoginIPThrottle / Signup*
     • email/username (case-insensitive) → AuthByUsernameThrottle
     • email + IP combo                   → PasswordResetThrottle
 """
@@ -24,14 +24,7 @@ from __future__ import annotations
 
 from rest_framework.throttling import SimpleRateThrottle
 
-
-def _client_ip(request) -> str | None:
-    if not request:
-        return None
-    xff = request.META.get('HTTP_X_FORWARDED_FOR') or ''
-    if xff:
-        return xff.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR')
+from .client_ip import get_client_ip
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -43,10 +36,21 @@ class LoginIPThrottle(SimpleRateThrottle):
     rate  = '10/min'
 
     def get_cache_key(self, request, view):
-        ip = _client_ip(request)
+        ip = get_client_ip(request)
         if not ip:
             return None
         return self.cache_format % {'scope': self.scope, 'ident': ip}
+
+
+class SocialExchangeThrottle(SimpleRateThrottle):
+    """Social-login code exchange: codes are 256-bit random and single-use,
+    so this only caps guessing noise — 20/min per IP."""
+    scope = 'social_exchange'
+    rate  = '20/min'
+
+    def get_cache_key(self, request, view):
+        ip = get_client_ip(request)
+        return self.cache_format % {'scope': self.scope, 'ident': ip} if ip else None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -57,7 +61,7 @@ class SignupBurstThrottle(SimpleRateThrottle):
     rate  = '3/min'
 
     def get_cache_key(self, request, view):
-        ip = _client_ip(request)
+        ip = get_client_ip(request)
         return self.cache_format % {'scope': self.scope, 'ident': ip} if ip else None
 
 
@@ -66,7 +70,7 @@ class SignupDailyThrottle(SimpleRateThrottle):
     rate  = '20/day'
 
     def get_cache_key(self, request, view):
-        ip = _client_ip(request)
+        ip = get_client_ip(request)
         return self.cache_format % {'scope': self.scope, 'ident': ip} if ip else None
 
 
@@ -82,7 +86,7 @@ class PasswordResetThrottle(SimpleRateThrottle):
     def get_cache_key(self, request, view):
         data = getattr(request, 'data', None) or getattr(request, 'POST', None) or {}
         email = (data.get('email') or '').strip().lower()
-        ip    = _client_ip(request) or ''
+        ip    = get_client_ip(request) or ''
         if not email and not ip:
             return None
         ident = f'{email}|{ip}'
@@ -101,7 +105,7 @@ class ResendVerificationThrottle(SimpleRateThrottle):
     def get_cache_key(self, request, view):
         data = getattr(request, 'data', None) or getattr(request, 'POST', None) or {}
         email = (data.get('email') or '').strip().lower()
-        ip    = _client_ip(request) or ''
+        ip    = get_client_ip(request) or ''
         if not email and not ip:
             return None
         ident = f'{email}|{ip}'
@@ -120,7 +124,7 @@ class MFAVerifyThrottle(SimpleRateThrottle):
     def get_cache_key(self, request, view):
         data = getattr(request, 'data', None) or getattr(request, 'POST', None) or {}
         token = (data.get('mfa_token') or '').strip()
-        ip    = _client_ip(request) or ''
+        ip    = get_client_ip(request) or ''
         if token:
             return self.cache_format % {'scope': self.scope, 'ident': token[:64]}
         if ip:

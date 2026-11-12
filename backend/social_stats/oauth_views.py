@@ -10,7 +10,9 @@
 OAuth 2.0 handlers for all 5 platforms:
   Facebook, Instagram, YouTube, Google My Business, LinkedIn
 """
-import secrets, requests, logging
+import secrets
+import requests
+import logging
 from urllib.parse import urlencode
 from datetime import timedelta
 
@@ -19,14 +21,12 @@ logger = logging.getLogger(__name__)
 from django.conf import settings
 from django.shortcuts import redirect
 from django.utils import timezone
-from django.contrib.auth.decorators import login_required
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from .models import PlatformCredential, Client
-from django.contrib.auth.models import User
 from .marketplace_permissions import (
     resolve_acting_context, check_action, deny_response, approval_pending_response,
 )
@@ -101,7 +101,7 @@ def facebook_oauth_start(request, client_id):
         'response_type': 'code',
         'state':          state,
     }
-    return redirect(f"https://www.facebook.com/dialog/oauth?{urlencode(params)}")
+    return redirect(f"https://www.facebook.com/{settings.META_API_VERSION}/dialog/oauth?{urlencode(params)}")
 
 
 @api_view(['GET'])
@@ -127,7 +127,7 @@ def facebook_consumer_callback(request):
 
     # Exchange code for consumer token
     token_resp = requests.get(
-        "https://graph.facebook.com/v21.0/oauth/access_token",
+        f"https://graph.facebook.com/{settings.META_API_VERSION}/oauth/access_token",
         params={
             'client_id':     FACEBOOK_CONSUMER_APP_ID,
             'client_secret': _facebook_consumer_secret(),
@@ -149,7 +149,7 @@ def facebook_consumer_callback(request):
 
     # Extend to long-lived token (60 days)
     long_resp = requests.get(
-        'https://graph.facebook.com/v21.0/oauth/access_token',
+        f'https://graph.facebook.com/{settings.META_API_VERSION}/oauth/access_token',
         params={
             'grant_type':        'fb_exchange_token',
             'client_id':         FACEBOOK_CONSUMER_APP_ID,
@@ -163,7 +163,7 @@ def facebook_consumer_callback(request):
 
     # Fetch pages this user manages
     pages_resp = requests.get(
-        'https://graph.facebook.com/v21.0/me/accounts',
+        f'https://graph.facebook.com/{settings.META_API_VERSION}/me/accounts',
         params={'access_token': long_token, 'fields': 'id,name,access_token'},
         timeout=10
     ).json()
@@ -187,14 +187,14 @@ def facebook_consumer_callback(request):
 
         # Try to get linked Instagram Business Account
         ig_resp = requests.get(
-            f'https://graph.facebook.com/v21.0/{page_id}',
+            f'https://graph.facebook.com/{settings.META_API_VERSION}/{page_id}',
             params={'fields': 'instagram_business_account', 'access_token': page_token},
             timeout=10
         ).json()
         ig_id = ig_resp.get('instagram_business_account', {}).get('id', '')
         if ig_id:
             ig_info = requests.get(
-                f'https://graph.facebook.com/v21.0/{ig_id}',
+                f'https://graph.facebook.com/{settings.META_API_VERSION}/{ig_id}',
                 params={'fields': 'name,username', 'access_token': page_token},
                 timeout=10
             ).json()
@@ -209,7 +209,7 @@ def facebook_consumer_callback(request):
     else:
         # No pages found — save user identity token so UI shows connected
         me_resp = requests.get(
-            'https://graph.facebook.com/v21.0/me',
+            f'https://graph.facebook.com/{settings.META_API_VERSION}/me',
             params={'fields': 'name', 'access_token': long_token},
             timeout=10
         ).json()
@@ -236,7 +236,7 @@ def facebook_consumer_callback(request):
     #     'response_type': 'code',
     #     'state':          biz_state,
     # }
-    # return redirect(f"https://www.facebook.com/dialog/oauth?{urlencode(params)}")
+    # return redirect(f"https://www.facebook.com/{settings.META_API_VERSION}/dialog/oauth?{urlencode(params)}")
     # ──────────────────────────────────────────────────────────────────────────
 
     # For now: consumer login complete, redirect back to settings
@@ -693,7 +693,7 @@ def _refresh_google_token(cred):
 def _refresh_facebook_token(cred):
     """Extend a Facebook long-lived token (valid for 60 more days)."""
     try:
-        resp = requests.get('https://graph.facebook.com/v21.0/oauth/access_token', params={
+        resp = requests.get(f'https://graph.facebook.com/{settings.META_API_VERSION}/oauth/access_token', params={
             'grant_type':        'fb_exchange_token',
             'client_id':         settings.META_APP_ID,
             'client_secret':     settings.META_APP_SECRET,

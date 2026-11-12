@@ -13,7 +13,6 @@ from django.utils import timezone
 
 from social_stats.publishers import (
     get_publisher, PublishError, TokenExpiredError, RateLimitError,
-    PermissionDeniedError,
 )
 
 

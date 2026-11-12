@@ -25,7 +25,7 @@ from social_stats.events.publisher import (
 )
 from social_stats.events.registry import EVENT_HANDLERS
 from social_stats.models import (
-    Client, UserProfile, EventLog, Notification, ActivityLog,
+    Client, UserProfile, EventLog, ActivityLog,
 )
 from social_stats.bot_models import Lead, BotFlow
 from social_stats.bot_models import BotConversation

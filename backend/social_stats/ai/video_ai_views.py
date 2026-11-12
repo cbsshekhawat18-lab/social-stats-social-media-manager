@@ -33,7 +33,7 @@ from rest_framework.response import Response
 
 from ..ai_helpers import brand_voice_prompt
 from ..ai_views import _resolved_client
-from . import AIClient, AIError, RateLimited, prompts
+from . import AIClient, AIError, RateLimited
 from .content_views import _ai_call_json, _error_response
 
 logger = logging.getLogger(__name__)

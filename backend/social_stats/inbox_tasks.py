@@ -29,12 +29,13 @@ from datetime import datetime, timedelta, timezone as dt_tz
 from typing import Optional
 
 import requests
+from django.conf import settings
 from celery import shared_task
 from django.db import transaction
 from django.utils import timezone
 
 from .models import (
-    Client, PlatformCredential, UnifiedReview,
+    PlatformCredential, UnifiedReview,
     Conversation, Message,
 )
 from . import sentiment as _sentiment
@@ -43,7 +44,7 @@ from .realtime import push_event
 
 logger = logging.getLogger(__name__)
 
-GRAPH_VERSION = 'v21.0'
+GRAPH_VERSION = settings.META_API_VERSION
 GRAPH_BASE = f'https://graph.facebook.com/{GRAPH_VERSION}'
 DEFAULT_TIMEOUT = (10, 30)
 

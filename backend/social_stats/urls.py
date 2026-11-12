@@ -33,6 +33,7 @@ from .social_auth_views import (
     google_social_start, google_social_callback,
     microsoft_social_start, microsoft_social_callback,
     facebook_social_start, facebook_social_callback,
+    social_exchange,
 )
 from .management_views import (
     StaffListView, StaffDetailView, StaffPermissionsView, StaffClientsView,
@@ -388,6 +389,7 @@ urlpatterns = [
     path('auth/social/facebook/callback/',       facebook_social_callback,  name='facebook_social_callback'),
     path('auth/social/microsoft/start/',         microsoft_social_start,    name='microsoft_social_start'),
     path('auth/social/microsoft/callback/',      microsoft_social_callback, name='microsoft_social_callback'),
+    path('auth/social/exchange/',                social_exchange,           name='social_exchange'),
 
     # Invitations
     path('invitations/send/',                        send_invitation,    name='invitation_send'),

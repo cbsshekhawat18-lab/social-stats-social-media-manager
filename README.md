@@ -38,8 +38,10 @@ python manage.py demo_setup    # seeds 3 accounts + 90 days of sample analytics
 ```
 
 `demo_setup` is idempotent and creates three accounts (password `demo` for all),
-then chains into the sample-data seeder so the dashboards aren't empty. Sign in at
-`/login`, which surfaces one-click sign-in buttons for each:
+then chains into the sample-data seeder so the dashboards aren't empty. It only
+runs with `DEBUG=True` unless you pass `--i-know-this-is-not-production`. Sign in
+at `/login`; set `REACT_APP_SHOW_DEMO=true` in `frontend/.env` to get one-click
+sign-in buttons for each:
 
 | Account | Email | Password | Lands on |
 |---|---|---|---|
@@ -166,7 +168,7 @@ for the full picture.
 
 | Layer | What |
 |---|---|
-| Backend | Django 4.2 + Django REST Framework |
+| Backend | Django 5.2 LTS + Django REST Framework |
 | Auth | JWT (SimpleJWT) + Argon2 hasher + django-axes brute-force protection |
 | Task queue | Celery + Redis |
 | Realtime | Django Channels (WebSockets) |
@@ -189,12 +191,14 @@ One command brings up the full stack — PostgreSQL, Redis, the Django/Channels
 API, a Celery worker + beat, and the React app served by nginx on one origin:
 
 ```bash
-# Pull the prebuilt multi-arch images (amd64 + arm64) and start:
-docker compose pull && docker compose up -d
-# — or build from source instead: docker compose up -d --build
+cp .env.docker.example .env.docker   # set SECRET_KEY + FIELD_ENCRYPTION_KEYS (see comments inside)
 
-# optional: seed 3 demo accounts + 90 days of analytics
-docker compose exec backend python manage.py demo_setup
+# Pull the prebuilt multi-arch images (amd64 + arm64) and start:
+docker compose --env-file .env.docker pull && docker compose --env-file .env.docker up -d
+# — or build from source instead: docker compose --env-file .env.docker up -d --build
+
+# optional: seed 3 demo accounts + 90 days of analytics (throwaway stacks only)
+docker compose --env-file .env.docker exec backend python manage.py demo_setup --i-know-this-is-not-production
 # app:          http://localhost:3000
 # Django admin: http://localhost:8000/admin/
 ```
@@ -208,7 +212,7 @@ file at the repo root — see `backend/.env.example` for every variable.
 
 ### Option B — manual (local dev)
 
-You'll need: Python 3.11–3.12 (Django 4.2 does not support 3.13+), Node 18+,
+You'll need: Python 3.11–3.13 (the Docker image and CI use 3.12), Node 18+,
 Redis, and an Anthropic API key for AI features (everything else works
 without external credentials).
 

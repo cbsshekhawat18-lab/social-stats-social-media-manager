@@ -55,7 +55,6 @@ NEVER deletes existing data. Prints a summary at the end.
 """
 from __future__ import annotations
 
-import re
 from collections import defaultdict
 
 from django.contrib.auth.models import User
@@ -68,7 +67,6 @@ from social_stats.models import (
     Agency,
     AgencyClientRelation,
     AgencyMembership,
-    Client,
     StaffClientAssignment,
     UserProfile,
 )

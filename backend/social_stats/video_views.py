@@ -32,17 +32,17 @@ from typing import Optional, Tuple
 
 import requests
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.base import ContentFile
-from django.utils import timezone
 from PIL import Image
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from . import media_service
 from .composer_serializers import MediaAssetSerializer
 from .models import Client, MediaAsset, PlatformCredential
+from .security.uploads import max_upload_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -114,11 +114,14 @@ def upload_video(request):
     alt    = (request.data.get('alt_text') or '').strip()
 
     if upload:
-        asset = media_service.upload_media(
-            upload, client_id=client.id,
-            uploaded_by_id=request.user.id,
-            folder=folder, alt_text=alt,
-        )
+        try:
+            asset = media_service.upload_media(
+                upload, client_id=client.id,
+                uploaded_by_id=request.user.id,
+                folder=folder, alt_text=alt,
+            )
+        except DjangoValidationError as e:
+            return Response({'error': ' '.join(e.messages)}, status=400)
         return Response(MediaAssetSerializer(asset).data, status=201)
 
     if src_url:
@@ -134,23 +137,28 @@ def _import_from_url(client, user, url: str, folder: str, alt: str):
             if src.status_code != 200:
                 return Response({'error': f'Failed to fetch URL ({src.status_code})'},
                                 status=400)
+            limit = max_upload_bytes()
             data = io.BytesIO()
             for chunk in src.iter_content(chunk_size=1024 * 1024):
                 if chunk:
                     data.write(chunk)
-            data.seek(0)
-            mime = src.headers.get('Content-Type', 'video/mp4').split(';')[0]
+                    if data.tell() > limit:
+                        return Response(
+                            {'error': f'File too large (max {limit // (1024 * 1024)} MB).'},
+                            status=400,
+                        )
     except requests.RequestException as e:
         return Response({'error': f'Network error: {e}'}, status=502)
 
     name = (url.split('/')[-1] or 'imported.mp4').split('?')[0]
     pseudo_file = ContentFile(data.getvalue(), name=name or 'imported.mp4')
-    pseudo_file.content_type = mime
-    pseudo_file.size = data.tell()
-    asset = media_service.upload_media(
-        pseudo_file, client_id=client.id,
-        uploaded_by_id=user.id, folder=folder, alt_text=alt,
-    )
+    try:
+        asset = media_service.upload_media(
+            pseudo_file, client_id=client.id,
+            uploaded_by_id=user.id, folder=folder, alt_text=alt,
+        )
+    except DjangoValidationError as e:
+        return Response({'error': ' '.join(e.messages)}, status=400)
     return Response(MediaAssetSerializer(asset).data, status=201)
 
 

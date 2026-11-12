@@ -183,7 +183,7 @@ def _decide(request, agency_id, *, approve: bool):
         dispatch_notification(
             agency.owner_user,
             event_type='marketplace_inquiry',
-            title=(f'Your agency was verified ✅' if approve else 'Verification needs more info'),
+            title=('Your agency was verified ✅' if approve else 'Verification needs more info'),
             body=note or ('You\'ll see the verified badge wherever your agency appears.' if approve
                           else 'Please re-submit with the requested clarifications.'),
             data={

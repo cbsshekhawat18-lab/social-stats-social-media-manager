@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
-from typing import Optional
 
 from django.db.models import Avg, Max, Sum
 from django.utils import timezone

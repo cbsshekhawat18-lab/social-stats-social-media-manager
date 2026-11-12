@@ -23,21 +23,12 @@
     <link rel="preconnect" href="https://plausible.io" />
     <link rel="dns-prefetch" href="https://plausible.io" />
 
-    <!-- Inter loaded async to avoid blocking first paint. The print/all
-         media swap is the standard "non-blocking stylesheet" trick:
-         CSS isn't applied during render but downloads in parallel, then
-         the onload swaps it to all media. <noscript> covers JS-disabled. -->
-    <link rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" />
+    <!-- Inter. A plain stylesheet link: the old media="print" + onload swap
+         was an inline event handler, which the Content-Security-Policy
+         (script-src 'self') blocks — the font would never apply.
+         display=swap keeps first paint from waiting on the font files. -->
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-          media="print"
-          onload="this.media='all'" />
-    <noscript>
-      <link rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" />
-    </noscript>
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" />
 
     <!-- iOS splash screens -->
     <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/favicon.png" />

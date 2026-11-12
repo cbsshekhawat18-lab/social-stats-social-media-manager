@@ -8,7 +8,7 @@
 # ============================================================================
 from django.contrib import admin
 from .models import (
-    Client, UserProfile, PlatformCredential, DailyMetric, PostMetric, SyncLog,
+    Client, UserProfile, PlatformCredential, DailyMetric, SyncLog,
     ROISettings, ROIReport,
     CalendarPost, CalendarNote, PostingSchedule, SiteContent, LookupCollection, LookupItem,
 )

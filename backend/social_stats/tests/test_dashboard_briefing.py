@@ -14,7 +14,7 @@ Three behaviour groups:
      stale cache (or '') without invoking the AI.
 """
 import uuid
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.cache import cache

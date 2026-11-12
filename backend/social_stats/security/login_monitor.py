@@ -30,7 +30,8 @@ from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 
-from .sessions import UserSession, _client_ip, _parse_user_agent
+from .client_ip import get_client_ip
+from .sessions import UserSession, _parse_user_agent
 
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 def is_suspicious(*, user, request) -> tuple[bool, dict]:
     """Return (suspicious_bool, context_dict). Context is logged + emailed."""
-    ip = _client_ip(request)
+    ip = get_client_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '') if request else ''
     browser, os_, device = _parse_user_agent(ua)
 

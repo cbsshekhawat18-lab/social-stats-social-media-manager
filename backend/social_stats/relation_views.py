@@ -25,7 +25,6 @@ All mutations write an ActivityLog row with severity and metadata.
 """
 from __future__ import annotations
 
-from django.db.models import Q
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated

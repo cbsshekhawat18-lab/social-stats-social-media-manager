@@ -19,10 +19,13 @@ import { useAuth } from '../hooks/useAuth';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
-// Seeded by `python manage.py demo_setup`. Surfaced here so anyone cloning
-// the repo can take the dashboard for a spin without standing up a real
-// account. Safe to remove this block (and the panel below) once the demo
-// command is dropped — nothing else depends on it.
+// Seeded by `python manage.py demo_setup`. One-click buttons for local
+// evaluation only: rendered when the bundle is built with
+// REACT_APP_SHOW_DEMO=true (off by default, so production builds never show
+// them). Read at render time so tests can toggle it.
+function showDemoLogins() {
+  return process.env.REACT_APP_SHOW_DEMO === 'true';
+}
 const DEMO_LOGINS = [
   { email: 'admin@demo.local',   label: 'Superadmin', icon: Shield,    landing: '/admin'     },
   { email: 'agency@demo.local',  label: 'Agency',     icon: Briefcase, landing: '/dashboard' },
@@ -386,63 +389,66 @@ export default function LoginPage() {
 
         {/* Demo logins — populated by `python manage.py demo_setup` in the
             backend. Each button signs in as the corresponding demo account
-            and lands on the right shell. Safe to remove this whole block
-            for a production deployment. */}
-        <div
-          style={{
-            marginTop: 24,
-            padding: 16,
-            background: 'var(--surface-sunken)',
-            border: '1px dashed var(--border-default)',
-            borderRadius: 'var(--radius-lg)',
-          }}
-        >
-          <div style={{
-            display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
-            marginBottom: 10, gap: 12,
-          }}>
-            <span style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
-              textTransform: 'uppercase', color: 'var(--brand-primary-hover)',
+            and lands on the right shell. Only built in when
+            REACT_APP_SHOW_DEMO=true. */}
+        {showDemoLogins() && (
+          <div
+            data-testid="demo-logins"
+            style={{
+              marginTop: 24,
+              padding: 16,
+              background: 'var(--surface-sunken)',
+              border: '1px dashed var(--border-default)',
+              borderRadius: 'var(--radius-lg)',
+            }}
+          >
+            <div style={{
+              display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+              marginBottom: 10, gap: 12,
             }}>
-              Try the demo
-            </span>
-            <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
-              local only · password <code style={{ fontFamily: 'var(--font-mono)' }}>demo</code>
-            </span>
+              <span style={{
+                fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: 'var(--brand-primary-hover)',
+              }}>
+                Try the demo
+              </span>
+              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                local only · password <code style={{ fontFamily: 'var(--font-mono)' }}>demo</code>
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {DEMO_LOGINS.map((d) => {
+                const Icon = d.icon;
+                return (
+                  <button
+                    type="button"
+                    key={d.email}
+                    onClick={() => signInAsDemo(d.email)}
+                    disabled={loading}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4,
+                      padding: '10px 12px', minHeight: 'unset',
+                      background: 'var(--surface-card)',
+                      border: '1px solid var(--border-default)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.6 : 1,
+                      textAlign: 'left',
+                      transition: 'var(--transition-fast)',
+                    }}
+                    onMouseEnter={(e) => { if (!loading) e.currentTarget.style.borderColor = 'var(--brand-primary-glow)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+                  >
+                    <Icon size={14} color="var(--brand-primary-hover)" />
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{d.label}</span>
+                    <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>{d.email}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-            {DEMO_LOGINS.map((d) => {
-              const Icon = d.icon;
-              return (
-                <button
-                  type="button"
-                  key={d.email}
-                  onClick={() => signInAsDemo(d.email)}
-                  disabled={loading}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4,
-                    padding: '10px 12px', minHeight: 'unset',
-                    background: 'var(--surface-card)',
-                    border: '1px solid var(--border-default)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--text-primary)',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.6 : 1,
-                    textAlign: 'left',
-                    transition: 'var(--transition-fast)',
-                  }}
-                  onMouseEnter={(e) => { if (!loading) e.currentTarget.style.borderColor = 'var(--brand-primary-glow)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
-                >
-                  <Icon size={14} color="var(--brand-primary-hover)" />
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{d.label}</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>{d.email}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
       </div>
     </AuthLayout>
   );

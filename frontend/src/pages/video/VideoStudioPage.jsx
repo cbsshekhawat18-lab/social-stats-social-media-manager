@@ -8,9 +8,10 @@
  * ========================================================================== */
 import { useEffect, useRef, useState } from 'react';
 import {
-  Upload, Scissors, Crop, Camera, Captions, Youtube,
+  Upload, Scissors, Crop, Camera, Captions,
   Loader2, Play, X, Link as LinkIcon, FileVideo, Wand2,
 } from 'lucide-react';
+import { Youtube } from '../../components/ui/BrandIcons';
 import toast from 'react-hot-toast';
 
 import PageHeader from '../../components/layout/PageHeader';

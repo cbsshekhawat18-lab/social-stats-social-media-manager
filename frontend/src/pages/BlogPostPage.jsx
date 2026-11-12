@@ -8,7 +8,8 @@
  * ========================================================================== */
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Linkedin, Facebook, Link as LinkIcon, Quote } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Link as LinkIcon, Quote } from 'lucide-react';
+import { Linkedin, Facebook } from '../components/ui/BrandIcons';
 
 import MarketingLayout from '../components/marketing/MarketingLayout';
 import Button from '../components/ui/Button';

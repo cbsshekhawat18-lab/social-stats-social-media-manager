@@ -10,18 +10,24 @@
 Social login views for Google, Microsoft, and Facebook OAuth.
 Client users only — superadmin/staff are blocked.
 """
+import hashlib
 import secrets
 import urllib.parse
 
 import requests as http_requests
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.shortcuts import redirect
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import (
+    api_view, authentication_classes, permission_classes, throttle_classes,
+)
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import UserProfile, ensure_client_profile
+from .security.throttles import SocialExchangeThrottle
 
 
 GOOGLE_CLIENT_ID      = settings.GOOGLE_CLIENT_ID
@@ -64,6 +70,43 @@ def _social_state_valid(request) -> bool:
     return bool(expected) and _hmac.compare_digest(returned, expected)
 
 
+# ── One-time login codes ──────────────────────────────────────────────────────
+# The provider callback must hand the result back to the SPA via a browser
+# redirect. Tokens in that URL would land in browser history, proxy/access
+# logs and Referer headers, so the redirect carries only a random one-time
+# code; the SPA swaps it for the real payload with a POST to
+# /api/auth/social/exchange/. Codes live in the shared cache for 60 s and
+# can be redeemed exactly once.
+SOCIAL_LOGIN_CODE_TTL = 60
+_LOGIN_CODE_PREFIX = 'social-login-code:'
+
+
+def _login_code_key(code: str) -> str:
+    return _LOGIN_CODE_PREFIX + hashlib.sha256(code.encode()).hexdigest()
+
+
+def _redirect_with_login_code(payload: dict):
+    code = secrets.token_urlsafe(32)
+    cache.set(_login_code_key(code), payload, timeout=SOCIAL_LOGIN_CODE_TTL)
+    return redirect(f'{FRONTEND_CALLBACK}?code={code}')
+
+
+def _consume_login_code(code: str):
+    """Return the payload stored for `code` and invalidate it, or None.
+    `cache.add` is atomic (SET NX on Redis), so concurrent redemptions of
+    the same code can't both succeed."""
+    if not code or len(code) > 128:
+        return None
+    key = _login_code_key(code)
+    payload = cache.get(key)
+    if payload is None:
+        return None
+    if not cache.add(key + ':claimed', 1, timeout=SOCIAL_LOGIN_CODE_TTL):
+        return None
+    cache.delete(key)
+    return payload
+
+
 def _finish_social_login(request, user):
     """Issue tokens for a socially-authenticated user — via the same MFA
     handshake the password login uses when the account has TOTP enabled.
@@ -73,18 +116,33 @@ def _finish_social_login(request, user):
         from .security.mfa import issue_mfa_token
         from .security.client_ip import get_client_ip
         token = issue_mfa_token(user_id=user.id, ip=get_client_ip(request))
-        return redirect(
-            f'{FRONTEND_CALLBACK}?mfa_required=1&mfa_token={urllib.parse.quote(token)}'
-        )
+        return _redirect_with_login_code({'mfa_required': True, 'mfa_token': token})
 
     access, refresh = _make_jwt(user)
     try:
         has_client = user.profile.client_id is not None
     except Exception:
         has_client = False
+    payload = {'access': access, 'refresh': refresh}
     if not has_client:
-        return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}&state=self')
-    return redirect(f'{FRONTEND_CALLBACK}?access={access}&refresh={refresh}')
+        payload['state'] = 'self'
+    return _redirect_with_login_code(payload)
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+@throttle_classes([SocialExchangeThrottle])
+def social_exchange(request):
+    """POST {code} → the tokens (or MFA handshake) behind a one-time code
+    issued by a social login callback. Each code works once, for 60 s."""
+    code = request.data.get('code') if hasattr(request.data, 'get') else None
+    payload = _consume_login_code(code if isinstance(code, str) else '')
+    if payload is None:
+        return Response({'error': 'Invalid or expired sign-in code.'}, status=400)
+    response = Response(payload)
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 

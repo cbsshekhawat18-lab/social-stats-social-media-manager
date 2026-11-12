@@ -42,6 +42,17 @@ class LoginIPThrottle(SimpleRateThrottle):
         return self.cache_format % {'scope': self.scope, 'ident': ip}
 
 
+class SocialExchangeThrottle(SimpleRateThrottle):
+    """Social-login code exchange: codes are 256-bit random and single-use,
+    so this only caps guessing noise — 20/min per IP."""
+    scope = 'social_exchange'
+    rate  = '20/min'
+
+    def get_cache_key(self, request, view):
+        ip = get_client_ip(request)
+        return self.cache_format % {'scope': self.scope, 'ident': ip} if ip else None
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Signup — 3/min per IP, 20/day per IP
 # ─────────────────────────────────────────────────────────────────────────────

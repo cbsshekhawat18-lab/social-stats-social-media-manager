@@ -1,0 +1,64 @@
+name: Docs
+
+# The documentation site (Material for MkDocs, mkdocs.yml): built strictly on
+# every pull request and push, deployed to GitHub Pages from main.
+# scripts/docs_seo.py makes a missing page description, a repeated title or a
+# broken link a warning, which --strict turns into a failure.
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build the docs site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install "mkdocs-material==9.8.1"
+      - name: "Build (strict: a broken link or a missing description fails)"
+        run: python -m mkdocs build --strict --site-dir site
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+      - name: The pages are server-rendered HTML with their metadata
+        run: |
+          set -euo pipefail
+          for page in index.html faq.html features.html GETTING_STARTED.html COMPARISON.html; do
+            grep -q '<link rel="canonical"' "site/$page"
+            grep -q '<meta name="description"' "site/$page"
+          done
+          grep -q '"@type":"SoftwareApplication"' site/index.html
+          grep -q '"@type":"FAQPage"' site/faq.html
+          test -s site/llms.txt && test -s site/llms-full.txt && test -s site/sitemap.xml
+      - uses: actions/upload-pages-artifact@v5
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

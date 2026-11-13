@@ -1,36 +1,36 @@
 # Social Stats
 
-> Social Stats is an open-source, self-hostable social media management &
-> marketing platform (MIT license) — an alternative to Hootsuite, Buffer and
-> Sprout Social. Built with Django + React, it unifies a post scheduler,
-> content calendar, cross-platform analytics (Facebook, Instagram, YouTube,
-> LinkedIn, Google Business Profile), a unified inbox, a click-to-WhatsApp
-> bot builder, CRM/leads, agency workspaces, and an AI assistant powered by
-> the Anthropic API.
+> Social Stats is an open-source, self-hostable social media management platform for agencies and teams. It publishes to Facebook, Instagram, YouTube, LinkedIn and Google Business from one composer, runs many client workspaces with enforced tenant isolation, and adds analytics, a unified inbox, WhatsApp bots and an AI assistant. Django + React, MIT.
 
-Key facts:
+Social Stats is an open alternative to Hootsuite, Buffer and Sprout Social, built and maintained by Gigai Kripa Services (https://gigaikripaservices.com/social-stats/). The full text of these docs is at https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/llms-full.txt.
+
+Key facts (version 2.0.0, released 2026-11-13):
 - Repository: https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager
-- License: MIT — free to self-host, no feature gating
-- Quick start: `docker compose pull && docker compose up -d` (prebuilt
-  multi-arch images on GHCR), or manual setup with Python 3.11–3.12 + Node 18
-- Demo data: `docker compose exec backend python manage.py demo_setup`
-- Stack: Django 4.2, Django REST Framework, Channels (WebSockets), Celery +
-  Redis, PostgreSQL/SQLite, React 18, React Query, Zustand
+- License: MIT, free to self-host.
+- Stack: Django 5.2 LTS, Django REST Framework, Celery and Redis, Django Channels, PostgreSQL (SQLite for local development), React 18.
+- Run it: Docker Compose with prebuilt amd64 and arm64 images on GHCR, or by hand with Python 3.11 to 3.13, Node 18 and Redis.
+- Demo data: `python manage.py demo_setup` seeds three accounts and 90 days of sample analytics.
+- Counted in the 2.0.0 code: 400 backend tests (all passing), 93 data models, 388 API endpoints, 52 background tasks, 15 scheduled jobs.
+- AI features use Anthropic Claude with your own API key; everything else works without one.
+- Status: early-stage; it runs end to end but has no launch partners yet.
 
-## Documentation
+## Docs
 
-- [Overview](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/): what Social Stats does and who it's for
-- [Getting Started](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/GETTING_STARTED): install and run locally (Docker or manual)
-- [Comparison](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/COMPARISON): Social Stats vs Hootsuite / Buffer / Sprout Social
-- [User Guide](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/USER_GUIDE): day-to-day usage
-- [Configuration](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/CONFIGURATION): every environment variable
-- [Connect Accounts](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/CONNECT_ACCOUNTS): Facebook, Instagram, YouTube, LinkedIn, Google Business
-- [Connect WhatsApp](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/CONNECT_WHATSAPP): WhatsApp Business + bot builder
-- [Going Live](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/GOING_LIVE): production checklist and OAuth app review
-- [FAQ & Troubleshooting](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/FAQ_TROUBLESHOOTING)
+- [Overview](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/): what Social Stats does and who it is for
+- [Features](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/features.html): every feature, with the tests behind each
+- [Getting started](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/GETTING_STARTED.html): install and run locally, with or without Docker
+- [Configuration](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/CONFIGURATION.html): every environment variable
+- [Connect social accounts](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/CONNECT_ACCOUNTS.html): Facebook, Instagram, YouTube, LinkedIn, Google Business
+- [Connect WhatsApp](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/CONNECT_WHATSAPP.html): WhatsApp Business and the bot builder
+- [Going live](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/GOING_LIVE.html): production checklist and platform app review
+- [User guide](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/USER_GUIDE.html): the account types and every module
+- [FAQ](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/faq.html): cost, platforms, self-hosting, security, 2.0.0
+- [Troubleshooting](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/FAQ_TROUBLESHOOTING.html): fixes for common setup problems
+- [Compare](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/COMPARISON.html): Social Stats vs Hootsuite, Buffer and Sprout Social
 
 ## Optional
 
-- [Changelog / Releases](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/releases)
-- [Contributing](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/CONTRIBUTING.md)
-- [Security policy](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/SECURITY.md)
+- [Changelog](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/changelog.html)
+- [Security](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/security.html)
+- [Contributing](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/contributing.html)
+- [Product page](https://gigaikripaservices.com/social-stats/)

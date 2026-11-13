@@ -7,9 +7,9 @@ description: "How to connect Facebook, Instagram, YouTube, LinkedIn and Google B
 
 How to connect each social platform to Social Stats. All redirect URIs, scopes,
 and env var names below are taken **directly from the code**
-([`oauth_views.py`](../backend/social_stats/oauth_views.py),
-[`urls.py`](../backend/social_stats/urls.py),
-[`manual_setup_guides.py`](../backend/social_stats/manual_setup_guides.py)).
+([`oauth_views.py`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/social_stats/oauth_views.py),
+[`urls.py`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/social_stats/urls.py),
+[`manual_setup_guides.py`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/social_stats/manual_setup_guides.py)).
 
 ## Two ways to connect
 
@@ -30,7 +30,6 @@ encrypted at rest** (`PlatformCredential` / `ManualCredentialExtras` via
 `EncryptedTextField`). Nothing is hardcoded; with an empty `.env` a fresh user
 connects their own accounts.
 
-![Settings → Connected Accounts](images/connect-accounts.png)
 
 ### Redirect URI base
 
@@ -73,7 +72,7 @@ META_REDIRECT_URI=http://localhost:8000/api/oauth/facebook/callback/
 ```
 
 ### 5. Manual Setup alternative (no app review needed)
-The in-app wizard ([`manual_setup_guides.py`](../backend/social_stats/manual_setup_guides.py))
+The in-app wizard ([`manual_setup_guides.py`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/social_stats/manual_setup_guides.py))
 walks users through generating a **System User Page Access Token** in Meta
 Business Suite with these permissions:
 `pages_show_list, pages_read_engagement, pages_read_user_content, read_insights,

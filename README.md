@@ -69,7 +69,7 @@ or set it in `frontend/.env` without Docker):
 
 ## Documentation
 
-Full guides live in [`docs/`](docs/):
+Full guides live on the **[docs site](https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/)** (built from [`docs/`](docs/)), and the product page is [gigaikripaservices.com/social-stats](https://gigaikripaservices.com/social-stats/):
 
 - [Getting Started](docs/GETTING_STARTED.md) — zero to running locally
 - [Configuration](docs/CONFIGURATION.md) — every `.env` variable explained

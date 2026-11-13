@@ -1,0 +1,96 @@
+site_name: Social Stats
+site_description: "Social Stats is an open-source, self-hostable social media management platform for agencies and teams. It publishes to Facebook, Instagram, YouTube, LinkedIn and Google Business from one composer, runs many client workspaces with enforced tenant isolation, and adds analytics, a unified inbox, WhatsApp bots and an AI assistant. Django + React, MIT."
+site_url: https://cbsshekhawat18-lab.github.io/social-stats-social-media-manager/
+site_author: Chandrabhan Shekhawat, Gigai Kripa Services
+repo_url: https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager
+repo_name: cbsshekhawat18-lab/social-stats
+edit_uri: edit/main/docs/
+copyright: "© 2026 Chandrabhan Shekhawat, Gigai Kripa Services · MIT License"
+docs_dir: docs
+strict: true
+# The site was first published with .html URLs (GETTING_STARTED.html, …) and
+# other sites link to them, so pages keep those addresses.
+use_directory_urls: false
+exclude_docs: |
+  images/README.md
+  overrides/
+hooks:
+  - scripts/docs_seo.py
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  # The look of the Social Stats page on gigaikripaservices.com/social-stats/:
+  # the product's own design tokens, a cool light page (#fafbfc), white cards,
+  # one brand cyan (#00CCF5) used as a fill, #0A7EA4 for text accents, a violet
+  # mesh, Inter and JetBrains Mono. Light only, like that page. The colours,
+  # header, buttons, cards, tables and code are in docs/stylesheets/social-stats.css.
+  logo: assets/brand/mark.svg
+  favicon: assets/brand/mark.svg
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+    - toc.follow
+  palette:
+    scheme: default
+    primary: custom
+    accent: custom
+
+extra_css:
+  - stylesheets/social-stats.css
+
+extra_javascript:
+  - javascripts/a11y.js
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager
+      name: Social Stats on GitHub
+    - icon: fontawesome/solid/globe
+      link: https://gigaikripaservices.com/social-stats/
+      name: Social Stats product page
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  # The changelog page includes CHANGELOG.md itself, so there is one copy.
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+
+nav:
+  - Home: index.md
+  - Features: features.md
+  - Start here:
+      - Getting started: GETTING_STARTED.md
+      - Configuration: CONFIGURATION.md
+      - Connect social accounts: CONNECT_ACCOUNTS.md
+      - Connect WhatsApp: CONNECT_WHATSAPP.md
+      - Going live: GOING_LIVE.md
+  - User guide: USER_GUIDE.md
+  - FAQ: faq.md
+  - Troubleshooting: FAQ_TROUBLESHOOTING.md
+  - Compare: COMPARISON.md
+  - Project:
+      - Changelog: changelog.md
+      - Security: security.md
+      - Contributing: contributing.md

@@ -19,8 +19,8 @@ weasyprint==70.0
 anthropic>=1.17.0,<2          # 2.x moves to API version 2026-10-21 — separate migration
 cryptography==50.0.2
 tenacity==9.2.1
-phonenumbers==9.0.42
-boto3==1.43.125
+phonenumbers==9.0.43
+boto3==1.43.127
 moviepy==1.0.3
 python-dateutil==2.9.0.post0
 croniter==6.2.4

@@ -25,11 +25,19 @@ rm -rf "$OUT_DIR"
 node scripts/record-demo.cjs
 RAW=$(ls "$OUT_DIR"/*.webm)
 
-# Hold the last frame for 2.5 s, then the two-pass palette conversion.
-FILTER="tpad=stop_mode=clone:stop_duration=2.5,fps=${FPS},scale=${WIDTH}:-1:flags=lanczos"
-ffmpeg -v error -y -i "$RAW" -vf "${FILTER},palettegen=max_colors=128:stats_mode=diff" "$OUT_DIR/palette.png"
-ffmpeg -v error -y -i "$RAW" -i "$OUT_DIR/palette.png" \
-  -lavfi "${FILTER}[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "$OUT"
+# Frame 1 is what GitHub shows while the GIF is paused (viewers with
+# animated-image autoplay off or reduced motion), so open on the analytics
+# screenshot the recorder just took, held POSTER_SECONDS. TRIM_START drops the
+# blank page-load frames at the head of the recording. The last frame is held
+# 2.5 s, then the two-pass palette conversion.
+POSTER_SECONDS=${POSTER_SECONDS:-2}
+TRIM_START=${TRIM_START:-0.5}
+SCALE="scale=${WIDTH}:-2:flags=lanczos"
+FILTER="[0:v]${SCALE},fps=${FPS},format=rgb24[p];[1:v]tpad=stop_mode=clone:stop_duration=2.5,fps=${FPS},${SCALE},format=rgb24[r];[p][r]concat=n=2:v=1:a=0"
+INPUTS=(-loop 1 -framerate "$FPS" -t "$POSTER_SECONDS" -i docs/screenshot.png -ss "$TRIM_START" -i "$RAW")
+ffmpeg -v error -y "${INPUTS[@]}" -filter_complex "${FILTER},palettegen=max_colors=128:stats_mode=diff" "$OUT_DIR/palette.png"
+ffmpeg -v error -y "${INPUTS[@]}" -i "$OUT_DIR/palette.png" \
+  -filter_complex "${FILTER}[x];[x][2:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" "$OUT"
 rm -rf "$OUT_DIR"
 
 SIZE=$(stat -f%z "$OUT" 2>/dev/null || stat -c%s "$OUT")

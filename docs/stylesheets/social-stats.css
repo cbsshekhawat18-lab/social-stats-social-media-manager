@@ -1,0 +1,244 @@
+/* Social Stats docs: the look of the Social Stats page on gigaikripaservices.com.
+   The product's own tokens (frontend/src/styles/tokens.css): a cool light page
+   #fafbfc, white cards, ink #0a0e14, one brand cyan #00CCF5 used as a FILL (10:1
+   under ink text), #0A7EA4 for text accents (4.6:1 on white), a violet mesh,
+   Inter and JetBrains Mono. Light only, like that page. Code blocks are dark
+   terminals, as on the page. Material's own layout stays: this file sets its
+   colour variables and restyles the header, buttons, cards, tables and code. */
+
+[data-md-color-scheme="default"] {
+  --ss-cyan: #00CCF5;
+  --ss-cyan-2: #00A8D8;
+  --ss-ink-accent: #0A7EA4;
+  --ss-soft: rgba(0, 204, 245, 0.10);
+  --ss-ink: #0a0e14;
+  --ss-muted: #475569;
+  --ss-muted-2: #64748b;
+  --ss-band: #f3f5f8;
+  --ss-line: rgba(10, 14, 20, 0.08);
+  --ss-line-2: rgba(10, 14, 20, 0.14);
+  --ss-shadow-sm: 0 2px 4px rgba(10, 14, 20, 0.05);
+  --ss-shadow-md: 0 6px 18px -6px rgba(10, 14, 20, 0.12);
+  --ss-term: #0a0e14;
+  --ss-grad: linear-gradient(110deg, #0891B2 0%, #0A7EA4 45%, #6D28D9 100%);
+
+  --md-default-bg-color: #fafbfc;
+  --md-default-fg-color: var(--ss-ink);
+  --md-default-fg-color--light: var(--ss-muted);
+  --md-default-fg-color--lighter: var(--ss-muted-2);
+  --md-default-fg-color--lightest: var(--ss-line-2);
+
+  --md-primary-fg-color: #ffffff;
+  --md-primary-fg-color--light: #ffffff;
+  --md-primary-fg-color--dark: #ffffff;
+  --md-primary-bg-color: var(--ss-ink);
+  --md-primary-bg-color--light: var(--ss-muted);
+  --md-accent-fg-color: var(--ss-ink-accent);
+  --md-accent-fg-color--transparent: var(--ss-soft);
+  --md-accent-bg-color: #ffffff;
+
+  --md-typeset-color: #1e293b;
+  --md-typeset-a-color: var(--ss-ink-accent);
+  --md-typeset-mark-color: rgba(0, 204, 245, 0.28);
+  --md-typeset-table-color: var(--ss-line-2);
+  --md-typeset-table-color--light: rgba(0, 204, 245, 0.05);
+
+  /* Code blocks are dark terminals; inline code is set separately below. */
+  --md-code-bg-color: var(--ss-term);
+  --md-code-fg-color: #E2E8F0;
+  --md-code-hl-color: rgba(0, 204, 245, 0.18);
+  --md-code-hl-keyword-color: #67E8F9;
+  --md-code-hl-string-color: #A7F3D0;
+  --md-code-hl-number-color: #FCD34D;
+  --md-code-hl-name-color: #E2E8F0;
+  --md-code-hl-function-color: #C4B5FD;
+  --md-code-hl-constant-color: #FCD34D;
+  --md-code-hl-special-color: #67E8F9;
+  --md-code-hl-operator-color: #94A3B8;
+  --md-code-hl-punctuation-color: #94A3B8;
+  --md-code-hl-comment-color: #94A3B8;
+  --md-code-hl-generic-color: #CBD5E1;
+  --md-code-hl-variable-color: #E2E8F0;
+
+  --md-footer-bg-color: #ffffff;
+  --md-footer-bg-color--dark: var(--ss-band);
+  --md-footer-fg-color: var(--ss-ink);
+  --md-footer-fg-color--light: var(--ss-muted);
+  --md-footer-fg-color--lighter: var(--ss-muted-2);
+
+  --md-admonition-bg-color: #ffffff;
+  --md-admonition-fg-color: #1e293b;
+}
+
+/* The brand mesh behind the top of every page, static. */
+body {
+  background-color: #fafbfc;
+  background-image:
+    radial-gradient(ellipse 50% 32rem at 18% -4rem, rgba(0, 204, 245, 0.20), transparent 70%),
+    radial-gradient(ellipse 45% 30rem at 86% -2rem, rgba(124, 58, 237, 0.11), transparent 70%);
+  background-repeat: no-repeat;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: rgba(0, 204, 245, 0.28); }
+:focus-visible { outline: 2px solid var(--ss-ink-accent); outline-offset: 3px; }
+
+/* ── Header: a white glass pill over the mesh ───────────────────────────── */
+.md-header { background: transparent; box-shadow: none; padding: 0.6rem 0.8rem 0; color: var(--ss-ink); }
+.md-header--shadow { box-shadow: none; }
+.md-header__inner {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  -webkit-backdrop-filter: saturate(170%) blur(16px);
+  backdrop-filter: saturate(170%) blur(16px);
+  box-shadow: var(--ss-shadow-md);
+  padding: 0.3rem 0.6rem;
+}
+.md-header--shadow .md-header__inner { background: rgba(255, 255, 255, 0.9); border-color: var(--ss-line-2); }
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg { height: 1.9rem; width: 1.9rem; }
+.md-header__title { font-weight: 800; font-size: 1rem; letter-spacing: -0.02em; }
+.md-search__form { border-radius: 999px; background: var(--ss-band); border: 1px solid var(--ss-line); }
+.md-search__form:hover { background: #ffffff; border-color: var(--ss-line-2); }
+.md-search__input { color: var(--ss-ink); }
+.md-search__input::placeholder { color: var(--ss-muted-2); }
+.md-search__icon { color: var(--ss-muted); }
+.md-source { color: var(--ss-ink); }
+.md-tabs { background: transparent; color: var(--ss-ink); }
+
+/* ── Navigation ─────────────────────────────────────────────────────────── */
+.md-nav__item--section > .md-nav__link {
+  color: var(--ss-ink-accent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.md-nav__link--active,
+.md-nav__link:is(:focus, :hover) { color: var(--ss-ink-accent); }
+.md-nav--primary .md-nav__link--active { font-weight: 600; }
+
+/* ── Type ───────────────────────────────────────────────────────────────── */
+.md-typeset h1, .md-typeset h2, .md-typeset h3, .md-typeset h4 { color: var(--ss-ink); letter-spacing: -0.025em; }
+.md-typeset h1 { font-weight: 800; font-size: 2.3em; line-height: 1.1; letter-spacing: -0.035em; }
+.md-typeset h2 { font-weight: 700; font-size: 1.5em; line-height: 1.2; }
+.md-typeset h3 { font-weight: 700; font-size: 1.15em; }
+.md-typeset a:hover { color: var(--ss-cyan-2); }
+.md-typeset code {
+  border-radius: 6px;
+  background: var(--ss-soft);
+  color: #075E7A;
+}
+.md-typeset pre > code { background: var(--ss-term); color: var(--md-code-fg-color); }
+.md-typeset pre { border-radius: 14px; overflow: hidden; box-shadow: 0 18px 40px -22px rgba(10, 14, 20, 0.45); }
+.md-typeset a code { color: inherit; }
+.md-typeset .md-clipboard { color: #94A3B8; }
+.md-typeset .md-clipboard:hover { color: var(--ss-cyan); }
+
+/* ── Buttons: cyan with ink text, or white ghost ───────────────────────── */
+.md-typeset .md-button {
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.6em 1.25em;
+  color: var(--ss-ink);
+  background: #ffffff;
+  border: 1px solid var(--ss-line-2);
+  box-shadow: var(--ss-shadow-sm);
+  transition: transform 0.2s, background 0.2s, border-color 0.2s;
+}
+.md-typeset .md-button:hover,
+.md-typeset .md-button:focus { color: var(--ss-ink); background: #ffffff; border-color: var(--ss-cyan-2); transform: translateY(-2px); }
+.md-typeset .md-button--primary,
+.md-typeset .md-button--primary:focus { color: var(--ss-ink); background: var(--ss-cyan); border-color: var(--ss-cyan); box-shadow: 0 8px 24px -8px rgba(0, 204, 245, 0.55); }
+.md-typeset .md-button--primary:hover { color: var(--ss-ink); background: #29D6F7; border-color: #29D6F7; }
+
+/* ── Cards, tables (the page's comparison table), admonitions ───────────── */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid > .card {
+  border: 1px solid var(--ss-line);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: var(--ss-shadow-sm);
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid > .card:hover { border-color: var(--ss-line-2); box-shadow: var(--ss-shadow-md); transform: translateY(-3px); }
+.md-typeset .grid.cards > ul > li > p:first-child strong {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ss-ink-accent);
+}
+.md-typeset .grid.cards > ul > li > hr { border-color: var(--ss-line); }
+.md-typeset table:not([class]) {
+  border: 1px solid var(--ss-line);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: var(--ss-shadow-sm);
+  overflow: hidden;
+  font-size: 0.7rem;
+}
+.md-typeset table:not([class]) th {
+  background: var(--ss-band);
+  color: var(--ss-muted-2);
+  font-family: var(--md-code-font-family);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.md-typeset table:not([class]) td { border-top-color: var(--ss-line); }
+/* The first data column, the one being compared, lit like the page's. */
+.md-typeset .ss-compare table:not([class]) td:nth-child(2) { background: rgba(0, 204, 245, 0.07); color: var(--ss-ink); }
+.md-typeset .ss-compare table:not([class]) th:nth-child(2) { color: var(--ss-ink-accent); }
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: 14px;
+  border: 1px solid var(--ss-line);
+  border-left: 3px solid var(--ss-cyan);
+  background: #ffffff;
+  box-shadow: var(--ss-shadow-sm);
+}
+.md-typeset .note > .admonition-title,
+.md-typeset .note > summary,
+.md-typeset .info > .admonition-title,
+.md-typeset .tip > .admonition-title { background-color: var(--ss-soft); }
+.md-typeset .note > .admonition-title::before,
+.md-typeset .note > summary::before,
+.md-typeset .info > .admonition-title::before,
+.md-typeset .tip > .admonition-title::before { background-color: var(--ss-ink-accent); }
+.md-typeset img { border-radius: 12px; }
+.md-typeset p > img,
+.md-typeset figure img { border: 1px solid var(--ss-line-2); box-shadow: 0 24px 60px -30px rgba(10, 14, 20, 0.35); }
+
+/* ── The home page: a centred hero, as on the product page ──────────────── */
+.md-typeset .ss-hero { text-align: center; padding: 2.2rem 0 1.4rem; }
+.md-typeset .ss-hero h1 { font-size: clamp(2.3rem, 5.2vw, 3.5rem); line-height: 1.04; margin: 0 auto 1rem; max-width: 16ch; }
+.md-typeset .ss-hero h1 .headerlink { display: none; }
+.md-typeset .ss-hero .ss-grad { background: var(--ss-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+.md-typeset .ss-hero > p:first-of-type { max-width: 62ch; margin: 0 auto 1.6rem; color: var(--ss-muted); font-size: 1.04rem; }
+.md-typeset .ss-hero .md-button { margin: 0.25rem 0.3rem; }
+.md-typeset .ss-eyebrow {
+  display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem;
+  padding: 0.35rem 0.85rem; border: 1px solid var(--ss-line-2); border-radius: 999px;
+  background: #ffffff; box-shadow: var(--ss-shadow-sm);
+  color: var(--ss-muted); font-size: 0.58rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+}
+.md-typeset .ss-eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ss-cyan); box-shadow: 0 0 0 3px var(--ss-soft); }
+.md-typeset .ss-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.6rem; margin: 1.2rem 0; }
+.md-typeset .ss-stats > div { padding: 0.9rem 1rem; border: 1px solid var(--ss-line); border-radius: 14px; background: #ffffff; box-shadow: var(--ss-shadow-sm); }
+.md-typeset .ss-stats b { display: block; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: var(--ss-ink); }
+.md-typeset .ss-stats span { font-size: 0.68rem; color: var(--ss-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .md-button,
+  .md-typeset .grid.cards > ul > li { transition: none; }
+}
+@media screen and (max-width: 76.1875em) {
+  .md-header { padding: 0.4rem 0.4rem 0; }
+  /* The drawer on small screens: white, ink text. */
+  .md-nav--primary .md-nav__title[for="__drawer"] { background: #ffffff; color: var(--ss-ink); }
+}
+.md-typeset .grid.cards { grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); }
+/* The demo animation, centred like the page's demo plate. */
+.md-typeset img[src$="demo.gif"] { display: block; margin: 0 auto; border-radius: 18px; }

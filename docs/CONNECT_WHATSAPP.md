@@ -7,11 +7,11 @@ description: "Set up the WhatsApp Business module in Social Stats: inbox, contac
 
 Social Stats integrates WhatsApp Business through the **Pinbot Partners API v3**.
 Everything below comes from
-[`whatsapp_service.py`](../backend/social_stats/whatsapp_service.py),
-[`whatsapp_webhook_views.py`](../backend/social_stats/whatsapp_webhook_views.py),
-[`whatsapp_tasks.py`](../backend/social_stats/whatsapp_tasks.py),
-[`urls.py`](../backend/social_stats/urls.py), and
-[`.env.example`](../backend/.env.example).
+[`whatsapp_service.py`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/social_stats/whatsapp_service.py),
+[`whatsapp_webhook_views.py`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/social_stats/whatsapp_webhook_views.py),
+[`whatsapp_tasks.py`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/social_stats/whatsapp_tasks.py),
+[`urls.py`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/social_stats/urls.py), and
+[`.env.example`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/.env.example).
 
 The integration is **fully dynamic and per-tenant**: each Client provides its own
 `phone_number_id` and `waba_id`, and the Pinbot `apikey` is stored encrypted in
@@ -97,9 +97,8 @@ messages that hit the webhook are routed into the bot engine; lead-capture nodes
 push contacts to the CRM. Click-to-WhatsApp ad campaigns land users into the same
 flows. See the [User Guide](USER_GUIDE.md#whatsapp-bot-builder) for building a flow.
 
-![Click-to-WhatsApp flow editor](images/bot-builder.png)
 
 ## Going live
 
 WhatsApp Business has its own approvals — display-name approval, message-template
-approval, and messaging tier limits. See [GOING_LIVE.md](GOING_LIVE.md#whatsapp).
+approval, and messaging tier limits. See [GOING_LIVE.md](GOING_LIVE.md#whatsapp-pinbot-waba).

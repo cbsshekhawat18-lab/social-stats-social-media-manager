@@ -5,7 +5,7 @@ description: "Every environment variable Social Stats reads: database, Redis/Cel
 
 # Configuration Reference
 
-Every variable in [`backend/.env.example`](../backend/.env.example), what it does,
+Every variable in [`backend/.env.example`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/backend/.env.example), what it does,
 whether it's required, how to generate it, and what breaks if it's unset.
 
 Copy the template first:
@@ -145,7 +145,7 @@ See [CONNECT_WHATSAPP.md](CONNECT_WHATSAPP.md) for the full setup.
 compose stops if they're missing), plus `ALLOWED_HOSTS`, `FRONTEND_URL`,
 `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE` and
 `POSTGRES_PASSWORD` (optional, local-friendly defaults) from `.env.docker`.
-Start from [`.env.docker.example`](../.env.docker.example) and pass
+Start from [`.env.docker.example`](https://github.com/cbsshekhawat18-lab/social-stats-social-media-manager/blob/main/.env.docker.example) and pass
 `--env-file .env.docker` to every `docker compose` command. Everything else in
 the file (API keys, OAuth apps, webhook secrets) is handed to the containers
 as-is. `REACT_APP_SHOW_DEMO` is a frontend **build** argument (default `false`).

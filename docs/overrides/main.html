@@ -1,0 +1,25 @@
+{#- Social and icon meta for every page, and the JSON-LD from scripts/docs_seo.py. -#}
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {#- Inter's heavier weights for the display headings (theme.font loads 300, 400 and 700). -#}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800&display=swap" />
+  {% set brand = config.site_url ~ "assets/brand/" %}
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="{{ config.site_name }}" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="{{ page.meta.title if page and page.meta and page.meta.title else config.site_name }}" />
+  <meta property="og:description" content="{{ page.meta.description if page and page.meta and page.meta.description else config.site_description }}" />
+  <meta property="og:url" content="{{ page.canonical_url }}" />
+  <meta property="og:image" content="{{ brand }}social-1200x630.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Social Stats: social media management you host yourself, beside its analytics dashboard." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="{{ brand }}social-1200x630.jpg" />
+  <link rel="apple-touch-icon" href="{{ brand }}apple-touch-icon.png" />
+  <link rel="alternate" type="text/plain" href="{{ config.site_url }}llms.txt" title="Social Stats summary for AI assistants (llms.txt)" />
+  {% for block in (page.meta.ss_jsonld if page and page.meta and page.meta.ss_jsonld else []) %}
+  <script type="application/ld+json">{{ block }}</script>
+  {% endfor %}
+{% endblock %}

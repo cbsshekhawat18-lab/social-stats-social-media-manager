@@ -18,6 +18,8 @@ Buffer, and Sprout Social.
 
 ## Structural comparison
 
+<div class="ss-compare" markdown>
+
 | | **Social Stats** | Typical SaaS (Hootsuite / Buffer / Sprout Social) |
 |---|---|---|
 | License | **Open source (MIT)** | Proprietary |
@@ -27,6 +29,8 @@ Buffer, and Sprout Social.
 | Data ownership | **Your database, your keys** (tokens encrypted at rest) | Stored in vendor cloud |
 | Customizable | **Fully** (it's your code) | Limited to vendor features |
 | Maturity / support | Early-stage, community | Mature, commercial SLAs & support |
+
+</div>
 
 ## Feature categories Social Stats ships
 

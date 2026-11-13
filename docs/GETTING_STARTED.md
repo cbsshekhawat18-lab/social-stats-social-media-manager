@@ -100,7 +100,7 @@ the one-click sign-in buttons on `/login`, add `REACT_APP_SHOW_DEMO=true` to
 
 > These are local-only demo credentials — never deploy them to production.
 
-![/login one-click demo sign-in](images/login.png)
+![The sign-in page with one-click demo accounts for the superadmin, the agency member and the end user](images/login.png)
 
 ## 4. Frontend: install and start
 
@@ -138,7 +138,7 @@ Open `http://localhost:3000`, click the **agency** demo button on `/login`, and
 you should now see the dashboard at `http://localhost:3000` populated with 90
 days of sample analytics.
 
-![Analytics dashboard](images/dashboard.png)
+![The agency dashboard with the demo data: active users, top platform, click efficiency and sync health](images/dashboard.png)
 
 ## Next steps
 

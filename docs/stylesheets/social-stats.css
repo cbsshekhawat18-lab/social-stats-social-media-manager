@@ -98,6 +98,9 @@ body {
 .md-header__button.md-logo img,
 .md-header__button.md-logo svg { height: 1.9rem; width: 1.9rem; }
 .md-header__title { font-weight: 800; font-size: 1rem; letter-spacing: -0.02em; }
+/* The pill keeps the wordmark: no swap to the page's long SEO title on scroll. */
+.md-header__title--active .md-header__topic:first-child { opacity: 1; transform: none; z-index: 0; pointer-events: auto; }
+.md-header__topic + .md-header__topic { display: none; }
 .md-search__form { border-radius: 999px; background: var(--ss-band); border: 1px solid var(--ss-line); }
 .md-search__form:hover { background: #ffffff; border-color: var(--ss-line-2); }
 .md-search__input { color: var(--ss-ink); }

@@ -6,9 +6,9 @@ celery==5.7.0
 redis==5.0.1
 django-celery-beat==2.9.0
 requests==2.34.2
-google-api-python-client==2.201.0
+google-api-python-client==2.202.0
 google-analytics-data==0.23.3
-google-auth==2.62.1
+google-auth==2.62.2
 google-auth-oauthlib==1.5.0
 python-dotenv==1.2.4
 gunicorn==27.0.0
@@ -20,7 +20,7 @@ anthropic>=1.17.0,<2          # 2.x moves to API version 2026-10-21 — separate
 cryptography==50.0.2
 tenacity==9.2.1
 phonenumbers==9.0.43
-boto3==1.43.127
+boto3==1.44.2
 moviepy==1.0.3
 python-dateutil==2.9.0.post0
 croniter==6.2.4

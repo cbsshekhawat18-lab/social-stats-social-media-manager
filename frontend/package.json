@@ -14,7 +14,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.9",
-    "lucide-react": "^1.70.0",
+    "lucide-react": "^1.72.0",
     "nanoid": "^6.0.2",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
@@ -32,7 +32,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.8",
+    "@testing-library/user-event": "^14.6.10",
     "react-scripts": "5.0.1"
   },
   "scripts": {

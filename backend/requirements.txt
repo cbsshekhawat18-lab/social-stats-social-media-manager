@@ -23,7 +23,7 @@ phonenumbers==9.0.43
 boto3==1.43.127
 moviepy==1.0.3
 python-dateutil==2.9.0.post0
-croniter==6.2.4
+croniter==7.0.0
 channels==4.3.2
 channels-redis==4.3.0
 daphne==4.2.3

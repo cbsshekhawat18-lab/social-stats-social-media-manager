@@ -2488,6 +2488,7 @@ from .bot_models import (  # noqa: E402,F401
     Lead,
     LeadActivity,
     BotFlowTemplate,
+    BotKnowledgeDoc,
     CTWACampaign,
 )
 

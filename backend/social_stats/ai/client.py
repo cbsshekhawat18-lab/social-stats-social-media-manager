@@ -147,11 +147,12 @@ class AIClient:
         }
 
     @staticmethod
-    def _request_kwargs(model: str, max_tokens: int, temperature, prompt: str, system: str) -> dict:
+    def _request_kwargs(model: str, max_tokens: int, temperature, prompt: str, system: str,
+                        messages: Optional[list] = None) -> dict:
         kwargs = {
             'model': model,
             'max_tokens': max_tokens,
-            'messages': [{'role': 'user', 'content': prompt}],
+            'messages': messages or [{'role': 'user', 'content': prompt}],
             **sampling_kwargs(model, temperature),
         }
         if system:
@@ -181,12 +182,20 @@ class AIClient:
     def complete(self, prompt: str, *, system: str = '', model: Optional[str] = None,
                  max_tokens: int = 1024, temperature: float = 0.7,
                  cache_key: Optional[str] = None, fast: bool = False, deep: bool = False,
-                 use_cache: bool = True, safety: bool = True) -> str:
+                 use_cache: bool = True, safety: bool = True,
+                 messages: Optional[list] = None, redact_pii: bool = True) -> str:
         """
         Synchronous completion. Returns plain text from the assistant.
 
         Args:
-            prompt:      user-side message
+            prompt:      user-side message (with `messages`: the latest user
+                         turn, used for logging and the cache key)
+            messages:    optional full conversation, [{'role': 'user'|'assistant',
+                         'content': str}, ...] ending with a user turn. Sent
+                         instead of the single-message default.
+            redact_pii:  mask emails / phone numbers in the output (default).
+                         Pass False when those values are the point of the
+                         call, e.g. extracting a lead's phone number.
             system:      system prompt
             model:       explicit model override
             max_tokens:  cap on output tokens
@@ -208,6 +217,15 @@ class AIClient:
             if in_flags:
                 logger.info('AIClient.complete: input safety flags %s (feature=%s)', in_flags, self.feature)
                 prompt = cleaned
+            if messages:
+                # Sanitise every user-authored turn the same way.
+                safe = []
+                for m in messages:
+                    content = m.get('content')
+                    if m.get('role') == 'user' and isinstance(content, str):
+                        content = ai_safety.sanitize_input(content)[0]
+                    safe.append({'role': m.get('role'), 'content': content})
+                messages = safe
 
         chosen_model = self._model(model, deep=deep, fast=fast)
 
@@ -224,6 +242,8 @@ class AIClient:
 
         # 2. Cache lookup
         ckey = cache_key or ai_cache.make_key(prompt, system, chosen_model, temperature)
+        if messages:
+            use_cache = False   # a conversation is never a cache hit for its last line
         if use_cache:
             hit = ai_cache.get(ckey)
             if hit is not None:
@@ -242,7 +262,8 @@ class AIClient:
 
         # 3. SDK call
         sdk = self._sdk_client()
-        kwargs = self._request_kwargs(chosen_model, max_tokens, temperature, prompt, system)
+        kwargs = self._request_kwargs(chosen_model, max_tokens, temperature, prompt, system,
+                                      messages=messages)
 
         t0 = time.monotonic()
         status = 'success'
@@ -287,7 +308,7 @@ class AIClient:
 
         if safety and text:
             from . import safety as ai_safety
-            scan = ai_safety.scan_output(text)
+            scan = ai_safety.scan_output(text, redact_pii=redact_pii)
             if scan.flags:
                 logger.warning('AIClient.complete: output safety flags %s (feature=%s)', scan.flags, self.feature)
             text = scan.clean_text

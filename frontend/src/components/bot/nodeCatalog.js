@@ -27,7 +27,7 @@ import {
   HelpCircle, Mail, Phone, Hash, MapPin, Paperclip,
   GitBranch, Shuffle, Variable, ArrowRightCircle, Clock,
   Tag, UserCheck, Globe, AtSign, Database,
-  Bot, UserPlus, FlagTriangleRight, ListPlus, Share2,
+  Bot, UserPlus, FlagTriangleRight, ListPlus, Share2, ScanText, Split,
 } from 'lucide-react';
 
 export const NODE_CATALOG = {
@@ -199,6 +199,27 @@ export const NODE_CATALOG = {
     },
     waits: true, terminal: false,
   },
+  ai_extract: {
+    label: 'AI Extract', icon: ScanText, category: 'Smart', color: '#ec4899',
+    defaultData: {
+      fields: [
+        { name: 'name', description: "The customer's name", type: 'string', required: true },
+        { name: 'budget', description: 'Budget in rupees', type: 'number', required: false },
+      ],
+    },
+    waits: false, terminal: false, namedOutputsOnly: true,
+  },
+  ai_intent: {
+    label: 'AI Intent', icon: Split, category: 'Smart', color: '#ec4899',
+    defaultData: {
+      intents: [
+        { key: 'pricing', description: 'Asks about price, cost or offers' },
+        { key: 'support', description: 'Has a problem or complaint' },
+      ],
+      store_var: 'intent',
+    },
+    waits: false, terminal: false, namedOutputsOnly: true,
+  },
   human_handoff: {
     label: 'Human Handoff', icon: UserPlus, category: 'Smart', color: '#ec4899',
     defaultData: { message: 'Connecting you to a teammate…' },
@@ -225,7 +246,14 @@ export const FREEFORM_TYPES = [
 
 // Extra named outputs per node type (besides per-button / per-row handles and
 // the plain output). Mirrors the engine's sourceHandle names.
-export function extraOutputs(type) {
+export function extraOutputs(type, data = {}) {
+  if (type === 'ai_extract') {
+    return [{ id: 'missing', label: 'missing' }, { id: 'complete', label: 'complete' }];
+  }
+  if (type === 'ai_intent') {
+    const keys = (data.intents || []).map((i) => (i.key || '').trim()).filter((k) => k && k !== 'other');
+    return [{ id: 'other', label: 'other' }, ...keys.reverse().map((k) => ({ id: k, label: k }))];
+  }
   if (type === 'message_buttons' || type === 'message_list') {
     return [{ id: 'no_match', label: 'no match' }, { id: 'invalid', label: 'gave up' }];
   }

@@ -252,6 +252,35 @@ def _node_issues(node: dict, outgoing: list, by_id: dict) -> list[dict]:
                      'after that, so follow it with a Send Template node (or give the next node a '
                      'fallback template) — otherwise the conversation fails there.')
 
+    elif kind == 'ai_extract':
+        fields = [f for f in (d.get('fields') or []) if isinstance(f, dict)]
+        names = [str(f.get('name') or '').strip() for f in fields]
+        if not any(names):
+            err('Add at least one field to extract.')
+        if any(not n for n in names):
+            err('A field has no name.')
+        if len(set(names)) != len(names):
+            err('Two fields share the same name.')
+        if 'missing' not in handles:
+            warn('The "missing" output is not connected — connect it to ask for what could not be found.')
+
+    elif kind == 'ai_intent':
+        intents = [i for i in (d.get('intents') or []) if isinstance(i, dict)]
+        keys = [str(i.get('key') or '').strip() for i in intents]
+        if not any(keys):
+            err('Add at least one intent.')
+        if any(not k for k in keys):
+            err('An intent has no key.')
+        if len(set(keys)) != len(keys):
+            err('Two intents share the same key.')
+        if 'other' in keys:
+            err('"other" is reserved for messages that match no intent — rename that intent.')
+        if 'other' not in handles and None not in handles:
+            warn('The "other" output is not connected — messages that match no intent end the conversation.')
+        unwired = [k for k in keys if k and k not in handles]
+        if unwired and outgoing:
+            warn('No connection for intent: ' + ', '.join(unwired) + ' (it will follow "other").')
+
     elif kind in ('webhook', 'crm_push'):
         if not (d.get('url') or '').strip().startswith(('http://', 'https://', '{{')):
             err('Add the URL to call.')

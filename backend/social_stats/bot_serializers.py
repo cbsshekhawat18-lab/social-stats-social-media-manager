@@ -13,7 +13,7 @@ from rest_framework import serializers
 
 from .models import (
     BotConversation, BotConversationStep, BotFlow, BotFlowTemplate, BotFlowVersion,
-    CTWACampaign, Lead, LeadActivity,
+    BotKnowledgeDoc, CTWACampaign, Lead, LeadActivity,
 )
 
 
@@ -81,6 +81,30 @@ class BotFlowVersionSerializer(serializers.ModelSerializer):
 
     def get_conversations(self, obj):
         return obj.conversations.count()
+
+
+class BotKnowledgeDocSerializer(serializers.ModelSerializer):
+    MAX_CONTENT = 100_000
+
+    class Meta:
+        model = BotKnowledgeDoc
+        fields = ['id', 'client', 'title', 'content', 'created_at', 'updated_at']
+        read_only_fields = ['client', 'created_at', 'updated_at']
+
+    def validate_title(self, value):
+        value = (value or '').strip()
+        if not value:
+            raise serializers.ValidationError('Give the document a title.')
+        return value
+
+    def validate_content(self, value):
+        value = (value or '').strip()
+        if not value:
+            raise serializers.ValidationError('The document is empty.')
+        if len(value) > self.MAX_CONTENT:
+            raise serializers.ValidationError(
+                f'Keep a document under {self.MAX_CONTENT:,} characters — split long material into several.')
+        return value
 
 
 class BotFlowTemplateSerializer(serializers.ModelSerializer):

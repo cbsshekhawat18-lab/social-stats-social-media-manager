@@ -21,7 +21,7 @@ export default function CanvasNode({ data, selected }) {
   const meta = getNodeMeta(data.type);
   const Icon = meta.icon;
   const summary = describeNode(data);
-  const extras = extraOutputs(data.type);
+  const extras = extraOutputs(data.type, data.data || {});
   const issue = data.issueLevel;   // 'error' | 'warning' | undefined — set by the editor's validation panel
 
   return (
@@ -109,7 +109,7 @@ export default function CanvasNode({ data, selected }) {
           <Handle type="source" position={Position.Right} id="false"
                   style={{ top: '70%', background: 'var(--danger)', width: 9, height: 9 }} />
         </>
-      ) : !meta.terminal && (
+      ) : !meta.terminal && !meta.namedOutputsOnly && (
         <Handle type="source" position={Position.Right}
                 style={{ background: meta.color, width: 9, height: 9 }} />
       )}
@@ -172,7 +172,9 @@ function describeNode(data) {
     case 'assign_segment': return d.list_name ? `${d.remove ? 'Remove from' : 'Add to'} “${d.list_name}”` : '(no list)';
     case 'crm_push':      return d.url && d.url !== 'https://' ? d.url : '(no CRM url)';
 
-    case 'ai_chat':       return d.persona ? d.persona.slice(0, 80) + '…' : 'AI takes over';
+    case 'ai_chat':       return (d.use_knowledge ? '📚 ' : '') + (d.persona ? d.persona.slice(0, 80) + '…' : 'AI takes over');
+    case 'ai_extract':    return `Extract: ${(d.fields || []).map((f) => f.name).filter(Boolean).join(', ') || '(no fields)'}`;
+    case 'ai_intent':     return `Route by: ${(d.intents || []).map((i) => i.key).filter(Boolean).join(', ') || '(no intents)'}`;
     case 'human_handoff': return d.message || 'Hand off to agent';
 
     case 'start':         return 'Flow entry point';

@@ -31,6 +31,7 @@ from . import (
  logic,
  timed,
  smart,
+ ai_nodes,
 )
 
 NODE_HANDLERS = {
@@ -74,6 +75,8 @@ NODE_HANDLERS = {
  # Smart
  'human_handoff': smart.handle_human_handoff,
  'ai_chat': smart.handle_ai_chat,
+ 'ai_extract': ai_nodes.handle_ai_extract,
+ 'ai_intent': ai_nodes.handle_ai_intent,
 }
 
 REPLY_HANDLERS = {

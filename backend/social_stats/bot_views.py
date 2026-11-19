@@ -39,12 +39,13 @@ from rest_framework.response import Response
 
 from .bot_serializers import (
     BotFlowListSerializer, BotFlowDetailSerializer, BotFlowVersionSerializer,
+    BotKnowledgeDocSerializer,
     BotFlowTemplateSerializer,
     BotConversationListSerializer, BotConversationDetailSerializer,
     CTWACampaignSerializer,
 )
 from .models import (
-    BotConversation, BotFlow, BotFlowTemplate, BotFlowVersion,
+    BotConversation, BotFlow, BotFlowTemplate, BotFlowVersion, BotKnowledgeDoc,
     CTWACampaign,
 )
 from .whatsapp_views import TenantScopedMixin
@@ -503,6 +504,43 @@ class CTWACampaignViewSet(TenantScopedMixin, viewsets.ModelViewSet):
         camp = self.get_object()
         from .meta_ads_views import fetch_per_ad_insights
         return Response(fetch_per_ad_insights(camp))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BotKnowledgeDocViewSet — knowledge base for ai_chat nodes
+# ─────────────────────────────────────────────────────────────────────────────
+class BotKnowledgeDocViewSet(TenantScopedMixin, viewsets.ModelViewSet):
+    """CRUD for the workspace's knowledge documents (/api/bot-knowledge/),
+    plus `search` to preview what an AI chat node would be given."""
+    queryset = BotKnowledgeDoc.objects.all()
+    serializer_class = BotKnowledgeDocSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = (self.request.query_params.get('q') or '').strip()
+        if q:
+            qs = qs.filter(Q(title__icontains=q) | Q(content__icontains=q))
+        return qs.order_by('-updated_at')
+
+    def perform_create(self, serializer):
+        client_id = self._resolved_client_id()
+        if client_id is None:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('No client context for this user.')
+        serializer.save(client_id=client_id, created_by=self.request.user)
+
+    @action(detail=False, methods=['post'])
+    def search(self, request):
+        """Body: {query}. Returns the passages retrieval would hand the AI."""
+        client_id = self._resolved_client_id()
+        if client_id is None:
+            return Response({'error': 'no client context'}, status=403)
+        from .bot_engine.knowledge import retrieve
+        passages = retrieve(client_id, str(request.data.get('query') or '')[:500])
+        return Response({'results': [
+            {'doc_id': p.doc_id, 'title': p.title, 'text': p.text, 'score': p.score} for p in passages
+        ]})
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -101,6 +101,8 @@ function Form({ type, data, patch, variables }) {
  case 'crm_push': return <FormCrmPush data={data} patch={patch} />;
 
  case 'ai_chat': return <FormAIChat data={data} patch={patch} variables={variables} />;
+ case 'ai_extract': return <FormAIExtract data={data} patch={patch} />;
+ case 'ai_intent': return <FormAIIntent data={data} patch={patch} />;
  case 'human_handoff': return <FormHandoff data={data} patch={patch} variables={variables} />;
 
  case 'end_conversation': return <FormEnd data={data} patch={patch} variables={variables} />;
@@ -838,7 +840,15 @@ function FormAIChat({ data, patch, variables }) {
  <input value={exitWords} onChange={(e) => patch({ exit_keywords: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
  style={inputStyle} placeholder="stop, agent, human" />
  </Field>
- <Hint>Uses our fast tier by default — quick responses, low cost. The user can exit by typing any of the keywords above (defaults: stop, agent, human, staff).</Hint>
+ <label style={checkRow}>
+ <input type="checkbox" checked={!!data.use_knowledge}
+ onChange={(e) => patch({ use_knowledge: e.target.checked })} />
+ Answer only from the knowledge base
+ </label>
+ {data.use_knowledge && (
+ <Hint>For each message the best-matching passages from your <strong>Knowledge base</strong> (Conversational AI → Knowledge base) are given to the AI, and it is told to answer only from them — otherwise to say it doesn't know and offer a teammate.</Hint>
+)}
+ <Hint>Uses our fast tier by default — quick responses, low cost. The user can exit by typing any of the keywords above (defaults: stop, agent, human, staff). Replies follow the customer's language (English, Hindi or Hinglish).</Hint>
  </>
 );
 }
@@ -1055,6 +1065,76 @@ function FormGeneric({ data, patch }) {
  style={{ ...inputStyle, fontFamily: 'var(--font-mono)', fontSize: 12, resize: 'vertical' }}
  />
  {err && <div style={{ marginTop: 6, color: 'var(--danger)', fontSize: 12 }}>{err}</div>}
+ </>
+);
+}
+
+// ─────────────────────────────────────────────────────────
+// ai_extract / ai_intent
+// ─────────────────────────────────────────────────────────
+const FIELD_TYPES = ['string', 'number', 'boolean', 'email', 'phone', 'date'];
+
+function FormAIExtract({ data, patch }) {
+ const fields = data.fields || [];
+ const set = (i, p) => patch({ fields: fields.map((f, j) => (j === i ? { ...f, ...p } : f)) });
+ return (
+ <>
+ <Hint>Reads what the customer has written so far and fills these variables — no extra questions. Takes <strong>complete</strong> when every required field was found, otherwise <strong>missing</strong> (the names are in <code>{'{{missing_fields}}'}</code>).</Hint>
+ {fields.map((f, i) => (
+ <div key={i} style={sectionBox}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 96px 28px', gap: 6, marginBottom: 6 }}>
+ <input value={f.name || ''} placeholder="variable_name" style={inputStyle}
+ onChange={(e) => set(i, { name: e.target.value.replace(/[^\w]/g, '_') })} />
+ <select value={f.type || 'string'} style={inputStyle} onChange={(e) => set(i, { type: e.target.value })}>
+ {FIELD_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+ </select>
+ <button type="button" style={iconBtn} aria-label="Remove field"
+ onClick={() => patch({ fields: fields.filter((_, j) => j !== i) })}><X size={13} /></button>
+ </div>
+ <input value={f.description || ''} placeholder="What to look for, e.g. monthly budget in rupees"
+ style={inputStyle} onChange={(e) => set(i, { description: e.target.value })} />
+ <label style={{ ...checkRow, margin: '8px 0 0' }}>
+ <input type="checkbox" checked={f.required !== false}
+ onChange={(e) => set(i, { required: e.target.checked })} />
+ Required
+ </label>
+ </div>
+))}
+ <button type="button" style={btnGhost}
+ onClick={() => patch({ fields: [...fields, { name: '', description: '', type: 'string', required: true }] })}>
+ <Plus size={12} /> Add field
+ </button>
+ </>
+);
+}
+
+function FormAIIntent({ data, patch }) {
+ const intents = data.intents || [];
+ const set = (i, p) => patch({ intents: intents.map((x, j) => (j === i ? { ...x, ...p } : x)) });
+ return (
+ <>
+ <Hint>Classifies the customer's last message and follows the matching output. Anything that fits no intent goes to <strong>other</strong>. Works for English, Hindi and Hinglish.</Hint>
+ {intents.map((it, i) => (
+ <div key={i} style={sectionBox}>
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 28px', gap: 6, marginBottom: 6 }}>
+ <input value={it.key || ''} placeholder="intent_key" style={inputStyle}
+ onChange={(e) => set(i, { key: e.target.value.replace(/[^\w]/g, '_').toLowerCase() })} />
+ <button type="button" style={iconBtn} aria-label="Remove intent"
+ onClick={() => patch({ intents: intents.filter((_, j) => j !== i) })}><X size={13} /></button>
+ </div>
+ <input value={it.description || ''} placeholder="When to pick this, e.g. wants to book a site visit"
+ style={inputStyle} onChange={(e) => set(i, { description: e.target.value })} />
+ </div>
+))}
+ <button type="button" style={btnGhost}
+ onClick={() => patch({ intents: [...intents, { key: '', description: '' }] })}>
+ <Plus size={12} /> Add intent
+ </button>
+ <div style={{ height: 12 }} />
+ <Field label="Variable to store the intent in">
+ <input value={data.store_var || 'intent'} onChange={(e) => patch({ store_var: e.target.value })}
+ style={inputStyle} />
+ </Field>
  </>
 );
 }

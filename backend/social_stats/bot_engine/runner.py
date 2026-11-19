@@ -30,6 +30,7 @@ from django.utils import timezone
 from ..models import BotConversation, BotFlow, BotFlowVersion, Client, WhatsAppContact
 from .business_hours import flow_is_open
 from .executor import BotExecutor
+from .language import detect_language, is_confident
 from .safety import is_bot_enabled, is_rate_limited, spam_signal
 from .triggers import match_entry_trigger, match_trigger
 
@@ -189,6 +190,7 @@ def _start(flow: BotFlow, contact_id: int, payload: dict, *, triggered_via: str,
         executor.set_variable('_first_message', text)
         executor.set_variable('_first_message_kind', kind)
         executor.set_variable('_last_user_text', text)
+        _note_language(executor, text, kind)
     if (payload.get('referral') or {}):
         executor.set_variable('_referral', payload['referral'])
 
@@ -227,6 +229,21 @@ def _out_of_hours(flow: BotFlow, contact_id: int, *, triggered_via: str,
         except Exception:  # noqa: BLE001
             logger.exception('out-of-hours message failed for flow=%s', flow.id)
     return True
+
+
+def _note_language(executor: BotExecutor, text: str, kind: str) -> None:
+    """Detect Hindi / Hinglish / English from the customer's first typed
+    message and keep it in `_lang` for AI nodes. Button and list taps carry
+    the flow's own wording, so they don't count. A short English-looking
+    opener ("Hi") stays provisional until a longer message confirms it."""
+    if kind != 'text' or executor.variables.get('_lang_final'):
+        return
+    lang = detect_language(text)
+    if not lang:
+        return
+    executor.set_variable('_lang', lang)
+    if is_confident(text, lang):
+        executor.set_variable('_lang_final', True)
 
 
 def _find_start_node(graph) -> str | None:
@@ -300,6 +317,7 @@ def _continue(conv: BotConversation, payload: dict, *, pinbot=None) -> bool:
                           payload={'text': text, 'kind': kind, 'raw': payload})
     if text:
         executor.set_variable('_last_user_text', text)
+        _note_language(executor, text, kind)
 
     # A wait_delay timer owns this conversation: record the message, but let
     # the timer advance the flow (otherwise the node after the wait runs twice).
@@ -352,6 +370,7 @@ def _continue_ai(conv: BotConversation, payload: dict, *, pinbot=None) -> bool:
     )
     if text:
         executor.set_variable('_last_user_text', text)
+        _note_language(executor, text, kind)
     from .handlers.smart import respond_with_ai
     from .executor import BotExecutorError
     try:

@@ -20,6 +20,7 @@ Concepts:
     Lead                 — captured lead (denormalised + custom_fields)
     LeadActivity         — note/call/status-change timeline against a lead
     BotFlowTemplate      — pre-built industry flows (cloned into BotFlow)
+    BotKnowledgeDoc      — reference text the AI chat node can answer from
     CTWACampaign         — links a BotFlow to specific Meta CTWA ads + tracks ROI
 
 The flow's nodes/edges live in JSONField (no separate Node/Edge tables) so
@@ -72,6 +73,8 @@ NODE_TYPES = {
     'crm_push':       'Push Lead to CRM',
     # Smart
     'ai_chat':        'AI Conversation (Claude)',
+    'ai_extract':     'AI Extract Fields',
+    'ai_intent':      'AI Intent Router',
     'human_handoff':  'Hand Off to Human Agent',
     # Flow control
     'start':            'Start (entry point, only one per flow)',
@@ -439,6 +442,29 @@ class BotFlowTemplate(models.Model):
 
     def __str__(self):
         return f'BotFlowTemplate<{self.name} {self.industry}/{self.use_case}>'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BotKnowledgeDoc — workspace knowledge the AI chat node may answer from
+# ─────────────────────────────────────────────────────────────────────────────
+class BotKnowledgeDoc(models.Model):
+    """A piece of reference text (FAQ, price list, policy…). An `ai_chat`
+    node with `use_knowledge` retrieves the best-matching passages for each
+    customer message and is told to answer only from them."""
+    client     = models.ForeignKey('social_stats.Client', on_delete=models.CASCADE, related_name='bot_knowledge_docs')
+    title      = models.CharField(max_length=200)
+    content    = models.TextField()
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = 'social_stats'
+        ordering = ['-updated_at']
+        indexes = [models.Index(fields=['client', '-updated_at'])]
+
+    def __str__(self):
+        return f'BotKnowledgeDoc<{self.title} client#{self.client_id}>'
 
 
 # ─────────────────────────────────────────────────────────────────────────────

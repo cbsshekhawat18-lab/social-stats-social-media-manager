@@ -169,6 +169,14 @@ export const aiPersonaAPI = {
   build: (payload) => api.post('/ai/persona-builder/', payload),
 };
 
+export const botKnowledgeAPI = {
+  list:   (params)    => api.get   ('/bot-knowledge/', { params }),
+  create: (data, params) => api.post('/bot-knowledge/', data, { params }),
+  update: (id, data)  => api.put   (`/bot-knowledge/${id}/`, data),
+  delete: (id)        => api.delete(`/bot-knowledge/${id}/`),
+  search: (query, params) => api.post('/bot-knowledge/search/', { query }, { params }),
+};
+
 export const botSettingsAPI = {
   get:    ()        => api.get ('/bot-settings/'),
   update: (payload) => api.put ('/bot-settings/', payload),

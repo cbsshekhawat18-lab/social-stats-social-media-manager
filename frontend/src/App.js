@@ -110,6 +110,7 @@ const CTWACampaignDetailPage       = lazy(() => import('./pages/ctwa/CTWACampaig
 const TemplatesGalleryPage         = lazy(() => import('./pages/bots/TemplatesGalleryPage'));
 const HandoffQueuePage             = lazy(() => import('./pages/bots/HandoffQueuePage'));
 const BotSettingsPage              = lazy(() => import('./pages/bots/BotSettingsPage'));
+const BotKnowledgePage             = lazy(() => import('./pages/bots/BotKnowledgePage'));
 
 function LazyFallback() {
   return (
@@ -168,6 +169,7 @@ function AdminLayout() {
           <Route path="conversations/:id"   element={<BotConversationDetailPage />} />
           <Route path="handoff"             element={<HandoffQueuePage />} />
           <Route path="bot-settings"        element={<BotSettingsPage />} />
+          <Route path="bot-knowledge"       element={<BotKnowledgePage />} />
           <Route path="bot-flows/:id/analytics" element={<BotAnalyticsPage />} />
           <Route path="ctwa"                element={<CTWACampaignsPage />} />
           <Route path="ctwa/:id"            element={<CTWACampaignDetailPage />} />

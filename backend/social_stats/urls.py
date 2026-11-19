@@ -194,7 +194,7 @@ from .whatsapp_views import (
 from .whatsapp_webhook_views import pinbot_webhook
 from .bot_views import (
     BotFlowViewSet, BotTemplateViewSet, BotConversationViewSet, CTWACampaignViewSet,
-    bot_settings,
+    BotKnowledgeDocViewSet, bot_settings,
 )
 from .bot_ai_views import (
     generate_flow_with_ai as bot_generate_flow_with_ai,
@@ -259,6 +259,7 @@ router.register(r'bot-flows',         BotFlowViewSet,         basename='bot-flow
 router.register(r'bot-templates',     BotTemplateViewSet,     basename='bot-template')
 router.register(r'bot-conversations', BotConversationViewSet, basename='bot-conversation')
 router.register(r'ctwa-campaigns',    CTWACampaignViewSet,    basename='ctwa-campaign')
+router.register(r'bot-knowledge',     BotKnowledgeDocViewSet, basename='bot-knowledge')
 router.register(r'leads',             LeadViewSet,            basename='lead')
 
 urlpatterns = [

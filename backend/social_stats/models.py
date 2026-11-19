@@ -146,6 +146,7 @@ class Client(models.Model):
     bot_max_msgs_per_minute    = models.IntegerField(default=20)     # per-contact rate limit
     bot_max_msgs_per_conv      = models.IntegerField(default=200)    # break runaway loops
     bot_spam_threshold         = models.IntegerField(default=5)      # auto-end at this score
+    bot_abandon_after_minutes  = models.IntegerField(default=1440)   # idle active conversations → 'abandoned'
 
     # ── — GDPR/DPDP "right to restrict processing" toggle ────────────
     # When True: batch sync fan-outs skip this client, AI calls fail with a
@@ -1658,6 +1659,15 @@ class WhatsAppMessage(models.Model):
             models.Index(fields=['campaign', 'status']),
             models.Index(fields=['contact', '-created_at']),
         ]
+        constraints = [
+            # A WhatsApp message id is delivered at most once per direction —
+            # webhook retries must not create (or re-run the bot on) a copy.
+            models.UniqueConstraint(
+                fields=['client', 'pinbot_message_id', 'direction'],
+                condition=~models.Q(pinbot_message_id=''),
+                name='uniq_wa_message_id_per_client_direction',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.direction} → {self.contact.phone} | {self.status}"
@@ -2472,6 +2482,7 @@ from .marketplace_models import (  # noqa: E402,F401
 from .bot_models import (  # noqa: E402,F401
     NODE_TYPES,
     BotFlow,
+    BotFlowVersion,
     BotConversation,
     BotConversationStep,
     Lead,

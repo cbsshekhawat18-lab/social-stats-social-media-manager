@@ -23,8 +23,8 @@ def handle_end(executor, node):
         from ..templates import render
         rendered = render(text, executor.variables)
         try:
-            executor.pinbot.send_text(executor.contact.phone, rendered)
-        except Exception:  # noqa: BLE001 — sending is best-effort at end
-            pass
-        executor.log_step(node, direction='bot_to_user', payload={'text': rendered})
+            if executor.send_freeform(node, 'send_text', executor.contact.phone, rendered):
+                executor.log_step(node, direction='bot_to_user', payload={'text': rendered})
+        except Exception:  # noqa: BLE001 — the closing text is best-effort
+            executor.log_step(node, direction='system', payload={'note': 'closing message not sent'})
     return executor.end_conversation('completed')

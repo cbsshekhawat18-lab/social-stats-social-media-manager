@@ -19,7 +19,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, X, Wand2, Sparkles } from 'lucide-react';
 
-import { getNodeMeta } from './nodeCatalog';
+import { getNodeMeta, ANSWER_TYPES, FREEFORM_TYPES } from './nodeCatalog';
 import VariableInserter from './VariableInserter';
 import { aiPersonaAPI } from '../../services/api';
 import toast from '../ui/toast';
@@ -60,6 +60,7 @@ export default function NodeInspector({ node, onChange, onDelete, variables = []
 
  <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
  <Form type={node.data.type} data={data} patch={patch} variables={variables} />
+ <CommonOptions type={node.data.type} data={data} patch={patch} />
  </div>
  </div>
 );
@@ -96,6 +97,8 @@ function Form({ type, data, patch, variables }) {
  case 'capture_lead': return <FormCaptureLead data={data} patch={patch} />;
  case 'webhook': return <FormWebhook data={data} patch={patch} variables={variables} />;
  case 'send_email': return <FormSendEmail data={data} patch={patch} variables={variables} />;
+ case 'assign_segment': return <FormAssignSegment data={data} patch={patch} variables={variables} />;
+ case 'crm_push': return <FormCrmPush data={data} patch={patch} />;
 
  case 'ai_chat': return <FormAIChat data={data} patch={patch} variables={variables} />;
  case 'human_handoff': return <FormHandoff data={data} patch={patch} variables={variables} />;
@@ -1057,6 +1060,134 @@ function FormGeneric({ data, patch }) {
 }
 
 // ─────────────────────────────────────────────────────────
+// assign_segment / crm_push
+// ─────────────────────────────────────────────────────────
+function FormAssignSegment({ data, patch, variables }) {
+ return (
+ <>
+ <Field label="Contact list name">
+ <VariableTextarea value={data.list_name || ''} onChange={(v) => patch({ list_name: v })}
+ variables={variables} rows={1} placeholder="e.g. Hot leads — {{interest}}" />
+ </Field>
+ <label style={checkRow}>
+ <input type="checkbox" checked={data.create_if_missing ?? true}
+ onChange={(e) => patch({ create_if_missing: e.target.checked })} />
+ Create the list if it doesn't exist
+ </label>
+ <label style={checkRow}>
+ <input type="checkbox" checked={!!data.remove}
+ onChange={(e) => patch({ remove: e.target.checked })} />
+ Remove the contact from the list instead
+ </label>
+ <Hint>Lists are the same WhatsApp contact lists used for broadcast campaigns.</Hint>
+ </>
+);
+}
+
+function FormCrmPush({ data, patch }) {
+ const rows = Object.entries(data.field_map || {});
+ function setRows(next) {
+ patch({ field_map: Object.fromEntries(next.filter(([k]) => k !== undefined)) });
+ }
+ return (
+ <>
+ <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: 6 }}>
+ <Field label="Method">
+ <select value={data.method || 'POST'} onChange={(e) => patch({ method: e.target.value })} style={inputStyle}>
+ <option value="POST">POST</option>
+ <option value="PUT">PUT</option>
+ <option value="PATCH">PATCH</option>
+ </select>
+ </Field>
+ <Field label="CRM endpoint URL">
+ <input value={data.url || ''} onChange={(e) => patch({ url: e.target.value })}
+ style={inputStyle} placeholder="https://crm.example.com/api/leads" />
+ </Field>
+ </div>
+ <Field label="Headers (JSON) — e.g. your CRM API key">
+ <JsonTextarea value={data.headers || {}} onCommit={(v) => patch({ headers: v })} rows={3} />
+ </Field>
+ <Field label="Field mapping (CRM field ← value)">
+ {rows.map(([k, v], i) => (
+ <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 28px', gap: 6, marginBottom: 6 }}>
+ <input value={k} placeholder="crm_field" style={inputStyle}
+ onChange={(e) => setRows(rows.map((r, j) => (j === i ? [e.target.value, r[1]] : r)))} />
+ <input value={v} placeholder="{{variable}}" style={inputStyle}
+ onChange={(e) => setRows(rows.map((r, j) => (j === i ? [r[0], e.target.value] : r)))} />
+ <button type="button" style={iconBtn} aria-label="Remove field"
+ onClick={() => setRows(rows.filter((_, j) => j !== i))}><X size={13} /></button>
+ </div>
+))}
+ <button type="button" style={btnGhost} onClick={() => setRows([...rows, [`field_${rows.length + 1}`, '']])}>
+ <Plus size={12} /> Add field
+ </button>
+ </Field>
+ <label style={checkRow}>
+ <input type="checkbox" checked={data.include_source ?? true}
+ onChange={(e) => patch({ include_source: e.target.checked })} />
+ Include source (flow, ad and campaign ids)
+ </label>
+ <Hint>Sends one flat JSON object with your field names. Delivery retries in the background; wire the <strong>failure</strong> output for a missing or blocked URL. Header values are never written to the conversation log.</Hint>
+ </>
+);
+}
+
+function JsonTextarea({ value, onCommit, rows = 3 }) {
+ const [text, setText] = useState(JSON.stringify(value, null, 2));
+ const [err, setErr] = useState('');
+ useEffect(() => { setText(JSON.stringify(value, null, 2)); }, [value]);
+ return (
+ <>
+ <textarea value={text} rows={rows}
+ onChange={(e) => setText(e.target.value)}
+ onBlur={() => {
+ try { onCommit(JSON.parse(text || '{}')); setErr(''); } catch (e) { setErr('Not valid JSON'); }
+ }}
+ style={{ ...inputStyle, fontFamily: 'var(--font-mono)', fontSize: 11, resize: 'vertical' }} />
+ {err && <div style={{ marginTop: 4, color: 'var(--danger)', fontSize: 12 }}>{err}</div>}
+ </>
+);
+}
+
+// ─────────────────────────────────────────────────────────
+// Options shared by several node types (shown under the type's own form)
+// ─────────────────────────────────────────────────────────
+function CommonOptions({ type, data, patch }) {
+ const answers = ANSWER_TYPES.includes(type);
+ const freeform = FREEFORM_TYPES.includes(type);
+ if (!answers && !freeform) return null;
+ const fb = typeof data.fallback_template === 'string'
+ ? { name: data.fallback_template } : (data.fallback_template || {});
+ return (
+ <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border-subtle)' }}>
+ {answers && (
+ <>
+ <Field label="Max retries on an unusable answer">
+ <input type="number" min={0} max={10} value={data.max_retries ?? 3}
+ onChange={(e) => patch({ max_retries: e.target.value === '' ? 3 : Math.max(0, Number(e.target.value)) })}
+ style={{ ...inputStyle, width: 90 }} />
+ </Field>
+ <Hint>After that many retries the flow takes this node's <strong>{type.startsWith('ask_') ? 'invalid' : 'gave up'}</strong> output. If it isn't connected, the conversation goes to a Human Handoff node when the flow has one, otherwise it ends as failed.</Hint>
+ </>
+)}
+ {freeform && (
+ <>
+ <Field label="Fallback template (outside the 24-hour window)">
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', gap: 6 }}>
+ <input value={fb.name || ''} placeholder="approved_template_name" style={inputStyle}
+ onChange={(e) => patch({ fallback_template: e.target.value ? { ...fb, name: e.target.value } : null })} />
+ <input value={fb.language || 'en_US'} style={inputStyle} disabled={!fb.name}
+ onChange={(e) => patch({ fallback_template: { ...fb, language: e.target.value } })} />
+ </div>
+ </Field>
+ <Hint>WhatsApp only delivers this message within 24 hours of the contact's last message. Later than that (for example after a long Wait), the approved template is sent instead. Without one, the conversation ends as failed.</Hint>
+ </>
+)}
+ </div>
+);
+}
+
+// ─────────────────────────────────────────────────────────
 // Reusable small components
 // ─────────────────────────────────────────────────────────
 function Field({ label, children }) {
@@ -1145,6 +1276,11 @@ const inputStyle = {
  borderRadius: 'var(--radius-sm)',
  fontSize: 13, color: 'var(--text-primary)',
  outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+};
+
+const checkRow = {
+ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13,
+ color: 'var(--text-secondary)', marginBottom: 8,
 };
 
 const iconBtn = {

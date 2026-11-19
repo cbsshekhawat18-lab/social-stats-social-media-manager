@@ -15,20 +15,25 @@
  * draw a different edge from each option.
  */
 import { Handle, Position } from 'reactflow';
-import { getNodeMeta } from './nodeCatalog';
+import { getNodeMeta, extraOutputs } from './nodeCatalog';
 
 export default function CanvasNode({ data, selected }) {
   const meta = getNodeMeta(data.type);
   const Icon = meta.icon;
   const summary = describeNode(data);
+  const extras = extraOutputs(data.type);
+  const issue = data.issueLevel;   // 'error' | 'warning' | undefined — set by the editor's validation panel
 
   return (
     <div style={{
       width: 220,
       background: 'var(--surface-card)',
-      border: `2px solid ${selected ? meta.color : 'var(--border-subtle)'}`,
+      border: `2px solid ${issue === 'error' ? 'var(--danger)' : issue === 'warning' ? 'var(--warning, #f59e0b)' : selected ? meta.color : 'var(--border-subtle)'}`,
       borderRadius: 'var(--radius-md)',
-      boxShadow: selected ? `0 0 0 4px ${meta.color}33` : 'var(--shadow-sm)',
+      paddingBottom: extras.length ? extras.length * 13 : 0,
+      boxShadow: issue === 'error' ? '0 0 0 4px rgba(239, 68, 68, 0.25)'
+        : issue === 'warning' ? '0 0 0 4px rgba(245, 158, 11, 0.22)'
+        : selected ? `0 0 0 4px ${meta.color}33` : 'var(--shadow-sm)',
       transition: 'border-color 120ms, box-shadow 120ms',
       fontFamily: 'inherit',
       overflow: 'hidden',
@@ -108,6 +113,26 @@ export default function CanvasNode({ data, selected }) {
         <Handle type="source" position={Position.Right}
                 style={{ background: meta.color, width: 9, height: 9 }} />
       )}
+
+      {/* Named extra outputs: no match / invalid / failure. Stacked at the
+          bottom-right, each with a small label, so they can be wired. */}
+      {extras.map((o, i) => (
+        <div key={o.id}>
+          <span style={{
+            position: 'absolute', right: 10, bottom: 3 + i * 13,
+            fontSize: 9, lineHeight: '11px', color: 'var(--text-tertiary)',
+            letterSpacing: '0.02em', pointerEvents: 'none',
+          }}>{o.label}</span>
+          <Handle
+            type="source" position={Position.Right} id={o.id}
+            title={o.label}
+            style={{
+              top: 'auto', bottom: 4 + i * 13, transform: 'translate(50%, 0)',
+              background: 'var(--text-tertiary)', width: 8, height: 8,
+            }}
+          />
+        </div>
+      ))}
     </div>
   );
 }
@@ -144,6 +169,8 @@ function describeNode(data) {
     case 'capture_lead':  return 'Save lead to database';
     case 'webhook':       return d.url || '(no url)';
     case 'send_email':    return d.to ? `To: ${d.to}` : '(no recipient)';
+    case 'assign_segment': return d.list_name ? `${d.remove ? 'Remove from' : 'Add to'} “${d.list_name}”` : '(no list)';
+    case 'crm_push':      return d.url && d.url !== 'https://' ? d.url : '(no CRM url)';
 
     case 'ai_chat':       return d.persona ? d.persona.slice(0, 80) + '…' : 'AI takes over';
     case 'human_handoff': return d.message || 'Hand off to agent';

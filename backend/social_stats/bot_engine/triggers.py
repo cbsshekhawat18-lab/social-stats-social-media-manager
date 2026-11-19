@@ -118,9 +118,11 @@ def _try_keyword(client_id: int, payload: dict) -> tuple[BotFlow | None, dict]:
 
 
 def _try_first_message(client_id: int, contact_id: int) -> tuple[BotFlow | None, dict]:
+    # A conversation that only recorded an out-of-hours notice doesn't count:
+    # the contact still gets the first-message flow when the business is open.
     is_first = not BotConversation.objects.filter(
         client_id=client_id, contact_id=contact_id,
-    ).exists()
+    ).exclude(trigger_metadata__out_of_hours=True).exists()
     if not is_first:
         return (None, {})
     flow = BotFlow.objects.filter(
@@ -129,6 +131,18 @@ def _try_first_message(client_id: int, contact_id: int) -> tuple[BotFlow | None,
     if flow:
         return (flow, {'reason': 'first_message_ever'})
     return (None, {})
+
+
+def match_entry_trigger(client_id: int, payload: dict) -> tuple[BotFlow | None, str, dict]:
+    """CTWA ad click or referral link only — the explicit "start this flow"
+    signals that may replace a conversation that is already running."""
+    flow, meta = _try_ctwa(client_id, payload)
+    if flow:
+        return (flow, 'ctwa_ad', meta)
+    flow, meta = _try_referral_link(client_id, payload)
+    if flow:
+        return (flow, 'referral_link', meta)
+    return (None, '', {})
 
 
 def match_trigger(client_id: int, contact_id: int, payload: dict) -> tuple[BotFlow | None, str, dict]:

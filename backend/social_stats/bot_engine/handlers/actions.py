@@ -6,7 +6,7 @@
 #  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
 #  Released under the MIT License — see LICENSE. Keep this notice.
 # ============================================================================
-"""Action handlers — capture_lead (the only action shipping in)."""
+"""Action handlers — capture_lead, tag_contact, send_email, webhook, assign_segment, crm_push."""
 from __future__ import annotations
 
 from django.db.models import F
@@ -296,4 +296,120 @@ def handle_webhook(executor, node):
 
     # Always take the `success` branch up-front — webhook results are async.
     # Flows that need to block on the response should use a wait_delay node.
+    return executor.advance_to_next(node['id'], branch='success')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+def handle_assign_segment(executor, node):
+    """Add (or remove) the contact to a WhatsApp contact list of this workspace.
+
+    data: { list_id | list_name, create_if_missing: bool (default True), remove: bool }
+    """
+    from ...models import WhatsAppContactList
+    from ..templates import render
+
+    data = node.get('data') or {}
+    client_id = executor.client.id
+    lists = WhatsAppContactList.objects.filter(client_id=client_id)   # tenant-scoped
+    target = None
+    if data.get('list_id'):
+        target = lists.filter(pk=data['list_id']).first()
+    name = render(str(data.get('list_name') or ''), executor.variables).strip()[:200]
+    if not target and name:
+        target = lists.filter(name__iexact=name).first()
+        if not target and data.get('create_if_missing', True) and not data.get('remove'):
+            target = WhatsAppContactList.objects.create(
+                client_id=client_id, name=name, description='Created by a bot flow',
+            )
+    if not target:
+        executor.log_step(node, direction='system', payload={'error': 'assign_segment: list not found'})
+        return executor.advance_to_next(node['id'])
+
+    if data.get('remove'):
+        target.contacts.remove(executor.contact)
+    else:
+        target.contacts.add(executor.contact)
+    executor.log_step(node, direction='system', payload={
+        'list_id': target.id, 'list_name': target.name,
+        'mode': 'remove' if data.get('remove') else 'add',
+    })
+    return executor.advance_to_next(node['id'])
+
+
+_CRM_DEFAULT_FIELDS = {
+    'name': '{{name}}', 'phone': '{{phone}}', 'email': '{{email}}',
+    'interest': '{{interest}}', 'budget': '{{budget}}', 'location': '{{location}}',
+}
+
+
+def handle_crm_push(executor, node):
+    """Push the lead to a CRM endpoint: a webhook with a field mapping.
+
+    data: {
+        url, method ('POST'), headers: {...},
+        field_map: {crm_field: '{{variable}}' | literal},   # default: standard lead fields
+        include_source: bool (default True),                # ad / campaign / flow ids
+        timeout: 5,
+    }
+    The body is a flat JSON object keyed by the CRM's field names. Delivery is
+    asynchronous with retries (bot_webhook_tasks.dispatch_webhook); the flow
+    continues on `success`, or `failure` when the URL is missing or blocked.
+    """
+    from ..templates import render
+
+    data = node.get('data') or {}
+    url = render(str(data.get('url') or ''), executor.variables).strip()
+    if not url:
+        executor.log_step(node, direction='system', payload={'error': 'crm_push missing url'})
+        return executor.advance_to_next(node['id'], branch='failure')
+
+    from ...security.ssrf import check_url, UnsafeURLError
+    try:
+        check_url(url)
+    except UnsafeURLError as e:
+        executor.log_step(node, direction='system', payload={
+            'error': f'crm_push url blocked by SSRF policy: {e}',
+        })
+        return executor.advance_to_next(node['id'], branch='failure')
+
+    # Fallbacks for the standard fields come from the contact record.
+    contact = executor.contact
+    variables = {'phone': contact.phone, 'name': contact.name, 'email': contact.email,
+                 **{k: v for k, v in (executor.variables or {}).items() if v not in (None, '')}}
+    field_map = data.get('field_map') or _CRM_DEFAULT_FIELDS
+    body = {}
+    for crm_field, source in field_map.items():
+        if not crm_field:
+            continue
+        value = render(str(source), variables) if isinstance(source, str) else source
+        if value not in (None, ''):
+            body[str(crm_field)] = value
+    if data.get('include_source', True):
+        tm = executor.conversation.trigger_metadata or {}
+        body['source'] = {
+            'channel': 'whatsapp',
+            'flow_id': executor.flow.id if executor.flow else None,
+            'conversation_id': executor.conversation.id,
+            'ad_id': tm.get('ad_id', ''),
+            'campaign_id': tm.get('campaign_id', ''),
+        }
+
+    method = (data.get('method') or 'POST').upper()
+    headers = {'Content-Type': 'application/json', **(data.get('headers') or {})}
+    try:
+        from ...bot_webhook_tasks import dispatch_webhook
+        dispatch_webhook.delay(
+            conversation_id=executor.conversation.id, node_id=node['id'],
+            url=url, method=method, headers=headers, body=body,
+            timeout=int(data.get('timeout') or 5),
+        )
+        queued, error = True, ''
+    except Exception as e:  # noqa: BLE001
+        queued, error = False, str(e)
+    # Field names only — never header values (they usually hold the CRM API key).
+    executor.log_step(node, direction='system', payload={
+        'url': url, 'method': method, 'queued': queued,
+        'fields': sorted(k for k in body if k != 'source'),
+        **({'error': error} if error else {}),
+    })
     return executor.advance_to_next(node['id'], branch='success')

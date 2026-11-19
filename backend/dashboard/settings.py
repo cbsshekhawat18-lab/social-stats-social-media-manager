@@ -24,9 +24,9 @@ def _env_bool(name: str, default: bool) -> bool:
     return raw.strip().lower() in ('1', 'true', 'yes', 'on')
 
 
-# `manage.py test` — the production guard at the bottom is skipped and a dev
+# `manage.py test` or pytest — the production guard at the bottom is skipped and a dev
 # SECRET_KEY is allowed (CI runs the suite with DEBUG=False).
-_RUNNING_TESTS = len(sys.argv) > 1 and sys.argv[1] == 'test'
+_RUNNING_TESTS = (len(sys.argv) > 1 and sys.argv[1] == 'test') or 'pytest' in sys.modules
 
 # Safe by default: production behaviour unless DEBUG=True is set explicitly
 # (backend/.env.example sets it for local development).
@@ -341,8 +341,20 @@ CELERY_BEAT_SCHEDULER    = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_TASK_ALWAYS_EAGER = DEBUG
 CELERY_TASK_EAGER_PROPAGATES = DEBUG
 
+# Task modules that aren't named `tasks.py` at an app root — autodiscovery
+# doesn't find those, and a worker discards tasks it hasn't registered.
+CELERY_IMPORTS = (
+    'social_stats.bot_engine.tasks',            # abandonment sweep, ask-node timeouts
+    'social_stats.bot_engine.handlers.timed',   # wait_delay resume
+    'social_stats.bot_webhook_tasks',           # webhook / CRM push delivery
+)
+
 from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = {
+    'bot-mark-abandoned-conversations-15min': {
+        'task':     'social_stats.bot_engine.tasks.mark_abandoned_bot_conversations',
+        'schedule': crontab(minute='*/15'),
+    },
     'check-alerts-every-6-hours': {
         'task':     'social_stats.tasks.check_alerts',
         'schedule': crontab(minute=0, hour='*/6'),

@@ -67,6 +67,8 @@ NODE_HANDLERS = {
  'tag_contact': actions.handle_tag_contact,
  'send_email': actions.handle_send_email,
  'webhook': actions.handle_webhook,
+ 'assign_segment': actions.handle_assign_segment,
+ 'crm_push': actions.handle_crm_push,
  # Timed
  'wait_delay': timed.handle_wait_delay,
  # Smart

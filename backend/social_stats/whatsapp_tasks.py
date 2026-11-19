@@ -15,7 +15,7 @@ Mirrors the style of `social_stats/tasks.py`:
 import logging
 
 from celery import shared_task
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import F
 from django.utils import timezone
 
@@ -346,6 +346,15 @@ def _process_inbound_messages(value):
         if not from_phone:
             continue
 
+        # Idempotency: Pinbot/Meta redeliver webhooks. A message id we already
+        # stored must not be saved, or run through the bot, a second time.
+        wa_id = m.get('id', '') or ''
+        if wa_id and WhatsAppMessage.objects.filter(
+            client=client, pinbot_message_id=wa_id, direction='inbound',
+        ).exists():
+            logger.info('duplicate inbound message %s for client=%s — skipped', wa_id, client.id)
+            continue
+
         contact, _ = WhatsAppContact.objects.get_or_create(
             client=client,
             phone=from_phone,
@@ -353,20 +362,27 @@ def _process_inbound_messages(value):
                 'name': (contacts_meta.get(from_phone, {}).get('profile') or {}).get('name', ''),
             },
         )
+        try:
+            # Savepoint: the unique constraint settles a race between two
+            # deliveries of the same message without breaking the transaction.
+            with transaction.atomic():
+                WhatsAppMessage.objects.create(
+                    client=client,
+                    contact=contact,
+                    campaign=None,
+                    pinbot_message_id=wa_id,
+                    direction='inbound',
+                    message_type=m.get('type', 'text'),
+                    payload=m,
+                    status='delivered',
+                    delivered_at=timezone.now(),
+                )
+        except IntegrityError:
+            logger.info('duplicate inbound message %s for client=%s — skipped', wa_id, client.id)
+            continue
+
         contact.last_inbound_at = timezone.now()
         contact.save(update_fields=['last_inbound_at'])
-
-        WhatsAppMessage.objects.create(
-            client=client,
-            contact=contact,
-            campaign=None,
-            pinbot_message_id=m.get('id', ''),
-            direction='inbound',
-            message_type=m.get('type', 'text'),
-            payload=m,
-            status='delivered',
-            delivered_at=timezone.now(),
-        )
 
         try:
             from .security.wa_opt_out import was_opt_out_message, apply_opt_out

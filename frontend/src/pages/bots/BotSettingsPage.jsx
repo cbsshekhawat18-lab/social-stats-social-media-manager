@@ -34,6 +34,7 @@ export default function BotSettingsPage() {
     bot_max_msgs_per_minute: 20,
     bot_max_msgs_per_conv:   200,
     bot_spam_threshold:      5,
+    bot_abandon_after_minutes: 1440,
   });
   const [dirty, setDirty] = useState(false);
 
@@ -142,6 +143,15 @@ export default function BotSettingsPage() {
           <NumberInput value={s.bot_spam_threshold}
                        min={1} max={50}
                        onChange={(v) => patch({ bot_spam_threshold: v })} />
+        </Row>
+
+        <Row
+          label="Mark abandoned after (minutes)"
+          help="A conversation with no activity for this long is closed as abandoned, and the contact's next message can start a flow afresh. 1440 = 24 hours."
+        >
+          <NumberInput value={s.bot_abandon_after_minutes ?? 1440}
+                       min={5} max={43200} step={5}
+                       onChange={(v) => patch({ bot_abandon_after_minutes: v })} />
         </Row>
       </section>
 

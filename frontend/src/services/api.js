@@ -144,6 +144,8 @@ export const botAPI = {
   unpublish:   (id)             => api.post  (`/bot-flows/${id}/unpublish/`, {}),
   test:        (id, phone)      => api.post  (`/bot-flows/${id}/test/`, { phone }),
   analytics:   (id)             => api.get   (`/bot-flows/${id}/analytics/`),
+  versions:    (id)             => api.get   (`/bot-flows/${id}/versions/`),
+  rollback:    (id, version)    => api.post  (`/bot-flows/${id}/rollback/`, { version }),
   generateWithAI: (payload, params) =>
     api.post('/bot-flows/generate-with-ai/', payload, { params }),
 };

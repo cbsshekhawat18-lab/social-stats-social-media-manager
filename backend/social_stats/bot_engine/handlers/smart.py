@@ -42,10 +42,10 @@ def handle_human_handoff(executor, node):
     msg = render(data.get('message', ''), executor.variables)
     if msg:
         try:
-            executor.pinbot.send_text(executor.contact.phone, msg)
-        except Exception:  # noqa: BLE001
-            pass
-        executor.log_step(node, direction='bot_to_user', payload={'text': msg})
+            if executor.send_freeform(node, 'send_text', executor.contact.phone, msg):
+                executor.log_step(node, direction='bot_to_user', payload={'text': msg})
+        except Exception:  # noqa: BLE001 — the goodbye text is best-effort; still hand off
+            executor.log_step(node, direction='system', payload={'note': 'handoff message not sent'})
 
     assignee_id = data.get('assignee_user_id')
     assignee = _resolve_assignee(executor, assignee_id, group_tag=data.get('group_tag'))
@@ -55,7 +55,12 @@ def handle_human_handoff(executor, node):
     conv.handed_off_at = timezone.now()
     conv.handed_off_to_user = assignee
     conv.ended_at = timezone.now()
-    conv.save(update_fields=['status', 'handed_off_at', 'handed_off_to_user', 'ended_at'])
+    conv.ai_takeover_active = False
+    v = dict(conv.variables or {})
+    for k in ('_waiting_for', '_waiting_for_node', '_resend_on_reply', '_timeout'):
+        v.pop(k, None)
+    conv.variables = v
+    conv.save()
 
     # Notify the assigned agent (— dedicated bot_handoff event)
     if assignee:
@@ -90,22 +95,64 @@ def handle_human_handoff(executor, node):
     return conv
 
 
-def _resolve_assignee(executor, explicit_user_id, *, group_tag=None):
-    """Pick an agent. Priority: explicit_user_id → round-robin among agency
-    members → None (the inbox triages it).
+def _eligible_agents(client):
+    """Users who may be handed this workspace's conversations: staff assigned
+    to the client and the client's own users."""
+    from django.contrib.auth.models import User
+    from django.db.models import Q
+    return User.objects.filter(
+        Q(profile__assigned_clients=client) | Q(profile__client=client),
+        is_active=True,
+    ).distinct()
 
-    For this task we keep this minimal — the inbox triage UI in a later stage
-    will own true round-robin / availability state.
+
+def _resolve_assignee(executor, explicit_user_id, *, group_tag=None):
+    """Pick an agent.
+
+    1. `explicit_user_id`, if that user belongs to this workspace (or is a
+       superadmin) — a flow can't route a conversation to another tenant.
+    2. Otherwise the least-busy assigned staff member: fewest open handed-off
+       conversations in this workspace, ties broken round-robin.
+    3. None — the handoff queue shows it as unassigned.
     """
     from django.contrib.auth.models import User
+    from django.core.cache import cache
+    from django.db.models import Count
+
+    client = executor.client
     if explicit_user_id:
-        return User.objects.filter(pk=explicit_user_id).first()
-    # Round-robin among the workspace's staff. Cheap version: random pick.
-    staff = list(User.objects.filter(profile__assigned_clients=executor.client).distinct()[:20])
-    if staff:
-        import random
-        return random.choice(staff)
-    return None
+        user = User.objects.filter(pk=explicit_user_id, is_active=True).first()
+        if user and (
+            getattr(getattr(user, 'profile', None), 'role', '') == 'superadmin'
+            or _eligible_agents(client).filter(pk=user.pk).exists()
+        ):
+            return user
+        logger.warning('handoff: user %s is not part of client %s; picking automatically',
+                       explicit_user_id, client.id)
+
+    staff = list(User.objects.filter(profile__assigned_clients=client, is_active=True)
+                 .distinct().order_by('pk')[:50])
+    if not staff:
+        return None
+
+    from ...models import BotConversation
+    load = dict(
+        BotConversation.objects
+        .filter(client=client, status='handed_off', handed_off_to_user__in=staff)
+        .values_list('handed_off_to_user').annotate(n=Count('id'))
+        .values_list('handed_off_to_user', 'n')
+    )
+    fewest = min(load.get(u.pk, 0) for u in staff)
+    candidates = [u for u in staff if load.get(u.pk, 0) == fewest]
+    if len(candidates) == 1:
+        return candidates[0]
+    key = f'bot:handoff_rr:{client.id}'
+    try:
+        cache.add(key, 0, timeout=None)
+        turn = cache.incr(key)
+    except Exception:  # noqa: BLE001 — cache down: still deterministic
+        turn = 0
+    return candidates[turn % len(candidates)]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -126,8 +173,7 @@ def handle_ai_chat(executor, node):
     """
     data = node.get('data') or {}
     opening = render(data.get('opening_message', ''), executor.variables)
-    if opening:
-        executor.pinbot.send_text(executor.contact.phone, opening)
+    if opening and executor.send_freeform(node, 'send_text', executor.contact.phone, opening):
         executor.log_step(node, direction='bot_to_user', payload={'text': opening, 'mode': 'ai_chat_opening'})
 
     # Persist AI config on the conversation so reply handler can read it
@@ -139,6 +185,36 @@ def handle_ai_chat(executor, node):
 
     # Don't advance — wait for the user's next message; runner routes to respond_with_ai
     return executor.conversation
+
+
+def _generate_reply(executor, *, persona: str, user_message: str, max_tokens: int) -> str:
+    """One Claude turn for this conversation. Raises on API failure."""
+    conv = executor.conversation
+    history = _build_history(conv)
+
+    system = (
+        f'{persona}\n\n'
+        f'You are talking to {executor.contact.name or "a customer"} '
+        f'on WhatsApp. Variables we already collected: '
+        + ', '.join(f'{k}={v}' for k, v in (executor.variables or {}).items() if not k.startswith('_'))
+        + '\n\nIf you cannot help, politely say so and suggest connecting them to a human agent.'
+    )
+
+    prompt_blocks: List[str] = []
+    for h in history[-10:]:
+        prompt_blocks.append(f'{h["who"]}: {h["text"]}')
+    if not history or history[-1]['text'] != user_message or history[-1]['who'] != 'User':
+        prompt_blocks.append(f'User: {user_message}')
+    prompt = '\n'.join(prompt_blocks) + '\nAssistant:'
+
+    from ...ai.client import AIClient
+    ai = AIClient(client=executor.client, user=None, feature='ctwa_ai_chat')
+    return (ai.complete(
+        prompt=prompt, system=system,
+        max_tokens=max_tokens, temperature=0.6,
+        fast=True,           # Haiku — cheap + fast for chat
+        use_cache=False,
+    ) or '').strip()
 
 
 def respond_with_ai(executor, user_message: str, raw_payload: dict):
@@ -162,49 +238,52 @@ def respond_with_ai(executor, user_message: str, raw_payload: dict):
 
     persona = render(data.get('persona') or _DEFAULT_PERSONA, executor.variables)
 
-    # Build conversation history from the audit trail
-    history = _build_history(conv)
-
-    system = (
-        f'{persona}\n\n'
-        f'You are talking to {executor.contact.name or "a customer"} '
-        f'on WhatsApp. Variables we already collected: '
-        + ', '.join(f'{k}={v}' for k, v in (executor.variables or {}).items() if not k.startswith('_'))
-        + '\n\nIf you cannot help, politely say so and suggest connecting them to a human agent.'
-    )
-
-    prompt_blocks: List[str] = []
-    for h in history[-10:]:
-        prompt_blocks.append(f'{h["who"]}: {h["text"]}')
-    prompt_blocks.append(f'User: {user_message}')
-    prompt = '\n'.join(prompt_blocks) + '\nAssistant:'
-
     try:
-        from ...ai.client import AIClient
-        ai = AIClient(client=executor.client, user=None, feature='ctwa_ai_chat')
-        reply = ai.complete(
-            prompt=prompt, system=system,
-            max_tokens=max_tokens, temperature=0.6,
-            fast=True,           # Haiku — cheap + fast for chat
-            use_cache=False,
-        ).strip()
+        reply = _generate_reply(executor, persona=persona, user_message=user_message, max_tokens=max_tokens)
     except Exception as e:  # noqa: BLE001
         logger.exception('AI chat failed for conv=%s', conv.id)
-        executor.pinbot.send_text(
-            executor.contact.phone,
-            'Sorry, I had a hiccup. Let me hand you to a human teammate.',
-        )
-        return _exit_ai(executor, node, reason=f'ai_error:{e}')
+        try:
+            executor.send_freeform(
+                node, 'send_text', executor.contact.phone,
+                'Sorry, I had a hiccup. Let me hand you to a human teammate.',
+            )
+        except Exception:  # noqa: BLE001
+            pass
+        return _exit_ai(executor, node, reason=f'ai_error:{type(e).__name__}')
 
     if not reply:
         reply = "Sorry, I'm not sure how to answer that. Want me to connect you to a teammate?"
 
-    executor.pinbot.send_text(executor.contact.phone, reply)
-    executor.log_step(node, direction='bot_to_user', payload={
-        'text': reply, 'mode': 'ai_chat', 'turn': turn_count,
-    })
+    if executor.send_freeform(node, 'send_text', executor.contact.phone, reply):
+        executor.log_step(node, direction='bot_to_user', payload={
+            'text': reply, 'mode': 'ai_chat', 'turn': turn_count,
+        })
     executor.set_variable('_ai_turn_count', turn_count)
     executor.conversation.save()
+
+
+def ai_fallback_turn(executor, node, user_message: str) -> bool:
+    """One AI reply when the user's input matched no branch of `node`
+    (flow.ai_fallback_enabled). The caller then re-asks the node's question.
+    Never raises: a failed AI call just means the question is repeated."""
+    flow = executor.flow
+    persona = render((flow.ai_fallback_persona if flow else '') or _DEFAULT_PERSONA, executor.variables)
+    persona += (
+        '\n\nThe customer was asked a question with fixed options and replied with '
+        'something else. Answer what they said briefly (under 60 words). Do not '
+        'repeat the options — they are sent again right after your reply.'
+    )
+    try:
+        reply = _generate_reply(executor, persona=persona, user_message=user_message, max_tokens=200)
+    except Exception:  # noqa: BLE001
+        logger.exception('AI fallback failed for conv=%s', executor.conversation.id)
+        executor.log_step(node, direction='system', payload={'note': 'ai_fallback_failed'})
+        return False
+    if not reply:
+        return False
+    if executor.send_freeform(node, 'send_text', executor.contact.phone, reply):
+        executor.log_step(node, direction='bot_to_user', payload={'text': reply, 'mode': 'ai_fallback'})
+    return True
 
 
 def _exit_ai(executor, node, *, reason: str):
@@ -212,7 +291,8 @@ def _exit_ai(executor, node, *, reason: str):
     wire a `human_handoff` or `end_conversation` node after `ai_chat`."""
     executor.conversation.ai_takeover_active = False
     v = dict(executor.variables or {})
-    v.pop('_ai_node_id', None); v.pop('_ai_turn_count', None)
+    v.pop('_ai_node_id', None)
+    v.pop('_ai_turn_count', None)
     executor.conversation.variables = v
     executor.conversation.save()
     executor.log_step(node, direction='system', payload={'note': 'ai_exit', 'reason': reason})
@@ -225,7 +305,7 @@ def _build_history(conv) -> List[dict]:
     out = []
     for r in rows:
         text = (r['payload'] or {}).get('text', '')
-        if not text:
+        if not text or r['direction'] == 'system':
             continue
         out.append({
             'who':  'User' if r['direction'] == 'user_to_bot' else 'Assistant',

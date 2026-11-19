@@ -33,3 +33,12 @@ skips = [
     # jitter, etc.). All security-sensitive randomness uses `secrets`.
     "B311",
 ]
+
+# pytest — `cd backend && pytest` (or a single file, e.g.
+# `pytest social_stats/tests/test_bot_engine.py`). CI still runs
+# `python manage.py test social_stats.tests`; both run the same tests.
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "dashboard.settings"
+testpaths = ["social_stats/tests"]
+python_files = ["test_*.py"]
+addopts = "-q"

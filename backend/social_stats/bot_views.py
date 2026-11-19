@@ -38,13 +38,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .bot_serializers import (
-    BotFlowListSerializer, BotFlowDetailSerializer,
+    BotFlowListSerializer, BotFlowDetailSerializer, BotFlowVersionSerializer,
     BotFlowTemplateSerializer,
     BotConversationListSerializer, BotConversationDetailSerializer,
     CTWACampaignSerializer,
 )
 from .models import (
-    BotConversation, BotFlow, BotFlowTemplate,
+    BotConversation, BotFlow, BotFlowTemplate, BotFlowVersion,
     CTWACampaign, NODE_TYPES,
 )
 from .whatsapp_views import TenantScopedMixin
@@ -138,10 +138,61 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
         result = _validate_flow(flow)
         if not result['ok']:
             return Response({'error': 'flow validation failed', 'issues': result['issues']}, status=400)
-        flow.is_active = True
-        flow.published_version = flow.version
-        flow.last_published_at = timezone.now()
-        flow.save(update_fields=['is_active', 'published_version', 'last_published_at'])
+        snapshot_flow(flow, user=request.user)
+        return Response(BotFlowDetailSerializer(flow).data)
+
+    @action(detail=True, methods=['get'])
+    def versions(self, request, pk=None):
+        """Published snapshots of this flow, newest first."""
+        flow = self.get_object()
+        rows = flow.versions.select_related('published_by').order_by('-version')
+        return Response({
+            'published_version': flow.published_version,
+            'results': BotFlowVersionSerializer(rows, many=True, context={'flow': flow}).data,
+        })
+
+    @action(detail=True, methods=['post'])
+    def rollback(self, request, pk=None):
+        """Restore the graph of an earlier published version.
+
+        Body: {version: <int>}. The draft graph is replaced by that snapshot;
+        if the flow is live, new conversations use it from now on.
+        Conversations already running stay on the version they started with.
+        """
+        flow = self.get_object()
+        try:
+            number = int(request.data.get('version'))
+        except (TypeError, ValueError):
+            return Response({'error': 'version (integer) is required'}, status=400)
+        target = flow.versions.filter(version=number).first()
+        if not target:
+            return Response({'error': f'version {number} not found for this flow'}, status=404)
+
+        from .marketplace_permissions import (
+            check_action, deny_response, approval_pending_response,
+        )
+        verdict, ctx = check_action(
+            request, flow.client, 'manage_bots',
+            action_type='publish_bot',
+            payload={'flow_id': flow.id, 'flow_name': flow.name, 'rollback_to_version': number},
+            target_object_type='BotFlow',
+            target_object_id=flow.id,
+            preview=f'Roll back bot flow "{flow.name}" to v{number}',
+        )
+        if verdict == 'denied':
+            return deny_response(ctx['reason'])
+        if verdict == 'approval_required':
+            return approval_pending_response(ctx['approval'])
+
+        flow.nodes = copy.deepcopy(target.nodes or [])
+        flow.edges = copy.deepcopy(target.edges or [])
+        flow.starting_node_id = target.starting_node_id
+        update = ['nodes', 'edges', 'starting_node_id', 'updated_at']
+        if flow.is_active:
+            flow.published_version = target.version
+            flow.last_published_at = timezone.now()
+            update += ['published_version', 'last_published_at']
+        flow.save(update_fields=update)
         return Response(BotFlowDetailSerializer(flow).data)
 
     @action(detail=True, methods=['post'])
@@ -193,6 +244,8 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
             client=flow.client, contact=contact, flow=flow, status='active',
         ).update(status='exited', ended_at=timezone.now())
 
+        # Test runs use the draft graph (no pinned version), so unpublished
+        # edits can be tried before going live.
         conv = BotConversation.objects.create(
             client=flow.client, flow=flow, contact=contact,
             triggered_via='manual',
@@ -203,7 +256,16 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
         BotFlow.objects.filter(pk=flow.pk).update(total_triggered=F('total_triggered') + 1)
         from .bot_engine.executor import BotExecutor
         BotExecutor(conv).execute_node(starting)
-        return Response({'conversation_id': conv.id, 'status': 'started'})
+        conv.refresh_from_db()
+        out = {'conversation_id': conv.id, 'status': 'started', 'conversation_status': conv.status}
+        if conv.status == 'failed':
+            err = conv.steps.filter(node_type='_error').order_by('-created_at').first()
+            out['error'] = (err.payload or {}).get('error', '') if err else ''
+            if out['error'] == 'outside_24h_window':
+                out['hint'] = ('WhatsApp only delivers free-form messages within 24 hours of the '
+                               "contact's last message. Send any message from the test phone to "
+                               'your WhatsApp number, then run the test again.')
+        return Response(out)
 
     @action(detail=True, methods=['get'])
     def analytics(self, request, pk=None):
@@ -441,6 +503,35 @@ class CTWACampaignViewSet(TenantScopedMixin, viewsets.ModelViewSet):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Publishing = snapshotting
+# ─────────────────────────────────────────────────────────────────────────────
+def snapshot_flow(flow: BotFlow, *, user=None, note: str = '') -> BotFlowVersion:
+    """Publish `flow`: freeze its current graph as a BotFlowVersion and point
+    `published_version` at it. Re-publishing an unchanged graph reuses the
+    latest snapshot instead of piling up identical copies."""
+    latest = flow.versions.order_by('-version').first()
+    if latest and (latest.nodes, latest.edges, latest.starting_node_id) == (
+        flow.nodes or [], flow.edges or [], flow.starting_node_id or '',
+    ):
+        version = latest
+    else:
+        number = max((latest.version if latest else 0) + 1, flow.version or 1)
+        version = BotFlowVersion.objects.create(
+            flow=flow, version=number,
+            nodes=copy.deepcopy(flow.nodes or []), edges=copy.deepcopy(flow.edges or []),
+            starting_node_id=flow.starting_node_id or '',
+            published_by=user if getattr(user, 'is_authenticated', False) else None,
+            note=note[:200],
+        )
+    flow.is_active = True
+    flow.version = version.version
+    flow.published_version = version.version
+    flow.last_published_at = timezone.now()
+    flow.save(update_fields=['is_active', 'version', 'published_version', 'last_published_at'])
+    return version
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Flow validator (used by validate + publish)
 # ─────────────────────────────────────────────────────────────────────────────
 def _validate_flow(flow: BotFlow) -> dict:
@@ -511,6 +602,7 @@ _BOT_SETTING_FIELDS = (
     'bot_max_msgs_per_minute',
     'bot_max_msgs_per_conv',
     'bot_spam_threshold',
+    'bot_abandon_after_minutes',
 )
 
 
@@ -569,6 +661,8 @@ def bot_settings(request):
                     n = max(10, min(n, 10000))
                 elif f == 'bot_spam_threshold':
                     n = max(1, min(n, 50))
+                elif f == 'bot_abandon_after_minutes':
+                    n = max(5, min(n, 43200))   # 5 minutes … 30 days
                 setattr(client, f, n)
             update.append(f)
     if update:

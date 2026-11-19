@@ -14,7 +14,8 @@ models.py so Django auto-discovers them under the social_stats app label.
 
 Concepts:
     BotFlow              — a complete chatbot conversation flow with nodes/edges
-    BotConversation      — a contact's session through a flow
+    BotFlowVersion       — immutable snapshot of a flow taken at publish time
+    BotConversation      — a contact's session through a flow (pinned to a version)
     BotConversationStep  — audit trail of each step in a conversation
     Lead                 — captured lead (denormalised + custom_fields)
     LeadActivity         — note/call/status-change timeline against a lead
@@ -69,7 +70,6 @@ NODE_TYPES = {
     'webhook':        'Call External Webhook',
     'send_email':     'Send Email Notification (to agency)',
     'crm_push':       'Push Lead to CRM',
-    'rate_limit':     'Rate Limit (anti-spam)',
     # Smart
     'ai_chat':        'AI Conversation (Claude)',
     'human_handoff':  'Hand Off to Human Agent',
@@ -155,6 +155,33 @@ class BotFlow(models.Model):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# BotFlowVersion — snapshot taken on publish
+# ─────────────────────────────────────────────────────────────────────────────
+class BotFlowVersion(models.Model):
+    """Immutable copy of a flow's graph at publish time. New conversations
+    pin the flow's published version, so editing (or re-publishing) a flow
+    never changes the graph under a conversation that is already running."""
+    flow             = models.ForeignKey(BotFlow, on_delete=models.CASCADE, related_name='versions')
+    version          = models.PositiveIntegerField()
+    nodes            = models.JSONField(default=list, blank=True)
+    edges            = models.JSONField(default=list, blank=True)
+    starting_node_id = models.CharField(max_length=50, blank=True)
+    published_at     = models.DateTimeField(auto_now_add=True)
+    published_by     = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    note             = models.CharField(max_length=200, blank=True)   # e.g. "rollback to v3"
+
+    class Meta:
+        app_label = 'social_stats'
+        ordering = ['-version']
+        constraints = [
+            models.UniqueConstraint(fields=['flow', 'version'], name='uniq_bot_flow_version'),
+        ]
+
+    def __str__(self):
+        return f'BotFlowVersion<flow#{self.flow_id} v{self.version}>'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # BotConversation — a contact's session through a flow
 # ─────────────────────────────────────────────────────────────────────────────
 class BotConversation(models.Model):
@@ -169,6 +196,11 @@ class BotConversation(models.Model):
 
     client  = models.ForeignKey('social_stats.Client', on_delete=models.CASCADE, related_name='bot_conversations')
     flow    = models.ForeignKey(BotFlow, on_delete=models.SET_NULL, null=True, blank=True, related_name='conversations')
+    # The published snapshot this conversation runs on. Null for conversations
+    # started before versioning (and for test runs of a draft) — those read
+    # the live flow.
+    flow_version = models.ForeignKey(BotFlowVersion, on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name='conversations')
     contact = models.ForeignKey('social_stats.WhatsAppContact', on_delete=models.CASCADE, related_name='bot_conversations')
 
     # Tracking

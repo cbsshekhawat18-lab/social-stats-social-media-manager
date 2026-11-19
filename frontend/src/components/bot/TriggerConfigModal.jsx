@@ -30,7 +30,7 @@ const TRIGGER_TYPES = [
   { value: 'manual',        label: 'Manual',                 desc: 'No automatic trigger. Use the test endpoint or jump_to_flow.' },
 ];
 
-export default function TriggerConfigModal({ flow, onClose, onPublished }) {
+export default function TriggerConfigModal({ flow, onClose, onPublished, onValidationFailed }) {
   const [triggerType, setTriggerType]   = useState(flow.trigger_type || 'ctwa_ad');
   const [config,      setConfig]        = useState(flow.trigger_config || {});
   const [busy,        setBusy]          = useState(false);
@@ -50,7 +50,10 @@ export default function TriggerConfigModal({ flow, onClose, onPublished }) {
       onPublished?.(r.data);
     } catch (e) {
       const data = e?.response?.data || {};
-      if (data.issues) {
+      if (data.errors && onValidationFailed) {
+        // The editor shows these in its panel and outlines the nodes.
+        onValidationFailed(data);
+      } else if (data.issues) {
         setValidation({ ok: false, issues: data.issues });
       } else {
         toast.error(data.error || 'Could not publish');

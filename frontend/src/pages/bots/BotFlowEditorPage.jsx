@@ -26,8 +26,8 @@ import 'reactflow/dist/style.css';
 import dagre from 'dagre';
 import { nanoid } from 'nanoid';
 import {
-  ArrowLeft, Save, PlayCircle, CheckCircle2, AlertTriangle,
-  Undo2, Redo2, LayoutGrid, FlaskConical,
+  ArrowLeft, Save, PlayCircle,
+  Undo2, Redo2, LayoutGrid, FlaskConical, History,
 } from 'lucide-react';
 
 import { botAPI } from '../../services/api';
@@ -36,6 +36,7 @@ import CanvasNode from '../../components/bot/CanvasNode';
 import NodeInspector from '../../components/bot/NodeInspector';
 import TestModeDrawer from '../../components/bot/TestModeDrawer';
 import TriggerConfigModal from '../../components/bot/TriggerConfigModal';
+import ValidationPanel from '../../components/bot/ValidationPanel';
 import { NODE_CATALOG, CATEGORIES, getNodeMeta } from '../../components/bot/nodeCatalog';
 
 // ─────────────────────────────────────────────────────────
@@ -85,6 +86,7 @@ function Editor() {
   const [validation, setValidation] = useState(null);
   const [testOpen,  setTestOpen]  = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
+  const [versions, setVersions] = useState(null);   // null = menu closed
   const wrapperRef = useRef(null);
 
   // Undo/redo history — stack of {nodes, edges} snapshots
@@ -143,25 +145,29 @@ function Editor() {
     let cancelled = false;
     botAPI.get(id).then((r) => {
       if (cancelled) return;
-      const f = r.data;
-      setFlow(f);
-      setNodes((f.nodes || []).map((n) => ({
-        id: n.id,
-        type: 'custom',
-        position: n.position || { x: 100, y: 100 },
-        data: { type: n.type, data: n.data || {} },
-      })));
-      setEdges((f.edges || []).map((e) => ({
-        id: e.id || nanoid(8),
-        source: e.source,
-        target: e.target,
-        sourceHandle: e.sourceHandle,
-        label: e.label,
-        markerEnd: { type: MarkerType.ArrowClosed },
-      })));
+      loadFlow(r.data);
     }).catch(() => toast.error('Could not load flow'));
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id]); // eslint-disable-line
+
+  function loadFlow(f) {
+    setFlow(f);
+    setNodes((f.nodes || []).map((n) => ({
+      id: n.id,
+      type: 'custom',
+      position: n.position || { x: 100, y: 100 },
+      data: { type: n.type, data: n.data || {} },
+    })));
+    setEdges((f.edges || []).map((e) => ({
+      id: e.id || nanoid(8),
+      source: e.source,
+      target: e.target,
+      sourceHandle: e.sourceHandle,
+      label: e.label,
+      markerEnd: { type: MarkerType.ArrowClosed },
+    })));
+    setDirty(false);
+  }
 
   // ── Autosave loop ────────────────────────────────────
   useEffect(() => {
@@ -277,6 +283,51 @@ function Editor() {
     if (dirty) await save();
     setPublishOpen(true);
   }
+
+  // Worst issue level per node — drives the red / amber node outlines.
+  const issueByNode = useMemo(() => {
+    const map = {};
+    (validation?.errors || []).forEach((i) => {
+      if (!i.node_id) return;
+      if (i.level === 'error' || !map[i.node_id]) map[i.node_id] = i.level;
+    });
+    return map;
+  }, [validation]);
+
+  const displayNodes = useMemo(() => nodes.map((n) => (
+    issueByNode[n.id] ? { ...n, data: { ...n.data, issueLevel: issueByNode[n.id] } } : n
+  )), [nodes, issueByNode]);
+
+  function focusNode(nodeId) {
+    const n = nodes.find((x) => x.id === nodeId);
+    if (!n) return;
+    setSelectedId(nodeId);
+    reactFlow.setCenter(n.position.x + NODE_W / 2, n.position.y + NODE_H / 2, { zoom: 1, duration: 300 });
+  }
+
+  // ── Version history ──────────────────────────────────
+  async function toggleVersions() {
+    if (versions) { setVersions(null); return; }
+    try {
+      const r = await botAPI.versions(id);
+      setVersions(r.data.results || []);
+    } catch { toast.error('Could not load version history'); }
+  }
+  async function restoreVersion(v) {
+    const live = flow?.is_active
+      ? ' It becomes the live version immediately; conversations already running finish on the version they started with.'
+      : '';
+    if (!window.confirm(`Restore version ${v.version}? This replaces the current draft.${live}`)) return;
+    try {
+      const r = await botAPI.rollback(id, v.version);
+      loadFlow(r.data);
+      setValidation(null);
+      setVersions(null);
+      toast.success(`Restored version ${v.version}`);
+    } catch (e) {
+      toast.error(e?.response?.data?.error || 'Could not restore that version');
+    }
+  }
   async function unpublish() {
     if (!flow) return;
     try {
@@ -351,6 +402,14 @@ function Editor() {
             <Save size={13} /> Save
           </button>
           <button type="button" onClick={validateNow} style={btnGhost}>Validate</button>
+          <div style={{ position: 'relative' }}>
+            <button type="button" onClick={toggleVersions} style={btnGhost} title="Published versions">
+              <History size={13} /> {flow?.is_active && flow?.published_version ? `Live v${flow.published_version}` : 'History'}
+            </button>
+            {versions && (
+              <VersionMenu versions={versions} onRestore={restoreVersion} onClose={() => setVersions(null)} />
+            )}
+          </div>
           <button type="button" onClick={() => setTestOpen(true)} style={btnGhost}>
             <FlaskConical size={13} /> Test
           </button>
@@ -364,7 +423,8 @@ function Editor() {
       </header>
 
       {validation && (
-        <ValidationBanner result={validation} onClose={() => setValidation(null)} />
+        <ValidationPanel result={validation} onClose={() => setValidation(null)}
+                         onRecheck={validateNow} onFocus={focusNode} />
       )}
 
       {/* 3-column body */}
@@ -374,7 +434,7 @@ function Editor() {
         <div ref={wrapperRef} onDragOver={onDragOver} onDrop={onDrop}
              style={{ flex: 1, position: 'relative' }}>
           <ReactFlow
-            nodes={nodes} edges={edges}
+            nodes={displayNodes} edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
@@ -413,7 +473,18 @@ function Editor() {
         <TriggerConfigModal
           flow={flow}
           onClose={() => setPublishOpen(false)}
-          onPublished={(updated) => { setFlow(updated); setPublishOpen(false); }}
+          onPublished={(updated) => {
+            setFlow(updated);
+            setPublishOpen(false);
+            // Published, possibly with warnings worth showing.
+            setValidation(updated.warnings?.length
+              ? { ok: true, errors: updated.warnings, node_count: nodes.length, edge_count: edges.length }
+              : null);
+          }}
+          onValidationFailed={(data) => {
+            setValidation({ ok: false, ...data });
+            setPublishOpen(false);
+          }}
         />
       )}
 
@@ -489,26 +560,46 @@ function Palette() {
   );
 }
 
-function ValidationBanner({ result, onClose }) {
+function VersionMenu({ versions, onRestore, onClose }) {
   return (
-    <div style={{
-      padding: '10px 14px',
-      background: result.ok ? 'var(--success-bg)' : 'var(--danger-bg)',
-      borderBottom: '1px solid ' + (result.ok ? 'var(--success)' : 'var(--danger)'),
-      color: result.ok ? 'var(--success)' : 'var(--danger)',
-      fontSize: 13,
-      display: 'flex', alignItems: 'center', gap: 8,
-    }}>
-      {result.ok ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
-      {result.ok
-        ? `Flow looks good — ${result.node_count} nodes, ${result.edge_count} edges.`
-        : <>Issues: <strong>{result.issues?.[0]}</strong>{result.issues?.length > 1 && ` (+${result.issues.length - 1} more)`}</>
-      }
-      <button type="button" onClick={onClose} style={{
-        marginLeft: 'auto', background: 'transparent', border: 'none', cursor: 'pointer',
-        color: 'inherit', fontSize: 14,
-      }}>×</button>
-    </div>
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 20 }} />
+      <div role="menu" style={{
+        position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 21, width: 300,
+        background: 'var(--surface-card)', border: '1px solid var(--border-default)',
+        borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg, 0 12px 32px rgba(0,0,0,.18))',
+        padding: 8, maxHeight: 320, overflowY: 'auto',
+      }}>
+        <div style={{ fontSize: 11, color: 'var(--text-tertiary)', padding: '4px 6px 8px', lineHeight: 1.45 }}>
+          Each publish saves a version. Edits to a live flow reach customers only when you re-publish.
+        </div>
+        {versions.length === 0 && (
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', padding: 6 }}>Not published yet.</div>
+        )}
+        {versions.map((v) => (
+          <div key={v.id} style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '6px',
+            borderRadius: 'var(--radius-sm)',
+            background: v.is_published ? 'var(--surface-sunken)' : 'transparent',
+          }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                Version {v.version}{v.is_published ? ' · live' : ''}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                {new Date(v.published_at).toLocaleString()} · {v.node_count} nodes
+                {v.conversations ? ` · ${v.conversations} conversations` : ''}
+              </div>
+            </div>
+            {!v.is_published && (
+              <button type="button" onClick={() => onRestore(v)} style={{ ...btnGhost, padding: '4px 10px' }}>
+                Restore
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 

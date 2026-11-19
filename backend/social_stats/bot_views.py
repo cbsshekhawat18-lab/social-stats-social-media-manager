@@ -45,7 +45,7 @@ from .bot_serializers import (
 )
 from .models import (
     BotConversation, BotFlow, BotFlowTemplate, BotFlowVersion,
-    CTWACampaign, NODE_TYPES,
+    CTWACampaign,
 )
 from .whatsapp_views import TenantScopedMixin
 
@@ -137,9 +137,12 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
 
         result = _validate_flow(flow)
         if not result['ok']:
-            return Response({'error': 'flow validation failed', 'issues': result['issues']}, status=400)
+            return Response({'error': 'flow validation failed', 'issues': result['issues'],
+                             'errors': result['errors']}, status=400)
         snapshot_flow(flow, user=request.user)
-        return Response(BotFlowDetailSerializer(flow).data)
+        data = BotFlowDetailSerializer(flow).data
+        data['warnings'] = [i for i in result['errors'] if i['level'] == 'warning']
+        return Response(data)
 
     @action(detail=True, methods=['get'])
     def versions(self, request, pk=None):
@@ -535,65 +538,19 @@ def snapshot_flow(flow: BotFlow, *, user=None, note: str = '') -> BotFlowVersion
 # Flow validator (used by validate + publish)
 # ─────────────────────────────────────────────────────────────────────────────
 def _validate_flow(flow: BotFlow) -> dict:
-    issues: list[str] = []
-    nodes = flow.nodes or []
-    edges = flow.edges or []
-    node_ids = {n.get('id') for n in nodes}
+    """Run bot_engine.flow_validator on the draft graph.
 
-    if not nodes:
-        issues.append('flow has no nodes')
-    starts = [n for n in nodes if n.get('type') == 'start']
-    if len(starts) == 0:
-        issues.append('flow needs a start node')
-    elif len(starts) > 1:
-        issues.append('flow has multiple start nodes (only one allowed)')
-    elif not flow.starting_node_id and starts[0].get('id') != flow.starting_node_id:
-        # Auto-fix: trust the only start node
+    Returns {ok, errors: [{node_id, level, message}], issues: [str], …}.
+    `errors` carries both levels; only level="error" blocks publishing.
+    """
+    from .bot_engine.flow_validator import validate_flow
+
+    # A flow with exactly one Start node doesn't need starting_node_id set by hand.
+    starts = [n for n in (flow.nodes or []) if n.get('type') == 'start']
+    if len(starts) == 1 and flow.starting_node_id != starts[0].get('id'):
         flow.starting_node_id = starts[0].get('id', '')
         flow.save(update_fields=['starting_node_id'])
-
-    # Unknown node types
-    unknown = sorted({n.get('type') for n in nodes if n.get('type') not in NODE_TYPES})
-    if unknown:
-        issues.append(f'unknown node types: {", ".join(unknown)}')
-
-    # Orphan / dangling edges
-    for e in edges:
-        if e.get('source') not in node_ids:
-            issues.append(f'edge {e.get("id")} has missing source')
-        if e.get('target') not in node_ids:
-            issues.append(f'edge {e.get("id")} has missing target')
-
-    # Reachability — every node should be reachable from start (except the start itself)
-    reachable = set()
-    if flow.starting_node_id:
-        stack = [flow.starting_node_id]
-        while stack:
-            cur = stack.pop()
-            if cur in reachable:
-                continue
-            reachable.add(cur)
-            for e in edges:
-                if e.get('source') == cur and e.get('target') in node_ids:
-                    stack.append(e['target'])
-        unreachable = sorted(node_ids - reachable)
-        if unreachable:
-            issues.append(f'unreachable nodes from start: {", ".join(unreachable)}')
-
-    # Required-field checks per node type
-    for n in nodes:
-        t = n.get('type')
-        d = n.get('data') or {}
-        if t == 'message_text' and not d.get('text'):
-            issues.append(f'node {n["id"]} (message_text) missing text')
-        if t == 'message_image' and not (d.get('url') or d.get('link') or d.get('media_id')):
-            issues.append(f'node {n["id"]} (message_image) missing url/media_id')
-        if t == 'message_buttons' and (not d.get('body') or not d.get('buttons')):
-            issues.append(f'node {n["id"]} (message_buttons) missing body or buttons')
-        if t == 'jump_to_flow' and not (d.get('target_flow_id') or d.get('flow_id')):
-            issues.append(f'node {n["id"]} (jump_to_flow) missing target_flow_id')
-
-    return {'ok': not issues, 'issues': issues, 'node_count': len(nodes), 'edge_count': len(edges)}
+    return validate_flow(flow)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -899,3 +899,148 @@ class ActionNodeTests(BotTestCase):
         with patch('random.random', return_value=0.99):      # second of two equal weights
             self.send(text_msg('hi'))
         self.assertEqual(self.pinbot.texts(), ['B'])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 2 — flow validator
+# ─────────────────────────────────────────────────────────────────────────────
+from social_stats.bot_engine.flow_validator import validate_graph  # noqa: E402
+
+
+def _levels(issues, node_id=None):
+    return sorted((i['level'], i['message']) for i in issues if node_id is None or i['node_id'] == node_id)
+
+
+def _has(issues, level, needle, node_id=...):
+    return any(i['level'] == level and needle.lower() in i['message'].lower()
+               and (node_id is ... or i['node_id'] == node_id) for i in issues)
+
+
+class FlowValidatorTests(TestCase):
+    def test_valid_flow_has_no_issues(self):
+        self.assertEqual(validate_graph(*ask_flow_nodes()), [])
+        nodes, edges = buttons_flow([edge('pick', 'lost', 'no_match')])
+        edges += [edge('buy', 'lost'), edge('rent', 'lost')]
+        nodes.append(node('end', 'end_conversation'))
+        edges.append(edge('lost', 'end'))
+        self.assertEqual(validate_graph(nodes, edges), [])
+
+    def test_issue_shape(self):
+        issues = validate_graph([node('a', 'message_text', text='')], [])
+        for issue in issues:
+            self.assertEqual(set(issue), {'node_id', 'level', 'message'})
+            self.assertIn(issue['level'], ('error', 'warning'))
+
+    def test_exactly_one_start_node(self):
+        self.assertTrue(_has(validate_graph([node('a', 'message_text', text='x')], []), 'error', 'needs a start', None))
+        two = [node('s1', 'start'), node('s2', 'start'), node('t', 'message_text', text='x')]
+        issues = validate_graph(two, [edge('s1', 't'), edge('s2', 't')])
+        self.assertTrue(_has(issues, 'error', 'only one start', 's2'))
+        self.assertTrue(_has(validate_graph([], []), 'error', 'no nodes', None))
+
+    def test_edges_must_point_to_existing_nodes(self):
+        nodes = [node('start', 'start'), node('t', 'message_text', text='x')]
+        issues = validate_graph(nodes, [edge('start', 't'), edge('t', 'ghost'), edge('phantom', 't')])
+        self.assertTrue(_has(issues, 'error', 'no longer exists', 't'))
+        self.assertEqual(sum('no longer exists' in i['message'] for i in issues), 2)
+
+    def test_unreachable_nodes(self):
+        nodes = [node('start', 'start'), node('t', 'message_text', text='x'),
+                 node('island', 'message_text', text='y')]
+        issues = validate_graph(nodes, [edge('start', 't')])
+        self.assertTrue(_has(issues, 'error', 'never be reached', 'island'))
+        self.assertFalse(_has(issues, 'error', 'never be reached', 't'))
+
+    def test_button_limits(self):
+        buttons = [{'id': f'B{i}', 'title': f'Option {i}'} for i in range(4)]
+        buttons[0]['title'] = 'A title that is far too long'
+        nodes = [node('start', 'start'), node('b', 'message_buttons', body='x' * 1025, buttons=buttons)]
+        issues = validate_graph(nodes, [edge('start', 'b')])
+        self.assertTrue(_has(issues, 'error', 'at most 3 buttons', 'b'))
+        self.assertTrue(_has(issues, 'error', 'the limit is 20', 'b'))
+        self.assertTrue(_has(issues, 'error', 'WhatsApp allows 1024', 'b'))
+        ok = [node('start', 'start'),
+              node('b', 'message_buttons', body='x' * 1024,
+                   buttons=[{'id': 'A', 'title': 'x' * 20}, {'id': 'B', 'title': 'B'}, {'id': 'C', 'title': 'C'}])]
+        self.assertFalse([i for i in validate_graph(ok, [edge('start', 'b')]) if i['level'] == 'error'])
+
+    def test_list_limits(self):
+        rows = [{'id': f'r{i}', 'title': f'Row {i}'} for i in range(11)]
+        nodes = [node('start', 'start'),
+                 node('l', 'message_list', body='Pick', sections=[{'title': 'A', 'rows': rows[:6]},
+                                                                 {'title': 'B', 'rows': rows[6:]}])]
+        self.assertTrue(_has(validate_graph(nodes, [edge('start', 'l')]), 'error', 'at most 10 rows', 'l'))
+        nodes[1]['data']['sections'] = [{'title': 'A', 'rows': rows[:10]}]
+        self.assertFalse([i for i in validate_graph(nodes, [edge('start', 'l')]) if i['level'] == 'error'])
+
+    def test_condition_needs_true_and_false(self):
+        nodes = [node('start', 'start'),
+                 node('c', 'condition', condition={'left': 'x', 'op': '==', 'right': 1}),
+                 node('t', 'message_text', text='yes'), node('f', 'message_text', text='no')]
+        base = [edge('start', 'c'), edge('c', 't', 'true')]
+        self.assertTrue(_has(validate_graph(nodes[:3], base), 'error', 'missing: false', 'c'))
+        both = base + [edge('c', 'f', 'false')]
+        self.assertFalse([i for i in validate_graph(nodes, both) if i['level'] == 'error'])
+        no_match = base + [edge('c', 'f', 'no_match')]
+        self.assertFalse([i for i in validate_graph(nodes, no_match) if i['level'] == 'error'])
+
+    def test_cycle_without_a_waiting_node_warns(self):
+        nodes = [node('start', 'start'), node('a', 'message_text', text='a'), node('b', 'message_text', text='b')]
+        issues = validate_graph(nodes, [edge('start', 'a'), edge('a', 'b'), edge('b', 'a')])
+        self.assertTrue(_has(issues, 'warning', 'loop that never waits', 'a'))
+        self.assertTrue(_has(issues, 'warning', 'loop that never waits', 'b'))
+        self.assertFalse(_has(issues, 'warning', 'loop that never waits', 'start'))
+        self.assertFalse([i for i in issues if i['level'] == 'error'])
+
+    def test_cycle_through_a_waiting_node_is_fine(self):
+        nodes = [node('start', 'start'), node('ask', 'ask_question', question='Again?'),
+                 node('say', 'message_text', text='ok')]
+        issues = validate_graph(nodes, [edge('start', 'ask'), edge('ask', 'say'), edge('say', 'ask')])
+        self.assertEqual(issues, [])
+
+    def test_long_wait_must_be_followed_by_a_template(self):
+        def flow(after_type, **after_data):
+            return ([node('start', 'start'), node('w', 'wait_delay', hours=25),
+                     node('n', after_type, **after_data), node('end', 'end_conversation')],
+                    [edge('start', 'w'), edge('w', 'n'), edge('n', 'end')])
+        self.assertTrue(_has(validate_graph(*flow('message_text', text='hi')), 'warning', 'longer than 24 hours', 'w'))
+        self.assertEqual(validate_graph(*flow('message_template', template_name='t')), [])
+        self.assertEqual(validate_graph(*flow('message_text', text='hi', fallback_template='t')), [])
+        short = flow('message_text', text='hi')
+        short[0][1]['data'] = {'hours': 24}
+        self.assertEqual(validate_graph(*short), [])
+
+
+class PublishValidationApiTests(BotTestCase):
+    def setUp(self):
+        super().setUp()
+        user = User.objects.create_user(username=f'u-{uuid.uuid4().hex[:10]}', password='x')
+        UserProfile.objects.create(user=user, role='superadmin')
+        self.api = APIClient()
+        self.api.force_authenticate(user)
+        self.q = f'?client_id={self.client_obj.id}'
+
+    def test_publish_is_blocked_and_returns_node_level_errors(self):
+        nodes = [node('start', 'start'),
+                 node('b', 'message_buttons', body='Pick',
+                      buttons=[{'id': str(i), 'title': f'B{i}'} for i in range(4)])]
+        flow = self.make_flow(nodes, [edge('start', 'b')], publish=False)
+        res = self.api.post(f'/api/bot-flows/{flow.id}/publish/{self.q}')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn({'node_id': 'b', 'level': 'error',
+                       'message': 'WhatsApp allows at most 3 buttons; this node has 4.'}, res.data['errors'])
+        self.assertTrue(res.data['issues'])                  # legacy string list still there
+        flow.refresh_from_db()
+        self.assertFalse(flow.is_active)
+        self.assertEqual(flow.versions.count(), 0)
+
+    def test_warnings_do_not_block_publishing(self):
+        nodes = [node('start', 'start'), node('a', 'message_text', text='a'), node('b', 'message_text', text='b')]
+        flow = self.make_flow(nodes, [edge('start', 'a'), edge('a', 'b'), edge('b', 'a')], publish=False)
+        res = self.api.post(f'/api/bot-flows/{flow.id}/validate/{self.q}')
+        self.assertTrue(res.data['ok'])
+        self.assertEqual(res.data['warning_count'], 2)
+        res = self.api.post(f'/api/bot-flows/{flow.id}/publish/{self.q}')
+        self.assertEqual(res.status_code, 200, res.content)
+        self.assertEqual(len(res.data['warnings']), 2)
+        self.assertTrue(res.data['is_active'])

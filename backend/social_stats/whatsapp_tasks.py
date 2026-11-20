@@ -28,7 +28,7 @@ def send_whatsapp_message(self, message_id):
     """Send one WhatsAppMessage row through Pinbot."""
     from .models import WhatsAppMessage
     from .whatsapp_service import (
-        get_pinbot_for_client, PinbotError, PinbotRateLimitError, PinbotAPIError,
+        get_whatsapp_client, WhatsAppProviderError, WhatsAppRateLimitError, WhatsAppAPIError,
     )
 
     try:
@@ -42,7 +42,7 @@ def send_whatsapp_message(self, message_id):
         return
 
     try:
-        svc = get_pinbot_for_client(msg.client_id)
+        svc = get_whatsapp_client(msg.client_id)
     except Exception as e:
         logger.exception('send_whatsapp_message: cannot get Pinbot service for client %s', msg.client_id)
         msg.status = 'failed'
@@ -97,7 +97,7 @@ def send_whatsapp_message(self, message_id):
         msg.contact.last_message_at = timezone.now()
         msg.contact.save(update_fields=['last_message_at'])
 
-    except (PinbotRateLimitError, PinbotAPIError) as e:
+    except (WhatsAppRateLimitError, WhatsAppAPIError) as e:
         # Transient — retry
         logger.warning('Transient Pinbot error sending message %s: %s', message_id, e)
         try:
@@ -109,7 +109,7 @@ def send_whatsapp_message(self, message_id):
             msg.save(update_fields=['status', 'error_code', 'error_message'])
             _bump_campaign_failed(msg.campaign_id)
 
-    except PinbotError as e:
+    except WhatsAppProviderError as e:
         msg.status = 'failed'
         msg.error_code = str(getattr(e, 'status_code', '')) or 'error'
         msg.error_message = str(e)[:500]
@@ -254,11 +254,14 @@ def process_whatsapp_webhook(self, log_id):
     payload = log.payload or {}
     try:
         # Standard Cloud-API webhook shape: entry → changes → value → {statuses, messages, contacts}
+        # A delivery that arrived on an account's own webhook is processed for
+        # that workspace only (log.client_id); the shared endpoint resolves
+        # the workspace from the payload's phone_number_id.
         for entry in payload.get('entry', []) or []:
             for change in entry.get('changes', []) or []:
                 value = change.get('value', {}) or {}
-                _process_status_updates(value)
-                _process_inbound_messages(value)
+                _process_status_updates(value, client_id=log.client_id)
+                _process_inbound_messages(value, client_id=log.client_id)
         log.processed = True
         log.error = ''
         log.save(update_fields=['processed', 'error'])
@@ -272,7 +275,7 @@ def process_whatsapp_webhook(self, log_id):
             return
 
 
-def _process_status_updates(value):
+def _process_status_updates(value, client_id=None):
     from .models import WhatsAppMessage
 
     statuses = value.get('statuses') or []
@@ -285,9 +288,10 @@ def _process_status_updates(value):
         ts = _parse_ts(st.get('timestamp'))
 
         with transaction.atomic():
+            scope = {'client_id': client_id} if client_id else {}
             msg = (WhatsAppMessage.objects
                    .select_for_update()
-                   .filter(pinbot_message_id=wa_id)
+                   .filter(pinbot_message_id=wa_id, direction='outbound', **scope)
                    .first())
             if not msg:
                 continue
@@ -317,8 +321,8 @@ def _process_status_updates(value):
                 _bump_campaign_counter(msg.campaign_id, new_status)
 
 
-def _process_inbound_messages(value):
-    from .models import WhatsAppMessage, WhatsAppContact
+def _process_inbound_messages(value, client_id=None):
+    from .models import WhatsAppAccount, WhatsAppContact, WhatsAppMessage
 
     messages = value.get('messages') or []
     if not messages:
@@ -327,10 +331,19 @@ def _process_inbound_messages(value):
     metadata = value.get('metadata') or {}
     phone_number_id = metadata.get('phone_number_id')
 
-    # Resolve client by phone_number_id
     client = None
-    if phone_number_id:
-        from .models import WhatsAppAccount
+    if client_id:
+        # Arrived on this workspace's own webhook. It may only carry events
+        # for its own number — never route it to another workspace.
+        acct = WhatsAppAccount.objects.select_related('client').filter(client_id=client_id).first()
+        if acct and phone_number_id and str(phone_number_id) != str(acct.phone_number_id):
+            logger.warning('Inbound for phone_number_id=%s on the webhook of client=%s (expects %s) — ignored',
+                           phone_number_id, client_id, acct.phone_number_id)
+            return
+        if acct:
+            client = acct.client
+    elif phone_number_id:
+        # Shared endpoint: resolve the workspace by phone_number_id
         acct = WhatsAppAccount.objects.filter(phone_number_id=phone_number_id).first()
         if acct:
             client = acct.client
@@ -432,17 +445,17 @@ def _parse_ts(value):
 def sync_whatsapp_templates(self, client_id):
     """Pull templates from Pinbot and upsert into WhatsAppTemplate."""
     from .models import WhatsAppTemplate
-    from .whatsapp_service import get_pinbot_for_client, PinbotError
+    from .whatsapp_service import get_whatsapp_client, WhatsAppProviderError
 
     try:
-        svc = get_pinbot_for_client(client_id)
+        svc = get_whatsapp_client(client_id)
     except Exception as e:
         logger.warning('sync_whatsapp_templates: %s', e)
         return
 
     try:
         result = svc.list_templates(limit=200)
-    except PinbotError as e:
+    except WhatsAppProviderError as e:
         logger.warning('sync_whatsapp_templates failed for client %s: %s', client_id, e)
         try:
             raise self.retry(exc=e)
@@ -480,18 +493,20 @@ def _extract_template_body(components):
 def sync_account_status(self, client_id):
     """Refresh quality_rating + messaging_tier on the WhatsAppAccount."""
     from .models import WhatsAppAccount
-    from .whatsapp_service import get_pinbot_for_client, PinbotError
+    from .whatsapp_service import get_whatsapp_client, WhatsAppProviderError
 
     try:
         account = WhatsAppAccount.objects.get(client_id=client_id)
-        svc = get_pinbot_for_client(client_id)
+        svc = get_whatsapp_client(client_id)
     except Exception as e:
         logger.warning('sync_account_status: %s', e)
         return
 
     try:
-        info = svc.fetch_waba_info()
-    except PinbotError as e:
+        # Pinbot reports account health on the WABA node; on the Cloud API the
+        # quality rating lives on the phone-number node.
+        info = svc.fetch_waba_info() if svc.provider == 'pinbot' else svc.get_phone_number()
+    except WhatsAppProviderError as e:
         logger.warning('sync_account_status failed for client %s: %s', client_id, e)
         try:
             raise self.retry(exc=e)
@@ -502,14 +517,15 @@ def sync_account_status(self, client_id):
         quality = (info.get('quality_rating') or info.get('quality') or 'UNKNOWN').upper()
         if quality not in ('GREEN', 'YELLOW', 'RED', 'UNKNOWN'):
             quality = 'UNKNOWN'
-        tier_raw = (info.get('messaging_limit_tier') or info.get('messaging_tier') or 'TIER_1K').upper()
+        tier_raw = (info.get('messaging_limit_tier') or info.get('messaging_tier')
+                    or account.messaging_tier or 'TIER_1K').upper()
         # Normalize Meta-style tiers to our choices
         tier_map = {
             'TIER_1K': 'TIER_1K', 'TIER_10K': 'TIER_10K', 'TIER_100K': 'TIER_100K',
             'TIER_UNLIMITED': 'TIER_UNLIMITED',
             'UNLIMITED': 'TIER_UNLIMITED',
         }
-        tier = tier_map.get(tier_raw, 'TIER_1K')
+        tier = tier_map.get(tier_raw, account.messaging_tier or 'TIER_1K')
 
         account.quality_rating = quality
         account.messaging_tier = tier

@@ -743,7 +743,7 @@ class IdempotencyTests(BotTestCase):
     def test_redelivered_webhook_is_processed_once(self):
         from social_stats import whatsapp_tasks
         value = self._webhook_value(text_msg('hi', msg_id='wamid.SAME'))
-        with patch('social_stats.whatsapp_service.get_pinbot_for_client', return_value=self.pinbot):
+        with patch('social_stats.whatsapp_service.get_whatsapp_client', return_value=self.pinbot):
             whatsapp_tasks._process_inbound_messages(value)
             whatsapp_tasks._process_inbound_messages(value)
         self.assertEqual(WhatsAppMessage.objects.filter(pinbot_message_id='wamid.SAME').count(), 1)

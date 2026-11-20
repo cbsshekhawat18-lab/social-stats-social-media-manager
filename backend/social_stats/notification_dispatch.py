@@ -156,7 +156,7 @@ def _send_whatsapp(client: Optional[Client], user, title: str, body: str):
     if not contact or contact.opt_in_status != 'opted_in':
         raise RuntimeError('Recipient is not opted in for WhatsApp')
 
-    from .whatsapp_service import get_pinbot_for_client
-    svc = get_pinbot_for_client(client.id)
+    from .whatsapp_service import get_whatsapp_client
+    svc = get_whatsapp_client(client.id)
     text = f'{title}\n\n{body}' if body else title
     svc.send_text(phone, text[:1500])

@@ -330,7 +330,7 @@ function FormMedia({ type, data, patch, variables }) {
  <VariableTextarea value={data.caption || ''} onChange={(v) => patch({ caption: v })}
  variables={variables} rows={2} />
  </Field>
- <Hint>Public URL or a Pinbot media_id. The 24-hour window applies — outside it, use a Send Template node instead.</Hint>
+ <Hint>Public URL or a media_id from your WhatsApp provider. The 24-hour window applies — outside it, use a Send Template node instead.</Hint>
  </>
 );
 }
@@ -392,7 +392,7 @@ function FormTemplate({ data, patch, variables }) {
  </button>
 )}
  </Field>
- <Hint>Required when sending outside the 24-hour conversation window. The template must be pre-approved on Pinbot.</Hint>
+ <Hint>Required when sending outside the 24-hour conversation window. The template must already be approved by WhatsApp.</Hint>
  <div style={{ marginTop: 4 }}>
  <VariableInserter variables={variables} onPick={() => {}} />
  </div>

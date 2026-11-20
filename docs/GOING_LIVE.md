@@ -64,7 +64,7 @@ These are the scopes Social Stats requests in code — apply for exactly these:
 2. Complete the product's review/questionnaire; approval typically takes a few days.
 3. Add `/api/oauth/linkedin/callback/` (HTTPS) as an authorized redirect URL.
 
-## WhatsApp (Pinbot / WABA)
+## WhatsApp
 
 1. **Display-name approval** for each WABA phone number.
 2. **Message-template approval** — template (HSM) messages must be approved before
@@ -72,7 +72,8 @@ These are the scopes Social Stats requests in code — apply for exactly these:
 3. **Messaging tier limits** — new numbers start at a low daily unique-recipient
    tier that scales up with quality and volume.
    - WhatsApp Business Platform docs: https://developers.facebook.com/docs/whatsapp
-   - (Provisioning is done through your Pinbot Partners dashboard.)
+   - (Provisioning is done with the provider each workspace connects — Meta directly,
+     Pinbot, or another Cloud API compatible provider.)
 
 ---
 
@@ -124,8 +125,8 @@ The check is skipped under `manage.py test`. For local development set
 - [ ] All `*_REDIRECT_URI` values use **HTTPS** + your domain and match the
       platform app settings exactly
 - [ ] `ANTHROPIC_API_KEY` set (if using AI)
-- [ ] WhatsApp: `WHATSAPP_ENCRYPTION_KEY` + `WHATSAPP_WEBHOOK_SECRET` set; webhook
-      URL registered in Pinbot
+- [ ] WhatsApp: `WHATSAPP_ENCRYPTION_KEY`, `WHATSAPP_WEBHOOK_SECRET` and
+      `BACKEND_PUBLIC_URL` set; each workspace's webhook URL registered with its provider
 - [ ] Redis reachable; Celery **worker** + **beat** running
 - [ ] **Flip `OAUTH_APPS_APPROVED=True`** only after Meta/Google/LinkedIn approve
       your apps

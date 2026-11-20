@@ -267,7 +267,7 @@ function Empty() {
       <ArrowDown size={20} style={{ opacity: 0.4, marginBottom: 8 }} />
       <div>Enter a phone number above and click Run.</div>
       <p style={{ margin: '8px 0 0', fontSize: 11 }}>
-        Use a real WhatsApp number you control — the bot will message it via your Pinbot account.
+        Use a real WhatsApp number you control — the bot will message it through your connected WhatsApp account.
       </p>
     </div>
   );

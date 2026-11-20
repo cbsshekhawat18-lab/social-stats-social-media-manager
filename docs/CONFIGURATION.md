@@ -114,16 +114,19 @@ Get these from [linkedin.com/developers](https://www.linkedin.com/developers).
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | For AI | placeholder | Powers AI captions, replies, insights, the Cmd/Ctrl+J assistant, and AI-narrated reports. Get one at [console.anthropic.com](https://console.anthropic.com). **Without it, AI surfaces are disabled; everything else works.** |
 
-## WhatsApp (Pinbot Partners API v3)
+## WhatsApp
 
-See [CONNECT_WHATSAPP.md](CONNECT_WHATSAPP.md) for the full setup.
+Each workspace connects its own provider (Meta WhatsApp Cloud API, Pinbot, or
+any Cloud API compatible provider) in **WhatsApp → Settings**; API keys are
+entered there, not here. See [CONNECT_WHATSAPP.md](CONNECT_WHATSAPP.md).
 
 | Variable | Required | Default | What it does |
 |---|---|---|---|
-| `PINBOT_BASE_URL` | For WhatsApp | `https://partnersv1.pinbot.ai/v3` | Pinbot Partners API base URL. |
-| `WHATSAPP_ENCRYPTION_KEY` | For WhatsApp | empty | Fernet key encrypting WhatsApp credentials at rest. Generate like `FIELD_ENCRYPTION_KEYS`. |
-| `WHATSAPP_WEBHOOK_SECRET` | **Yes (prod)** unless `ALLOW_UNSIGNED_WEBHOOKS=True` | empty | Random 32+ char string. Verifies inbound webhook calls to `/api/whatsapp/webhook/` (sent as `X-Webhook-Secret` header, or matched as `hub.verify_token` on the GET handshake). |
+| `PINBOT_BASE_URL` | No | `https://partnersv1.pinbot.ai/v3` | API address used for workspaces that chose Pinbot. |
+| `WHATSAPP_ENCRYPTION_KEY` | For WhatsApp | empty | Fernet key encrypting every workspace's WhatsApp API key and App Secret at rest. Generate like `FIELD_ENCRYPTION_KEYS`. |
+| `WHATSAPP_WEBHOOK_SECRET` | **Yes (prod)** unless `ALLOW_UNSIGNED_WEBHOOKS=True` | empty | Random 32+ char string. Verifies calls to the shared `/api/whatsapp/webhook/` URL (sent as `X-Webhook-Secret` header, or matched as `hub.verify_token` on the GET handshake). Per-workspace webhook URLs use each account's own verify token / App Secret instead. |
 | `WHATSAPP_RATE_LIMIT_PER_SEC` | No | `20` | Outbound WhatsApp send rate cap. |
+| `BACKEND_PUBLIC_URL` | Recommended | empty | Public address of the API (e.g. `https://api.example.com`). Used to show each workspace its WhatsApp webhook URL; if empty, the address of the current request is used. |
 
 ## Webhook signing
 

@@ -101,7 +101,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Anthropic</strong> — Claude AI inference.</li>
                 <li><strong>SendGrid</strong> — transactional email.</li>
                 <li><strong>Sentry</strong> — error monitoring (PII scrubbed).</li>
-                <li><strong>Pinbot.ai</strong> — WhatsApp Business API gateway.</li>
+                <li><strong>Your WhatsApp provider</strong> — Meta's WhatsApp Cloud API, Pinbot.ai or another provider, whichever you connect. WhatsApp messages are sent only through the provider you chose.</li>
                 <li><strong>Meta / Google / LinkedIn / X</strong> — only when you connect those accounts; we send the minimum data each platform requires for the action you requested.</li>
               </ul>
               <p>A complete, current list lives at <a href="/security#subprocessors">/security#subprocessors</a>.</p>

@@ -7,17 +7,23 @@
 #  Released under the MIT License — see LICENSE. Keep this notice.
 # ============================================================================
 """
-PinbotService — wraps Pinbot Partners API v3 (https://partnersv1.pinbot.ai/v3).
+WhatsApp Cloud API client.
 
-Auth: single header `apikey: YOUR_WABA_API_KEY` per WABA. One Pinbot key
-serves multiple `phone_number_id`s (one per Social Stats client).
+One client class for every provider that speaks the WhatsApp Cloud API
+format — Meta's own Cloud API, Pinbot, and other compatible providers. They
+differ only in base URL and in how the API key is sent, which come from the
+workspace's WhatsAppAccount (see whatsapp_providers.py).
 
 Usage:
-    svc = get_pinbot_for_client(client_id)
+    svc = get_whatsapp_client(client_id)
     svc.send_text('+919876543210', 'Hello!')
 
 Or directly:
-    svc = PinbotService(api_key='...', phone_number_id='...', waba_id='...')
+    svc = WhatsAppCloudClient(api_key='...', phone_number_id='...', waba_id='...',
+                              base_url='https://api.your-provider.com/v1')
+
+`PinbotService`, `get_pinbot_for_client` and the `Pinbot*Error` names remain
+as aliases for code written before providers were pluggable.
 """
 from __future__ import annotations
 
@@ -33,33 +39,33 @@ logger = logging.getLogger(__name__)
 
 
 # ── Exceptions ────────────────────────────────────────────────────────────────
-class PinbotError(Exception):
-    """Base class for all Pinbot errors."""
+class WhatsAppProviderError(Exception):
+    """Base class for all WhatsApp provider errors."""
     def __init__(self, message: str, *, status_code: Optional[int] = None, response: Any = None):
         super().__init__(message)
         self.status_code = status_code
         self.response = response
 
 
-class PinbotAuthError(PinbotError):
+class WhatsAppAuthError(WhatsAppProviderError):
     """401/403 — bad apikey or missing permissions."""
 
 
-class PinbotRateLimitError(PinbotError):
+class WhatsAppRateLimitError(WhatsAppProviderError):
     """429 — rate limit exceeded."""
 
 
-class PinbotValidationError(PinbotError):
+class WhatsAppValidationError(WhatsAppProviderError):
     """400/422 — validation failure on payload."""
 
 
-class PinbotAPIError(PinbotError):
+class WhatsAppAPIError(WhatsAppProviderError):
     """5xx or other unexpected response."""
 
 
 # ── Service ───────────────────────────────────────────────────────────────────
-class PinbotService:
-    """Thin wrapper over the Pinbot Partners API v3."""
+class WhatsAppCloudClient:
+    """Thin wrapper over a WhatsApp Cloud API endpoint."""
 
     def __init__(
         self,
@@ -67,23 +73,37 @@ class PinbotService:
         phone_number_id: Optional[str] = None,
         waba_id: Optional[str] = None,
         base_url: Optional[str] = None,
+        *,
+        auth_header: str = 'Authorization',
+        auth_scheme: str = 'Bearer',
+        provider: str = 'custom',
     ):
         if not api_key:
-            raise PinbotAuthError('api_key is required')
+            raise WhatsAppAuthError('api_key is required')
+        if not base_url:
+            raise WhatsAppValidationError('base_url is required')
         self.api_key = api_key
         self.phone_number_id = phone_number_id
         self.waba_id = waba_id
-        self.base_url = (base_url or getattr(settings, 'PINBOT_BASE_URL', 'https://partnersv1.pinbot.ai/v3')).rstrip('/')
+        self.base_url = base_url.rstrip('/')
+        self.auth_header = auth_header or 'Authorization'
+        self.auth_scheme = (auth_scheme or '').strip()
+        self.provider = provider
 
     # ── HTTP plumbing ─────────────────────────────────────────────────────────
+    def _auth_headers(self) -> dict:
+        """The API key, sent the way this provider expects it."""
+        value = f'{self.auth_scheme} {self.api_key}' if self.auth_scheme else self.api_key
+        return {self.auth_header: value}
+
     def _headers(self, *, json_body: bool = True) -> dict:
-        h = {'apikey': self.api_key, 'Accept': 'application/json'}
+        h = {**self._auth_headers(), 'Accept': 'application/json'}
         if json_body:
             h['Content-Type'] = 'application/json'
         return h
 
     @retry(
-        retry=retry_if_exception_type((PinbotRateLimitError, PinbotAPIError, requests.ConnectionError, requests.Timeout)),
+        retry=retry_if_exception_type((WhatsAppRateLimitError, WhatsAppAPIError, requests.ConnectionError, requests.Timeout)),
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=8),
         reraise=True,
@@ -99,7 +119,7 @@ class PinbotService:
         params: Any = None,
     ) -> Any:
         url = f"{self.base_url}{path if path.startswith('/') else '/' + path}"
-        logger.info('Pinbot %s %s', method, path)
+        logger.info('WhatsApp[%s] %s %s', self.provider, method, path)
         try:
             resp = requests.request(
                 method=method,
@@ -110,9 +130,12 @@ class PinbotService:
                 data=data,
                 params=params,
                 timeout=(10, 30),
+                # An API call never needs a redirect, and following one could
+                # carry the key to a host the workspace never configured.
+                allow_redirects=False,
             )
         except (requests.ConnectionError, requests.Timeout):
-            logger.exception('Pinbot connection/timeout %s %s', method, path)
+            logger.exception('WhatsApp[%s] connection/timeout %s %s', self.provider, method, path)
             raise
 
         return self._handle_response(resp, method, path)
@@ -130,27 +153,27 @@ class PinbotService:
 
         # Sanitize before logging — never log api_key
         snippet = body if isinstance(body, (dict, list)) else str(body)[:500]
-        logger.error('Pinbot %s %s failed %s: %s', method, path, sc, snippet)
+        logger.error('WhatsApp[%s] %s %s failed %s: %s', self.provider, method, path, sc, snippet)
 
         if sc in (401, 403):
-            raise PinbotAuthError(f'Pinbot auth failed ({sc})', status_code=sc, response=body)
+            raise WhatsAppAuthError(f'WhatsApp provider rejected the credentials ({sc})', status_code=sc, response=body)
         if sc == 429:
-            raise PinbotRateLimitError('Pinbot rate-limit exceeded', status_code=sc, response=body)
+            raise WhatsAppRateLimitError('WhatsApp provider rate limit exceeded', status_code=sc, response=body)
         if sc in (400, 422):
-            raise PinbotValidationError(f'Pinbot validation error ({sc})', status_code=sc, response=body)
-        raise PinbotAPIError(f'Pinbot API error ({sc})', status_code=sc, response=body)
+            raise WhatsAppValidationError(f'WhatsApp provider rejected the request ({sc})', status_code=sc, response=body)
+        raise WhatsAppAPIError(f'WhatsApp provider error ({sc})', status_code=sc, response=body)
 
     # ── Helpers ───────────────────────────────────────────────────────────────
     def _phone_id(self, override: Optional[str] = None) -> str:
         pid = override or self.phone_number_id
         if not pid:
-            raise PinbotValidationError('phone_number_id is required for this call')
+            raise WhatsAppValidationError('phone_number_id is required for this call')
         return pid
 
     def _waba_id(self, override: Optional[str] = None) -> str:
         wid = override or self.waba_id
         if not wid:
-            raise PinbotValidationError('waba_id is required for this call')
+            raise WhatsAppValidationError('waba_id is required for this call')
         return wid
 
     def _wrap_message(self, to: str, message_type: str, body: dict) -> dict:
@@ -186,7 +209,7 @@ class PinbotService:
 
     def _media_block(self, link: Optional[str], media_id: Optional[str], extra: Optional[dict] = None) -> dict:
         if not link and not media_id:
-            raise PinbotValidationError('Either link or media_id must be provided')
+            raise WhatsAppValidationError('Either link or media_id must be provided')
         block = {}
         if media_id:
             block['id'] = media_id
@@ -523,7 +546,7 @@ class PinbotService:
     def upload_media(self, phone_number_id: Optional[str], file_path: str, mime_type: str) -> dict:
         pid = self._phone_id(phone_number_id)
         if not os.path.exists(file_path):
-            raise PinbotValidationError(f'File not found: {file_path}')
+            raise WhatsAppValidationError(f'File not found: {file_path}')
         with open(file_path, 'rb') as fh:
             files = {
                 'file':              (os.path.basename(file_path), fh, mime_type),
@@ -539,11 +562,40 @@ class PinbotService:
         info = self.get_media_url(media_id)
         url = info.get('url') if isinstance(info, dict) else None
         if not url:
-            raise PinbotAPIError('No url returned for media', response=info)
-        resp = requests.get(url, headers={'apikey': self.api_key}, timeout=(10, 60))
+            raise WhatsAppAPIError('No url returned for media', response=info)
+        resp = self._fetch_media(url)
         if resp.status_code >= 300:
-            raise PinbotAPIError(f'Failed to download media ({resp.status_code})', status_code=resp.status_code)
+            raise WhatsAppAPIError(f'Failed to download media ({resp.status_code})', status_code=resp.status_code)
         return resp.content
+
+    def _fetch_media(self, url: str) -> requests.Response:
+        """GET a media URL handed back by the provider.
+
+        The URL comes from the provider's response, so it is treated as
+        untrusted: https only, never a private/internal address, redirects
+        followed by hand (each hop re-checked) and the API key dropped as soon
+        as a hop leaves the original host.
+        """
+        from urllib.parse import urljoin, urlparse
+
+        from .security.ssrf import UnsafeURLError, check_url
+
+        headers = self._auth_headers()
+        first_host = urlparse(url).hostname
+        for _ in range(4):
+            try:
+                check_url(url, allowed_schemes=('https',))
+            except UnsafeURLError as e:
+                raise WhatsAppAPIError(f'Refusing to download media: {e}') from e
+            resp = requests.get(url, headers=headers, timeout=(10, 60), allow_redirects=False)
+            location = resp.headers.get('Location')
+            if resp.status_code in (301, 302, 303, 307, 308) and location:
+                url = urljoin(url, location)
+                if urlparse(url).hostname != first_host:
+                    headers = {}
+                continue
+            return resp
+        raise WhatsAppAPIError('Too many redirects while downloading media')
 
     def delete_media(self, media_id: str) -> dict:
         return self._request('DELETE', f'/{media_id}')
@@ -558,16 +610,30 @@ class PinbotService:
     def start_resumable_upload(self, session_id: str, file_data: bytes) -> dict:
         url = f"{self.base_url}/{session_id}"
         headers = {
-            'apikey':         self.api_key,
+            **self._auth_headers(),
             'file_offset':    '0',
             'Content-Type':   'application/octet-stream',
         }
-        resp = requests.post(url, headers=headers, data=file_data, timeout=(10, 120))
+        resp = requests.post(url, headers=headers, data=file_data, timeout=(10, 120), allow_redirects=False)
         return self._handle_response(resp, 'POST', f'/{session_id}')
 
     # ── Account ───────────────────────────────────────────────────────────────
     def get_user_details(self) -> dict:
+        """Pinbot-only account endpoint."""
         return self._request('GET', '/getuserdetails')
+
+    def get_phone_number(self, phone_number_id: Optional[str] = None) -> dict:
+        """Cloud API phone-number node: display number, verified name, quality."""
+        pid = self._phone_id(phone_number_id)
+        return self._request('GET', f'/{pid}', params={
+            'fields': 'display_phone_number,verified_name,quality_rating',
+        })
+
+    def check_connection(self) -> dict:
+        """One cheap authenticated call that proves the credentials work."""
+        if self.provider == 'pinbot':
+            return self.get_user_details()
+        return self.get_phone_number()
 
     def fetch_waba_info(self, waba_id: Optional[str] = None) -> dict:
         wid = self._waba_id(waba_id)
@@ -582,20 +648,57 @@ class PinbotService:
         })
 
 
+# ── Pinbot-era aliases ────────────────────────────────────────────────────────
+class PinbotService(WhatsAppCloudClient):
+    """WhatsAppCloudClient preset for Pinbot (kept for existing callers)."""
+
+    def __init__(self, api_key: str, phone_number_id: Optional[str] = None,
+                 waba_id: Optional[str] = None, base_url: Optional[str] = None):
+        super().__init__(
+            api_key, phone_number_id, waba_id,
+            base_url or getattr(settings, 'PINBOT_BASE_URL', 'https://partnersv1.pinbot.ai/v3'),
+            auth_header='apikey', auth_scheme='', provider='pinbot',
+        )
+
+
+PinbotError = WhatsAppProviderError
+PinbotAuthError = WhatsAppAuthError
+PinbotRateLimitError = WhatsAppRateLimitError
+PinbotValidationError = WhatsAppValidationError
+PinbotAPIError = WhatsAppAPIError
+
+
 # ── Factory ───────────────────────────────────────────────────────────────────
-def get_pinbot_for_client(client_id: int) -> PinbotService:
+def client_for_account(account) -> WhatsAppCloudClient:
+    """Build the API client for a WhatsAppAccount from its provider settings."""
+    from .whatsapp_providers import connection_for
+
+    api_key = account.api_key  # decrypted
+    if not api_key:
+        raise WhatsAppAuthError(f'No API key configured for client {account.client_id}')
+    try:
+        conn = connection_for(account)
+    except ValueError as e:
+        raise WhatsAppValidationError(str(e)) from e
+    return WhatsAppCloudClient(
+        api_key=api_key,
+        phone_number_id=account.phone_number_id,
+        waba_id=account.waba_id,
+        base_url=conn.base_url,
+        auth_header=conn.auth_header,
+        auth_scheme=conn.auth_scheme,
+        provider=conn.provider,
+    )
+
+
+def get_whatsapp_client(client_id: int) -> WhatsAppCloudClient:
     """
-    Return a configured PinbotService instance for the given client.
+    Return the API client for the given workspace's WhatsApp account.
 
     Raises WhatsAppAccount.DoesNotExist if the client has no WhatsApp account.
     """
     from .models import WhatsAppAccount
-    account = WhatsAppAccount.objects.get(client_id=client_id)
-    api_key = account.api_key  # decrypted via Fernet
-    if not api_key:
-        raise PinbotAuthError(f'No api_key configured for client {client_id}')
-    return PinbotService(
-        api_key=api_key,
-        phone_number_id=account.phone_number_id,
-        waba_id=account.waba_id,
-    )
+    return client_for_account(WhatsAppAccount.objects.get(client_id=client_id))
+
+
+get_pinbot_for_client = get_whatsapp_client

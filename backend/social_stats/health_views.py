@@ -90,7 +90,7 @@ _THIRD_PARTY = [
     ('meta',     'Meta integration (Facebook + Instagram)'),
     ('google',   'Google integration (YouTube + GMB)'),
     ('linkedin', 'LinkedIn integration'),
-    ('pinbot',   'WhatsApp (Pinbot.ai)'),
+    ('whatsapp', 'WhatsApp messaging'),
     ('ai',       'Social Stats'),
 ]
 

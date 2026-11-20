@@ -2,8 +2,33 @@
 
 ## [Unreleased]
 
-WhatsApp bot builder: engine fixes, flow versions, validation, AI nodes and
-analytics. See `docs/CONNECT_WHATSAPP.md` → *Bots & Click-to-WhatsApp*.
+**Bring your own WhatsApp provider**, and the WhatsApp bot builder: engine
+fixes, flow versions, validation, AI nodes and analytics. See
+`docs/CONNECT_WHATSAPP.md`.
+
+### WhatsApp providers
+
+- Each workspace now picks its provider in **WhatsApp → Settings** and enters
+  its own credentials: **Meta WhatsApp Cloud API** (direct), **Pinbot**, or
+  **any Cloud API compatible provider** (base URL + auth header). Pinbot is no
+  longer the only option. `GET /api/whatsapp/providers/` lists them.
+- Each account has its own webhook URL (`/api/whatsapp/webhook/<key>/`) and
+  verify token. Meta deliveries are verified with the App Secret
+  (`X-Hub-Signature-256`); other providers send `X-Webhook-Secret`. Events on
+  an account's webhook are processed for that workspace only.
+- Stored keys are never returned by the API and are never sent to an endpoint
+  they weren't entered for: switching provider or changing a custom base URL
+  needs the key again. Custom base URLs must be public https; API calls no
+  longer follow redirects; media URLs returned by a provider are checked
+  before download.
+- Fixed: connecting an account from the Settings page failed because the form
+  doesn't send `client` — the workspace is now taken from the signed-in user.
+- **Upgrading:** run `migrate` (0070). Existing accounts become provider
+  *Pinbot* with the same key and need no changes; the shared
+  `/api/whatsapp/webhook/` URL and `WHATSAPP_WEBHOOK_SECRET` keep working. Set
+  `BACKEND_PUBLIC_URL` so the Settings page shows the right webhook address.
+  The status-page service id `pinbot` is now `whatsapp`
+  (`health:incident:whatsapp`).
 
 ### Upgrading
 

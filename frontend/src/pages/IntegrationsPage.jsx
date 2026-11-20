@@ -60,7 +60,7 @@ const INTEGRATIONS = [
 
   // Messaging
   { slug: 'whatsapp',   name: 'WhatsApp Business', tagline: 'Two-way chat, campaigns, CTWA.', category: 'messaging',  live: true,  badge: 'Native', accent: '#25D366', initial: 'W' },
-  { slug: 'pinbot',     name: 'Pinbot.ai',  tagline: 'WhatsApp Business API gateway.',         category: 'messaging',  live: true,                   accent: '#22c55e', initial: 'pb' },
+  { slug: 'pinbot',     name: 'Pinbot.ai',  tagline: 'One of the WhatsApp providers you can connect.', category: 'messaging',  live: true,                   accent: '#22c55e', initial: 'pb' },
   { slug: 'messenger',  name: 'Messenger',  tagline: 'Conversations from Facebook.',          category: 'messaging',  live: true,                   accent: '#0084FF', initial: 'M' },
   { slug: 'telegram',   name: 'Telegram',   tagline: 'Channels and bot replies.',             category: 'messaging',  live: false,                  accent: '#26A5E4', initial: 'tg' },
   { slug: 'slack',      name: 'Slack',      tagline: 'Notifications, approvals, alerts.',     category: 'messaging',  live: true,                   accent: '#4A154B', initial: 'S' },

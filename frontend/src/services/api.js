@@ -715,8 +715,9 @@ export const inboxAPI = {
   stats:         ()         => api.get('/inbox/stats/'),
 };
 
-// ── WhatsApp (Pinbot) ──────────────────────────────────
+// ── WhatsApp (any connected provider) ──────────────────
 export const whatsappAPI = {
+  providers: () => api.get('/whatsapp/providers/'),
   account: {
     list:           (params)     => api.get('/whatsapp/accounts/', { params }),
     get:            (id)         => api.get(`/whatsapp/accounts/${id}/`),
@@ -725,6 +726,7 @@ export const whatsappAPI = {
     delete:         (id)         => api.delete(`/whatsapp/accounts/${id}/`),
     testConnection: (id)         => api.post(`/whatsapp/accounts/${id}/test_connection/`),
     syncStatus:     (id)         => api.post(`/whatsapp/accounts/${id}/sync_status/`),
+    rotateWebhookToken: (id)     => api.post(`/whatsapp/accounts/${id}/rotate_webhook_token/`),
   },
   contacts: {
     list:        (params)   => api.get('/whatsapp/contacts/', { params }),

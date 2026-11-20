@@ -74,7 +74,7 @@ Full guides live on the **[docs site](https://cbsshekhawat18-lab.github.io/socia
 - [Getting Started](docs/GETTING_STARTED.md) — zero to running locally
 - [Configuration](docs/CONFIGURATION.md) — every `.env` variable explained
 - [Connect Social Accounts](docs/CONNECT_ACCOUNTS.md) — Meta, Google, LinkedIn (exact scopes & redirect URIs)
-- [Connect WhatsApp](docs/CONNECT_WHATSAPP.md) — Pinbot / WABA + webhook setup
+- [Connect WhatsApp](docs/CONNECT_WHATSAPP.md) — connect your own provider (Meta Cloud API, Pinbot, others) + webhook setup
 - [Going Live](docs/GOING_LIVE.md) — platform app-review & production checklist
 - [User Guide](docs/USER_GUIDE.md) — the three account types and every module
 - [FAQ & Troubleshooting](docs/FAQ_TROUBLESHOOTING.md) — common failures and fixes

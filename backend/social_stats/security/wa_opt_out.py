@@ -164,8 +164,8 @@ def apply_opt_out(contact, *, keyword: str = '', request=None, send_confirmation
     # if Pinbot is misconfigured, we'd rather honour the opt-out than crash.
     if send_confirmation:
         try:
-            from ..whatsapp_service import get_pinbot_for_client
-            svc = get_pinbot_for_client(contact.client_id)
+            from ..whatsapp_service import get_whatsapp_client
+            svc = get_whatsapp_client(contact.client_id)
             if svc:
                 svc.send_text(contact.phone,
                               "You've been unsubscribed and will no longer "

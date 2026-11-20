@@ -24,7 +24,7 @@ Every free-form WhatsApp send goes through `send_freeform`, which enforces the
 24-hour customer-service window (see window.py).
 
 A pluggable `pinbot` attribute lets tests swap in a fake sender — the engine
-otherwise calls `get_pinbot_for_client(client_id)` lazily.
+otherwise calls `get_whatsapp_client(client_id)` lazily.
 """
 from __future__ import annotations
 
@@ -91,8 +91,8 @@ class BotExecutor:
     def pinbot(self):
         if self._pinbot is not None:
             return self._pinbot
-        from ..whatsapp_service import get_pinbot_for_client
-        self._pinbot = get_pinbot_for_client(self.client.id)
+        from ..whatsapp_service import get_whatsapp_client
+        self._pinbot = get_whatsapp_client(self.client.id)
         return self._pinbot
 
     # ── Graph (pinned version → live flow) ───────────────────────────────

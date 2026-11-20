@@ -32,8 +32,9 @@ def _reprompt(executor, node, message: str):
         return executor.on_retries_exceeded(node)
     if executor.send_freeform(node, 'send_text', executor.contact.phone, message):
         executor.log_step(node, direction='bot_to_user', payload={'text': message, 're_prompt': True})
-    # Stay on this node — leave _waiting_for / _waiting_for_node intact, and
-    # persist the retry counter.
+    # Stay on this node — leave _waiting_for / _waiting_for_node intact, give
+    # the customer a fresh answer timer, and persist the retry counter.
+    executor.schedule_timeout(node)
     executor.save()
     return executor.conversation
 

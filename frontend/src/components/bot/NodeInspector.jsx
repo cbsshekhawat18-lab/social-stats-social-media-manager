@@ -1248,6 +1248,21 @@ function CommonOptions({ type, data, patch }) {
  style={{ ...inputStyle, width: 90 }} />
  </Field>
  <Hint>After that many retries the flow takes this node's <strong>{type.startsWith('ask_') ? 'invalid' : 'gave up'}</strong> output. If it isn't connected, the conversation goes to a Human Handoff node when the flow has one, otherwise it ends as failed.</Hint>
+ <Field label="If there's no answer after (minutes)">
+ <input type="number" min={0} max={10080} value={data.timeout_minutes ?? ''} placeholder="No timeout"
+ onChange={(e) => patch({ timeout_minutes: e.target.value === '' ? null : Math.max(0, Number(e.target.value)) })}
+ style={{ ...inputStyle, width: 120 }} />
+ </Field>
+ {Number(data.timeout_minutes) > 0 && (
+ <>
+ <Field label="Reminder text (sent once)">
+ <textarea value={data.reminder_text || ''} rows={2} placeholder="Still there? Reply whenever you're ready."
+ onChange={(e) => patch({ reminder_text: e.target.value })}
+ style={{ ...inputStyle, resize: 'vertical' }} />
+ </Field>
+ <Hint>{data.reminder_text ? 'The reminder goes out after the timeout; if there is still no answer after the same time again, ' : 'When the time runs out, '}the flow takes the <strong>timeout</strong> output (if connected). Needs a running Celery worker.</Hint>
+ </>
+)}
  </>
 )}
  {freeform && (

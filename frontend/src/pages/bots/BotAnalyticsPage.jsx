@@ -21,7 +21,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import {
-  BarChart3, ArrowLeft, Filter, AlertTriangle, TrendingDown, Sparkles, ChevronRight,
+  BarChart3, ArrowLeft, Sparkles, ChevronRight,
 } from 'lucide-react';
 
 import { botAPI } from '../../services/api';
@@ -36,6 +36,7 @@ export default function BotAnalyticsPage() {
   const [flow,     setFlow]     = useState(null);
   const [data,     setData]     = useState(null);
   const [loading,  setLoading]  = useState(true);
+  const [days,     setDays]     = useState('');   // '' = all time
 
   // Resolve flow id: route param wins, else query param, else first available
   useEffect(() => {
@@ -55,11 +56,11 @@ export default function BotAnalyticsPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    Promise.all([botAPI.get(id), botAPI.analytics(id)])
+    Promise.all([botAPI.get(id), botAPI.analytics(id, days ? { days } : undefined)])
       .then(([fr, ar]) => { setFlow(fr.data); setData(ar.data); })
       .catch(() => toast.error('Could not load analytics'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, days]);
 
   const nodesById = useMemo(() => {
     const m = {};
@@ -81,20 +82,6 @@ export default function BotAnalyticsPage() {
     });
     // Sort by count desc — biggest funnel step first
     return rows.sort((a, b) => b.count - a.count);
-  }, [data, nodesById]);
-
-  const dropOffRows = useMemo(() => {
-    return (data?.top_drop_off_nodes || []).map(([nodeId, count]) => {
-      const n = nodesById[nodeId];
-      const meta = getNodeMeta(n?.type || 'unknown');
-      return {
-        nodeId,
-        node_type: n?.type || 'unknown',
-        label: meta.label || nodeId,
-        color: meta.color || 'var(--text-tertiary)',
-        count,
-      };
-    });
   }, [data, nodesById]);
 
   return (
@@ -132,6 +119,18 @@ export default function BotAnalyticsPage() {
                   fontSize: 13, fontFamily: 'inherit',
                 }}>
           {flows.map((f) => <option key={f.id} value={f.id}>{f.name} {f.is_active ? '· active' : ''}</option>)}
+        </select>
+        <select value={days} onChange={(e) => setDays(e.target.value)} aria-label="Period for the funnels"
+                style={{
+                  padding: '8px 12px',
+                  background: 'var(--surface-card)', color: 'var(--text-primary)',
+                  border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)',
+                  fontSize: 13, fontFamily: 'inherit',
+                }}>
+          <option value="">All time</option>
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option>
         </select>
       </header>
 
@@ -183,42 +182,16 @@ export default function BotAnalyticsPage() {
             )}
           </Section>
 
-          {/* Drop-off table */}
-          <Section title="Top drop-off nodes" subtitle="Where conversations stalled or failed">
-            {dropOffRows.length === 0 ? (
-              <Empty subtle>No drop-offs yet — every conversation completed successfully.</Empty>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <th style={th}>Node</th>
-                    <th style={th}>Type</th>
-                    <th style={{ ...th, textAlign: 'right' }}>Conversations stalled</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dropOffRows.map((r) => (
-                    <tr key={r.nodeId} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <td style={td}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 10, height: 10, borderRadius: '50%', background: r.color }} />
-                          <strong style={{ color: 'var(--text-primary)' }}>{r.label}</strong>
-                          <code style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{r.nodeId}</code>
-                        </span>
-                      </td>
-                      <td style={td}>
-                        <span style={pill}>{r.node_type}</span>
-                      </td>
-                      <td style={{ ...td, textAlign: 'right', fontWeight: 700, color: 'var(--danger)' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                          <TrendingDown size={12} /> {r.count}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          {/* Per-node funnel */}
+          <Section title="Node funnel"
+                   subtitle="For each step: conversations that reached it, went on, are waiting there now, or stopped there (abandoned, failed or ended early)">
+            <NodeFunnel rows={data.node_funnel || []} />
+          </Section>
+
+          {/* Ad funnel */}
+          <Section title="Ad funnel"
+                   subtitle="Click-to-WhatsApp campaigns linked to this flow: ad click → conversation → lead → converted">
+            <AdFunnel funnel={data.ctwa_funnel} />
           </Section>
 
           {/* Open in editor */}
@@ -237,6 +210,129 @@ export default function BotAnalyticsPage() {
       )}
     </div>
   );
+}
+
+const num = (v) => (v ?? 0).toLocaleString();
+const money = (v) => (v == null ? '—' : `₹${Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 })}`);
+const pct = (v) => (v == null ? '—' : `${v}%`);
+
+export function NodeFunnel({ rows }) {
+  const reached = rows.filter((r) => r.entered > 0 || r.in_current_version);
+  const max = Math.max(1, ...reached.map((r) => r.entered));
+  if (!reached.some((r) => r.entered > 0)) {
+    return <Empty subtle>No conversations in this period yet.</Empty>;
+  }
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+            <th style={th}>Step</th>
+            <th style={{ ...th, textAlign: 'right' }}>Entered</th>
+            <th style={{ ...th, textAlign: 'right' }}>Went on</th>
+            <th style={{ ...th, textAlign: 'right' }}>Waiting</th>
+            <th style={{ ...th, textAlign: 'right' }}>Dropped off</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reached.map((r) => {
+            const meta = getNodeMeta(r.node_type || 'unknown');
+            return (
+              <tr key={r.node_id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <td style={{ ...td, maxWidth: 380 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: meta.color, flexShrink: 0 }} />
+                    <strong style={{ color: 'var(--text-primary)' }}>
+                      {r.in_current_version ? (meta.label || r.label) : 'Removed step'}
+                    </strong>
+                    {!r.in_current_version && <span style={pill}>older version</span>}
+                  </div>
+                  {r.summary && (
+                    <div style={{
+                      marginTop: 2, marginLeft: 18, fontSize: 12, color: 'var(--text-tertiary)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>{r.summary}</div>
+                  )}
+                  <div style={{ marginTop: 5, marginLeft: 18, height: 4, background: 'var(--surface-sunken)', borderRadius: 2 }}>
+                    <div style={{ width: `${(r.entered / max) * 100}%`, height: '100%', background: meta.color, borderRadius: 2 }} />
+                  </div>
+                </td>
+                <td style={tdNum}>{num(r.entered)}</td>
+                <td style={tdNum}>{num(r.exited)}</td>
+                <td style={{ ...tdNum, color: 'var(--text-secondary)' }}>{num(r.waiting)}</td>
+                <td style={{ ...tdNum, color: r.dropped_off ? 'var(--danger)' : 'var(--text-tertiary)', fontWeight: r.dropped_off ? 700 : 400 }}>
+                  {num(r.dropped_off)}{r.dropped_off ? ` · ${r.drop_off_rate}%` : ''}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function AdFunnel({ funnel }) {
+  const campaigns = funnel?.campaigns || [];
+  if (campaigns.length === 0) {
+    return <Empty subtle>No Click-to-WhatsApp campaign is linked to this flow.</Empty>;
+  }
+  const t = funnel.totals;
+  return (
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 12 }}>
+        <KPI label="Ad clicks"      n={num(t.clicks)}        color="var(--brand-primary)" />
+        <KPI label="Conversations"  n={num(t.conversations)} color="var(--info)" />
+        <KPI label="Leads"          n={num(t.leads)}         color="var(--brand-primary-hover)" />
+        <KPI label="Converted"      n={num(t.converted)}     color="var(--success)" />
+        <KPI label="Spend"          n={money(t.spent)}       color="var(--text-primary)" />
+        <KPI label="Cost per lead"  n={money(t.cost_per_lead)} color="var(--warning)" />
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 720 }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              <th style={th}>Campaign</th>
+              <th style={{ ...th, textAlign: 'right' }}>Clicks</th>
+              <th style={{ ...th, textAlign: 'right' }}>Conversations</th>
+              <th style={{ ...th, textAlign: 'right' }}>Leads</th>
+              <th style={{ ...th, textAlign: 'right' }}>Converted</th>
+              <th style={{ ...th, textAlign: 'right' }}>Spend</th>
+              <th style={{ ...th, textAlign: 'right' }}>Cost / lead</th>
+              <th style={{ ...th, textAlign: 'right' }}>Cost / conversion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {campaigns.map((c) => (
+              <tr key={c.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                <td style={td}>
+                  <Link to={`/admin/ctwa/${c.id}`} style={{ color: 'var(--text-primary)', fontWeight: 600, textDecoration: 'none' }}>
+                    {c.name}
+                  </Link>
+                  {!c.is_active && <span style={{ ...pill, marginLeft: 6 }}>paused</span>}
+                </td>
+                <td style={tdNum}>{num(c.clicks)}</td>
+                <td style={tdNum}>{num(c.conversations)}<Sub>{pct(c.click_to_conversation_rate)}</Sub></td>
+                <td style={tdNum}>{num(c.leads)}<Sub>{pct(c.conversation_to_lead_rate)}</Sub></td>
+                <td style={tdNum}>{num(c.converted)}<Sub>{pct(c.lead_to_converted_rate)}</Sub></td>
+                <td style={tdNum}>{money(c.spent)}</td>
+                <td style={{ ...tdNum, fontWeight: 700 }}>{money(c.cost_per_lead)}</td>
+                <td style={tdNum}>{money(c.cost_per_conversion)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--text-tertiary)' }}>
+        Percentages are the share of the previous step. Clicks and spend are campaign totals synced from Meta
+        (not limited to the selected period); conversations and leads are counted here.
+      </p>
+    </>
+  );
+}
+
+function Sub({ children }) {
+  return <span style={{ display: 'block', fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 400 }}>{children}</span>;
 }
 
 function KPI({ label, n, color }) {
@@ -289,4 +385,5 @@ function Empty({ children, subtle }) {
 
 const th = { padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--text-tertiary)' };
 const td = { padding: '10px 12px', verticalAlign: 'middle' };
+const tdNum = { ...td, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)' };
 const pill = { padding: '2px 8px', fontSize: 10, fontWeight: 600, color: 'var(--text-tertiary)', background: 'var(--surface-sunken)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-pill)', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' };

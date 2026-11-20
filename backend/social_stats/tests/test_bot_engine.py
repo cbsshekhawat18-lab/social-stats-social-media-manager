@@ -247,6 +247,14 @@ class BusinessHoursTests(BotTestCase):
         self.send(text_msg('hi'))
         self.assertEqual(self.pinbot.texts(), ['Your name?'])
 
+    def test_first_message_trigger_fires_only_once_per_contact(self):
+        self.make_flow(*ask_flow_nodes(), trigger_type='first_message', trigger_config={})
+        self.send(text_msg('hello'))
+        self.send(text_msg('Ravi'))                          # conversation completes
+        self.assertFalse(self.send(text_msg('hello again')))  # not a first message any more
+        self.assertEqual(BotConversation.objects.filter(contact=self.contact).count(), 1)
+        self.assertEqual(self.pinbot.texts(), ['Your name?', 'Thanks Ravi'])
+
     def test_out_of_hours_does_not_use_up_the_first_message_trigger(self):
         flow = self.make_flow(*ask_flow_nodes(), trigger_type='first_message', trigger_config={},
                               business_hours_only=True, business_hours=ALL_CLOSED)
@@ -1479,3 +1487,316 @@ class AIChatWireFormatTests(BotTestCase):
         self.assertNotIn('prompt', body)
         self.assertEqual(self.pinbot.texts()[-1], 'hello there')      # the fake API's reply
         self.assertEqual(self.conv().variables['_ai_turn_count'], 1)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 4 — answer timeouts + analytics
+# ─────────────────────────────────────────────────────────────────────────────
+from social_stats.bot_engine import analytics as bot_analytics  # noqa: E402
+from social_stats.bot_engine.tasks import ask_node_timeout  # noqa: E402
+from social_stats.models import CTWACampaign, Lead  # noqa: E402
+
+ARM_TIMER = 'social_stats.bot_engine.tasks.ask_node_timeout.apply_async'
+
+
+def timeout_flow(*, reminder='Still there?', timeout_edge=True, **ask_data):
+    data = {'question': 'Your name?', 'store_var': 'name', 'timeout_minutes': 30, **ask_data}
+    if reminder:
+        data['reminder_text'] = reminder
+    nodes = [node('start', 'start'), node('ask', 'ask_question', **data),
+             node('thanks', 'message_text', text='Thanks {{name}}'),
+             node('nudge', 'message_text', text='No problem, message us any time')]
+    edges = [edge('start', 'ask'), edge('ask', 'thanks')]
+    if timeout_edge:
+        edges.append(edge('ask', 'nudge', 'timeout'))
+    return nodes, edges
+
+
+@patch(ARM_TIMER)
+class AskTimeoutTests(BotTestCase):
+    def _fire(self, conv, token=None):
+        conv.refresh_from_db()
+        token = token or conv.variables['_timeout']['token']
+        return ask_node_timeout.run(conv.id, 'ask', token, pinbot=self.pinbot)
+
+    def test_asking_arms_a_timer(self, arm):
+        self.make_flow(*timeout_flow())
+        self.send(text_msg('hi'))
+        conv = self.conv()
+        timer = conv.variables['_timeout']
+        self.assertEqual((timer['node'], timer['reminded']), ('ask', False))
+        self.assertEqual(arm.call_args.kwargs, {'args': [conv.id, 'ask', timer['token']], 'countdown': 1800})
+
+    def test_reminder_is_sent_once_then_the_timeout_edge_is_followed(self, arm):
+        self.make_flow(*timeout_flow())
+        self.send(text_msg('hi'))
+        conv = self.conv()
+        first = conv.variables['_timeout']['token']
+
+        self.assertEqual(self._fire(conv), 'reminded')
+        self.assertEqual(self.pinbot.texts(), ['Your name?', 'Still there?'])
+        conv.refresh_from_db()
+        self.assertTrue(conv.variables['_timeout']['reminded'])
+        self.assertNotEqual(conv.variables['_timeout']['token'], first)
+        self.assertEqual(arm.call_count, 2)                       # re-armed
+
+        self.assertEqual(self._fire(conv, token=first), 'stale')  # the old timer does nothing
+        self.assertEqual(self._fire(conv), 'timed_out')
+        self.assertEqual(self.pinbot.texts(), ['Your name?', 'Still there?', 'No problem, message us any time'])
+        conv.refresh_from_db()
+        self.assertEqual(conv.status, 'completed')
+        self.assertIn('answer_timeout', self.notes(conv))
+
+    def test_answering_makes_the_timer_stale(self, arm):
+        self.make_flow(*timeout_flow())
+        self.send(text_msg('hi'))
+        conv = self.conv()
+        token = conv.variables['_timeout']['token']
+        self.send(text_msg('Ravi'))
+        self.assertEqual(ask_node_timeout.run(conv.id, 'ask', token, pinbot=self.pinbot), 'stale')
+        self.assertEqual(self.pinbot.texts(), ['Your name?', 'Thanks Ravi'])
+        self.assertNotIn('_timeout', self.conv().variables)
+
+    def test_answer_after_the_reminder_continues_normally(self, arm):
+        self.make_flow(*timeout_flow())
+        self.send(text_msg('hi'))
+        self._fire(self.conv())
+        self.send(text_msg('Ravi'))
+        self.assertEqual(self.pinbot.texts()[-1], 'Thanks Ravi')
+
+    def test_without_reminder_text_it_goes_straight_to_timeout(self, arm):
+        self.make_flow(*timeout_flow(reminder=''))
+        self.send(text_msg('hi'))
+        self.assertEqual(self._fire(self.conv()), 'timed_out')
+        self.assertEqual(self.pinbot.texts(), ['Your name?', 'No problem, message us any time'])
+
+    def test_without_a_timeout_edge_the_conversation_keeps_waiting(self, arm):
+        self.make_flow(*timeout_flow(reminder='', timeout_edge=False))
+        self.send(text_msg('hi'))
+        conv = self.conv()
+        self.assertEqual(self._fire(conv), 'timed_out_no_edge')
+        conv.refresh_from_db()
+        self.assertEqual(conv.status, 'active')
+        self.send(text_msg('Ravi'))
+        self.assertEqual(self.pinbot.texts()[-1], 'Thanks Ravi')
+
+    def test_reminder_respects_the_24_hour_window(self, arm):
+        self.make_flow(*timeout_flow())
+        self.send(text_msg('hi'))
+        conv = self.conv()
+        WhatsAppContact.objects.filter(pk=self.contact.pk).update(
+            last_inbound_at=timezone.now() - timedelta(hours=25))
+        self.assertEqual(self._fire(conv), 'reminder_skipped')
+        self.assertEqual(self.pinbot.texts(), ['Your name?'])       # nothing free-form went out
+        conv.refresh_from_db()
+        self.assertEqual(conv.status, 'active')
+        # …and the timeout branch is held to the same rule.
+        self.assertEqual(self._fire(conv), 'timed_out')
+        conv.refresh_from_db()
+        self.assertEqual(conv.status, 'failed')
+        self.assertEqual(self.errors(conv), ['outside_24h_window'])
+
+    def test_reminder_uses_the_fallback_template_outside_the_window(self, arm):
+        self.make_flow(*timeout_flow(fallback_template='still_there'))
+        self.send(text_msg('hi'))
+        conv = self.conv()
+        WhatsAppContact.objects.filter(pk=self.contact.pk).update(
+            last_inbound_at=timezone.now() - timedelta(hours=25))
+        self._fire(conv)
+        self.assertEqual(self.pinbot.sent[-1]['kind'], 'template')
+        self.assertEqual(self.pinbot.sent[-1]['name'], 'still_there')
+
+    def test_invalid_answer_restarts_the_timer(self, arm):
+        nodes, edges = timeout_flow()
+        nodes[1]['type'] = 'ask_email'
+        self.make_flow(nodes, edges)
+        self.send(text_msg('hi'))
+        conv = self.conv()
+        first = conv.variables['_timeout']['token']
+        self.send(text_msg('not an email'))
+        conv.refresh_from_db()
+        self.assertNotEqual(conv.variables['_timeout']['token'], first)
+        self.assertEqual(self._fire(conv, token=first), 'stale')
+
+    def test_buttons_support_timeouts_and_nodes_without_one_arm_nothing(self, arm):
+        nodes, edges = buttons_flow()
+        self.make_flow(nodes, edges)
+        self.send(text_msg('hi'))
+        arm.assert_not_called()
+        self.assertNotIn('_timeout', self.conv().variables)
+
+        nodes[1]['data']['timeout_minutes'] = 5
+        other = WhatsAppContact.objects.create(client=self.client_obj, phone='919877777701',
+                                               last_inbound_at=timezone.now())
+        BotFlow.objects.all().update(is_active=False)
+        self.make_flow(nodes, edges)
+        self.send(text_msg('hi'), other)
+        self.assertEqual(arm.call_args.kwargs['countdown'], 300)
+
+    def test_validator_warnings(self, arm):
+        nodes, edges = timeout_flow(reminder='', timeout_edge=False)
+        self.assertTrue(_has(validate_graph(nodes, edges), 'warning', 'nothing will happen', 'ask'))
+        self.assertFalse(_has(validate_graph(*timeout_flow()), 'warning', 'nothing will happen'))
+        nodes, edges = timeout_flow(timeout_minutes=1500)
+        self.assertTrue(_has(validate_graph(nodes, edges), 'warning', 'reminder is skipped', 'ask'))
+        nodes, edges = timeout_flow(timeout_minutes=0)
+        self.assertTrue(_has(validate_graph(nodes, edges), 'warning', 'never sent', 'ask'))
+
+
+class NodeFunnelTests(BotTestCase):
+    def setUp(self):
+        super().setUp()
+        nodes, edges = ask_flow_nodes()
+        self.flow = self.make_flow(nodes, edges)
+        self.contacts = [
+            WhatsAppContact.objects.create(client=self.client_obj, phone=f'9197000000{i:02d}',
+                                           last_inbound_at=timezone.now())
+            for i in range(4)
+        ]
+        done, quit_, waiting, closed = self.contacts
+        for contact in self.contacts:
+            self.send(text_msg('hi'), contact)
+        self.send(text_msg('Ravi'), done)                                    # completes
+        BotConversation.objects.filter(contact=quit_).update(
+            last_activity_at=timezone.now() - timedelta(days=3))
+        mark_abandoned_bot_conversations()                                   # abandoned at "ask"
+        BotConversation.objects.filter(contact=closed).update(status='exited', ended_at=timezone.now())
+
+    def _row(self, rows, node_id):
+        return next(r for r in rows if r['node_id'] == node_id)
+
+    def test_entered_exited_waiting_dropped(self):
+        rows = bot_analytics.node_funnel(self.flow)
+        self.assertEqual([r['node_id'] for r in rows], ['start', 'ask', 'thanks', 'end'])   # flow order
+        start, ask = self._row(rows, 'start'), self._row(rows, 'ask')
+        self.assertEqual((start['entered'], start['exited'], start['dropped_off']), (4, 4, 0))
+        self.assertEqual((ask['entered'], ask['exited'], ask['waiting'], ask['dropped_off']), (4, 1, 1, 2))
+        self.assertEqual(ask['drop_off_rate'], 50.0)
+        self.assertEqual(ask['summary'], 'Your name?')
+        self.assertEqual(self._row(rows, 'thanks')['entered'], 1)
+        end = self._row(rows, 'end')
+        self.assertEqual((end['entered'], end['exited'], end['dropped_off']), (1, 1, 0))
+
+    def test_period_filter_and_out_of_hours_are_excluded(self):
+        BotConversation.objects.filter(contact=self.contacts[0]).update(
+            started_at=timezone.now() - timedelta(days=40))
+        BotConversation.objects.create(client=self.client_obj, flow=self.flow, contact=self.contacts[1],
+                                       triggered_via='keyword', status='exited',
+                                       trigger_metadata={'out_of_hours': True})
+        rows = bot_analytics.node_funnel(self.flow, days=30)
+        self.assertEqual(self._row(rows, 'start')['entered'], 3)
+        self.assertEqual(self._row(rows, 'thanks')['entered'], 0)
+
+    def test_nodes_removed_in_a_later_version_are_still_reported(self):
+        self.flow.nodes = [node('start', 'start'), node('new', 'message_text', text='v2')]
+        self.flow.edges = [edge('start', 'new')]
+        self.flow.save()
+        snapshot_flow(self.flow)
+        rows = bot_analytics.node_funnel(self.flow)
+        self.assertFalse(self._row(rows, 'ask')['in_current_version'])
+        self.assertEqual(self._row(rows, 'ask')['entered'], 4)
+        self.assertTrue(self._row(rows, 'new')['in_current_version'])
+
+    def test_api_adds_the_funnels_and_keeps_the_old_keys(self):
+        user = User.objects.create_user(username=f'a-{uuid.uuid4().hex[:10]}', password='x')
+        UserProfile.objects.create(user=user, role='client', client=self.client_obj)
+        api = APIClient()
+        api.force_authenticate(user)
+        with self.assertNumQueries(FuzzyInt(1, 22)):
+            res = api.get(f'/api/bot-flows/{self.flow.id}/analytics/?days=30')
+        self.assertEqual(res.status_code, 200)
+        for key in ('totals', 'completion_rate', 'top_drop_off_nodes', 'success_funnel'):
+            self.assertIn(key, res.data)
+        self.assertEqual(res.data['days'], 30)
+        self.assertEqual(self._row(res.data['node_funnel'], 'ask')['dropped_off'], 2)
+        self.assertEqual(res.data['ctwa_funnel']['campaigns'], [])
+
+        other_client = Client.objects.create(name='B', company='B', email=f'b-{uuid.uuid4().hex[:6]}@x.test')
+        outsider = User.objects.create_user(username=f'o-{uuid.uuid4().hex[:10]}', password='x')
+        UserProfile.objects.create(user=outsider, role='client', client=other_client)
+        api.force_authenticate(outsider)
+        self.assertEqual(api.get(f'/api/bot-flows/{self.flow.id}/analytics/').status_code, 404)
+
+
+class FuzzyInt(int):
+    """assertNumQueries bound: equal to anything in [low, high]."""
+    def __new__(cls, low, high):
+        obj = super().__new__(cls, high)
+        obj.low, obj.high = low, high
+        return obj
+
+    def __eq__(self, other):
+        return self.low <= other <= self.high
+
+    def __hash__(self):
+        return hash(self.high)
+
+    def __repr__(self):
+        return f'[{self.low}..{self.high}]'
+
+
+@patch('social_stats.meta_capi_tasks.push_capi_lead.delay')
+class CtwaFunnelTests(BotTestCase):
+    def setUp(self):
+        super().setUp()
+        nodes = [node('start', 'start'), node('ask', 'ask_question', question='Your name?', store_var='name'),
+                 node('lead', 'capture_lead'), node('end', 'end_conversation')]
+        edges = [edge('start', 'ask'), edge('ask', 'lead'), edge('lead', 'end')]
+        self.flow = self.make_flow(nodes, edges, trigger_type='ctwa_ad', trigger_config={'ad_ids': ['AD1', 'AD9']})
+        self.campaign = CTWACampaign.objects.create(
+            client=self.client_obj, flow=self.flow, name='Diwali offer', ad_account_id='act_1',
+            campaign_id='CAMP1', ad_ids=['AD1'], total_clicks=50, total_spent=1000)
+
+    def _click(self, phone, name=None, ad='AD1'):
+        contact = WhatsAppContact.objects.create(client=self.client_obj, phone=phone,
+                                                 last_inbound_at=timezone.now())
+        self.send(ad_msg(ad), contact)
+        if name:
+            self.send(text_msg(name), contact)
+        return contact
+
+    def test_ad_to_conversation_to_lead_to_converted_with_cost_per_lead(self, _capi):
+        self._click('919600000001', 'Ravi')
+        self._click('919600000002', 'Meena')
+        self._click('919600000003')                       # clicked, never answered
+        self._click('919600000004', 'Other ad', ad='AD9')  # an ad no campaign owns
+        won = Lead.objects.get(name='Meena')
+        won.status, won.conversion_value = 'converted', 5000
+        won.save()
+
+        funnel = bot_analytics.ctwa_funnel(self.flow)
+        row = funnel['campaigns'][0]
+        self.assertEqual((row['clicks'], row['conversations'], row['leads'], row['converted']), (50, 3, 2, 1))
+        self.assertEqual(row['spent'], 1000.0)
+        self.assertEqual(row['cost_per_lead'], 500.0)
+        self.assertEqual(row['cost_per_conversion'], 1000.0)
+        self.assertEqual(row['cost_per_conversation'], 333.33)
+        self.assertEqual(row['click_to_conversation_rate'], 6.0)
+        self.assertEqual(row['conversation_to_lead_rate'], 66.7)
+        self.assertEqual(row['lead_to_converted_rate'], 50.0)
+        self.assertEqual(row['revenue'], 5000.0)
+        self.assertEqual(funnel['totals']['cost_per_lead'], 500.0)
+
+    def test_ad_click_is_tied_to_its_campaign(self, _capi):
+        contact = self._click('919600000001', 'Ravi')
+        conv = BotConversation.objects.get(contact=contact)
+        self.assertEqual(conv.trigger_metadata['ctwa_campaign_id'], self.campaign.id)
+        self.assertEqual(conv.trigger_metadata['campaign_id'], 'CAMP1')
+        lead = Lead.objects.get(contact=contact)
+        self.assertEqual((lead.source_campaign_id, lead.source_ad_id), ('CAMP1', 'AD1'))
+        self.campaign.refresh_from_db()
+        self.assertEqual((self.campaign.total_conversations, self.campaign.total_leads), (1, 1))
+
+    def test_no_spend_or_no_leads_gives_no_cost(self, _capi):
+        self._click('919600000003')
+        row = bot_analytics.ctwa_funnel(self.flow)['campaigns'][0]
+        self.assertIsNone(row['cost_per_lead'])
+        self.assertIsNone(row['lead_to_converted_rate'])
+
+    def test_other_tenants_campaigns_are_not_included(self, _capi):
+        other = Client.objects.create(name='B', company='B', email=f'b-{uuid.uuid4().hex[:6]}@x.test')
+        other_flow = self.make_flow(*ask_flow_nodes(), client=other)
+        CTWACampaign.objects.create(client=other, flow=other_flow, name='Theirs', ad_account_id='act_2',
+                                    campaign_id='CAMP1', ad_ids=['AD1'], total_spent=999)
+        funnel = bot_analytics.ctwa_funnel(self.flow)
+        self.assertEqual([c['name'] for c in funnel['campaigns']], ['Diwali offer'])

@@ -88,6 +88,7 @@ def handle_jump_to_flow(executor, node):
         inherited_vars.pop(k, None)
 
     # End current conversation
+    executor.log_step(node, direction='system', payload={'note': 'jump_to_flow', 'target_flow_id': target.id})
     executor.end_conversation('completed')
 
     # Start the new one immediately (no inbound message — synthetic trigger),

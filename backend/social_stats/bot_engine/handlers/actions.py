@@ -90,7 +90,7 @@ def handle_capture_lead(executor, node):
         )
     if tm.get('ctwa_campaign_id'):
         from ...models import CTWACampaign
-        CTWACampaign.objects.filter(pk=tm['ctwa_campaign_id']).update(
+        CTWACampaign.objects.filter(pk=tm['ctwa_campaign_id'], client_id=executor.client.id).update(
             total_leads=F('total_leads') + 1,
         )
 

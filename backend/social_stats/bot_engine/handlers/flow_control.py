@@ -27,4 +27,7 @@ def handle_end(executor, node):
                 executor.log_step(node, direction='bot_to_user', payload={'text': rendered})
         except Exception:  # noqa: BLE001 — the closing text is best-effort
             executor.log_step(node, direction='system', payload={'note': 'closing message not sent'})
+    else:
+        # Always leave a step, so analytics can count conversations reaching this node.
+        executor.log_step(node, direction='system', payload={'note': 'conversation ended'})
     return executor.end_conversation('completed')

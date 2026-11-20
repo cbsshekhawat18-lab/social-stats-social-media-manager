@@ -49,6 +49,7 @@ from .models import (
     CTWACampaign,
 )
 from .whatsapp_views import TenantScopedMixin
+from .bot_engine import analytics as bot_analytics
 
 
 logger = logging.getLogger(__name__)
@@ -273,8 +274,20 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def analytics(self, request, pk=None):
-        """Funnel + per-node drop-off for this flow."""
+        """Funnel + per-node drop-off for this flow.
+
+        `node_funnel` (entered / exited / waiting / dropped off per node, from
+        the step audit trail) and `ctwa_funnel` (ad → conversation → lead →
+        converted, with cost per lead) accept `?days=N`; the older keys are
+        all-time, as before.
+        """
         flow = self.get_object()
+        days = None
+        if request.query_params.get('days'):
+            try:
+                days = max(1, min(int(request.query_params['days']), 365))
+            except (TypeError, ValueError):
+                days = None
         convs = BotConversation.objects.filter(flow=flow)
         total = convs.count()
         completed = convs.filter(status='completed').count()
@@ -307,6 +320,9 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
             'lead_capture_rate':  round(leads / total * 100, 1)     if total else 0,
             'top_drop_off_nodes': drop_off.most_common(10),
             'success_funnel':     success_funnel.most_common(20),
+            'days':               days,
+            'node_funnel':        bot_analytics.node_funnel(flow, days),
+            'ctwa_funnel':        bot_analytics.ctwa_funnel(flow, days),
         })
 
 

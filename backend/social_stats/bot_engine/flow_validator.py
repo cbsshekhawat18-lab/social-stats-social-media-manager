@@ -293,6 +293,21 @@ def _node_issues(node: dict, outgoing: list, by_id: dict) -> list[dict]:
         if not d.get('to'):
             err('Add at least one recipient.')
 
+    if kind in ASK_TYPES or kind in ('message_buttons', 'message_list'):
+        try:
+            minutes = int(d.get('timeout_minutes') or 0)
+        except (TypeError, ValueError):
+            minutes = 0
+            err('The answer timeout must be a number of minutes.')
+        if minutes > 0 and 'timeout' not in handles and not (d.get('reminder_text') or '').strip():
+            warn('An answer timeout is set, but there is no reminder text and the "timeout" output '
+                 'is not connected — nothing will happen when it runs out.')
+        if (d.get('reminder_text') or '').strip() and minutes <= 0:
+            warn('Reminder text is set but the answer timeout is 0, so the reminder is never sent.')
+        if minutes * 60 >= SERVICE_WINDOW_SECONDS and (d.get('reminder_text') or '').strip() and not _has_fallback(node):
+            warn('The reminder would go out 24 hours or more after the customer last wrote. WhatsApp '
+                 'only delivers approved templates then — add a fallback template or the reminder is skipped.')
+
     if kind not in ('end_conversation', 'human_handoff', 'jump_to_flow') and not outgoing and kind in NODE_TYPES:
         if kind != 'start':   # start has its own message
             warn('Nothing is connected after this node, so the conversation ends here.')

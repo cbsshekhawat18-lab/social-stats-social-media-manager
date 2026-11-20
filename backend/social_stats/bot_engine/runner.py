@@ -181,6 +181,11 @@ def _start(flow: BotFlow, contact_id: int, payload: dict, *, triggered_via: str,
 
     # Bump triggered counter atomically
     BotFlow.objects.filter(pk=flow.pk).update(total_triggered=F('total_triggered') + 1)
+    if (trigger_meta or {}).get('ctwa_campaign_id'):
+        from ..models import CTWACampaign
+        CTWACampaign.objects.filter(
+            pk=trigger_meta['ctwa_campaign_id'], client_id=flow.client_id,
+        ).update(total_conversations=F('total_conversations') + 1)
 
     executor = BotExecutor(conv, pinbot=pinbot)
 
@@ -205,7 +210,7 @@ def _out_of_hours(flow: BotFlow, contact_id: int, *, triggered_via: str,
     do not run the flow."""
     recent = BotConversation.objects.filter(
         client_id=flow.client_id, contact_id=contact_id, flow=flow,
-        trigger_metadata__out_of_hours=True,
+        trigger_metadata__has_key='out_of_hours',
         started_at__gte=timezone.now() - OUT_OF_HOURS_NOTICE_EVERY,
     ).exists()
     if recent:

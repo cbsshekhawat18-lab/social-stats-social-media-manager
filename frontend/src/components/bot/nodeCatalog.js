@@ -254,11 +254,12 @@ export function extraOutputs(type, data = {}) {
     const keys = (data.intents || []).map((i) => (i.key || '').trim()).filter((k) => k && k !== 'other');
     return [{ id: 'other', label: 'other' }, ...keys.reverse().map((k) => ({ id: k, label: k }))];
   }
+  const timeout = Number(data.timeout_minutes) > 0 ? [{ id: 'timeout', label: 'timeout' }] : [];
   if (type === 'message_buttons' || type === 'message_list') {
-    return [{ id: 'no_match', label: 'no match' }, { id: 'invalid', label: 'gave up' }];
+    return [...timeout, { id: 'no_match', label: 'no match' }, { id: 'invalid', label: 'gave up' }];
   }
   if (type === 'condition') return [{ id: 'no_match', label: 'no match' }];
-  if (type.startsWith('ask_')) return [{ id: 'invalid', label: 'invalid' }];
+  if (type.startsWith('ask_')) return [...timeout, { id: 'invalid', label: 'invalid' }];
   if (type === 'webhook' || type === 'crm_push') return [{ id: 'failure', label: 'failure' }];
   return [];
 }

@@ -63,6 +63,17 @@ SPECIAL_HANDLES = frozenset({
 })
 
 DEFAULT_MAX_RETRIES = 3
+MAX_TIMEOUT_MINUTES = 7 * 24 * 60
+
+
+def timeout_minutes(node: dict) -> int:
+    """`data.timeout_minutes` of an answer node, clamped to 1 minute … 7 days
+    (0 = no timeout)."""
+    try:
+        minutes = int((node.get('data') or {}).get('timeout_minutes') or 0)
+    except (TypeError, ValueError):
+        return 0
+    return min(minutes, MAX_TIMEOUT_MINUTES) if minutes > 0 else 0
 
 
 class BotExecutor:
@@ -204,6 +215,8 @@ class BotExecutor:
         an explicit `no_match` edge wins, then the legacy first-edge fallback.
         """
         self.clear_retries(current_node_id)
+        if ((self.conversation.variables or {}).get('_timeout') or {}).get('node') == current_node_id:
+            self.pop_variable('_timeout')       # answered (or timed out): disarm the timer
         edges = self.outgoing_edges(current_node_id)
         plain = [e for e in edges if e.get('sourceHandle') not in SPECIAL_HANDLES]
         if branch is not None:
@@ -273,7 +286,13 @@ class BotExecutor:
 
     def wait_for_user(self, node_id: str, store_var: Optional[str] = None) -> BotConversation:
         """Persist state and stop walking. The next inbound webhook for this
-        contact will resume from this node via runner.continue_conversation."""
+        contact will resume from this node via runner.continue_conversation.
+
+        If the node has `timeout_minutes`, a timer is armed: a reminder once
+        (if `reminder_text` is set), then the node's `timeout` output."""
+        node = self.get_node(node_id)
+        if node:
+            self.schedule_timeout(node)
         v = dict(self.conversation.variables or {})
         v['_waiting_for_node'] = node_id
         if store_var:
@@ -313,6 +332,26 @@ class BotExecutor:
             payload={'error': message},
         )
         return self.end_conversation('failed')
+
+    # ── Answer timeout (ask nodes, buttons, lists) ───────────────────────
+    def schedule_timeout(self, node: dict, *, reminded: bool = False) -> None:
+        """Arm (or re-arm) the node's answer timer. Each arming gets a fresh
+        token, so timers from an earlier prompt — or from before the customer
+        replied — find a different token and do nothing."""
+        minutes = timeout_minutes(node)
+        if not minutes:
+            self.pop_variable('_timeout')
+            return
+        import uuid
+        token = uuid.uuid4().hex[:12]
+        self.set_variable('_timeout', {'node': node['id'], 'token': token, 'reminded': reminded})
+        from .tasks import ask_node_timeout
+        try:
+            ask_node_timeout.apply_async(
+                args=[self.conversation.id, node['id'], token], countdown=minutes * 60,
+            )
+        except Exception:  # noqa: BLE001 — a broker hiccup must not break the conversation
+            logger.exception('could not schedule ask timeout for conv=%s', self.conversation.id)
 
     # ── Retries (ask nodes, buttons, lists) ──────────────────────────────
     def register_retry(self, node: dict) -> bool:

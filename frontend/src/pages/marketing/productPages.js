@@ -242,7 +242,7 @@ export const productPages = {
   // ── 4. WhatsApp ──────────────────────────────────────────────────────────
   'whatsapp': {
     title: 'WhatsApp Business at agency scale',
-    description: 'Templates, broadcast campaigns, two-way chat, opt-in compliance — everything you need to run WhatsApp Business across 100+ clients via Pinbot.',
+    description: 'Templates, broadcast campaigns, two-way chat, opt-in compliance — everything you need to run WhatsApp Business across 100+ clients, on the provider you choose.',
     eyebrow: 'WhatsApp',
     heroTitle: 'WhatsApp Business at agency scale',
     heroSubtitle: 'Run broadcasts, manage templates, handle two-way chat — across every client in your agency. Compliance built in.',
@@ -286,13 +286,13 @@ export const productPages = {
       },
     ],
     capabilities: {
-      title: 'Why Pinbot vs direct Meta?',
-      subtitle: 'Pinbot is our BSP partner — they own the technical relationship with Meta so you don\'t have to.',
+      title: 'Bring your own WhatsApp provider',
+      subtitle: 'Each workspace connects the provider it already uses, with its own credentials.',
       columns: 3,
       items: [
-        { icon: Check, title: 'Faster onboarding', description: 'No Meta App Review for messaging — go live in days.' },
-        { icon: Shield, title: 'India-aligned',     description: 'Pinbot is RBI-aware + GST invoiced.' },
-        { icon: TrendingUp, title: 'Better tier upgrades', description: 'Pinbot handles tier-bump requests with Meta.' },
+        { icon: Check, title: 'Meta Cloud API, direct', description: 'Connect your own Meta app — no middleman, no per-message markup.' },
+        { icon: Shield, title: 'Pinbot',                 description: 'Already on Pinbot? Paste your API key and keep going.' },
+        { icon: TrendingUp, title: 'Any compatible provider', description: 'Any provider that speaks the WhatsApp Cloud API format: enter its URL and key.' },
       ],
     },
     quote: {

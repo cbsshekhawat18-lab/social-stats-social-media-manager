@@ -30,8 +30,9 @@ from .whatsapp_serializers import (
     WhatsAppCampaignSerializer, WhatsAppMessageSerializer,
     WhatsAppContactSummarySerializer,
 )
+from .whatsapp_providers import catalog as provider_catalog
 from .whatsapp_service import (
-    PinbotError, PinbotAuthError, get_pinbot_for_client,
+    WhatsAppProviderError, WhatsAppAuthError, client_for_account, get_whatsapp_client,
 )
 from .whatsapp_tasks import (
     sync_account_status, run_whatsapp_campaign, sync_whatsapp_templates,
@@ -56,23 +57,38 @@ class WhatsAppAccountViewSet(TenantScopedMixin, viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def test_connection(self, request, pk=None):
+        """One authenticated call to the account's provider with its stored key."""
         account = self.get_object()
         try:
-            svc = get_pinbot_for_client(account.client_id)
-            details = svc.get_user_details()
-            return Response({'ok': True, 'details': details})
-        except PinbotAuthError as e:
+            details = client_for_account(account).check_connection()
+            return Response({'ok': True, 'provider': account.provider, 'details': details})
+        except WhatsAppAuthError as e:
             return Response({'ok': False, 'error': 'auth', 'detail': str(e)}, status=400)
-        except PinbotError as e:
+        except WhatsAppProviderError as e:
             return Response({'ok': False, 'error': 'api', 'detail': str(e)}, status=400)
         except Exception as e:
             return Response({'ok': False, 'error': 'unknown', 'detail': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def rotate_webhook_token(self, request, pk=None):
+        """Issue a new webhook verify token. The old one stops working at once,
+        so the provider's webhook settings must be updated with the new value."""
+        account = self.get_object()
+        account.rotate_webhook_token()
+        return Response(self.get_serializer(account).data)
 
     @action(detail=True, methods=['post'])
     def sync_status(self, request, pk=None):
         account = self.get_object()
         sync_account_status.delay(account.client_id)
         return Response({'queued': True})
+
+
+class WhatsAppProviderListView(APIView):
+    """The WhatsApp providers a workspace can connect (drives the connect form)."""
+
+    def get(self, request):
+        return Response({'providers': provider_catalog()})
 
 
 # ── Contacts ──────────────────────────────────────────────────────────────────
@@ -227,7 +243,7 @@ class WhatsAppTemplateViewSet(TenantScopedMixin, viewsets.ModelViewSet):
 
     def _submit_to_pinbot(self, instance):
         try:
-            svc = get_pinbot_for_client(instance.client_id)
+            svc = get_whatsapp_client(instance.client_id)
             payload = self._build_pinbot_template_payload(instance)
             response = svc.create_template(svc.waba_id, payload)
             tid = response.get('id') if isinstance(response, dict) else ''
@@ -236,7 +252,7 @@ class WhatsAppTemplateViewSet(TenantScopedMixin, viewsets.ModelViewSet):
             instance.save(update_fields=['pinbot_template_id', 'status'])
         except WhatsAppAccount.DoesNotExist:
             pass  # account not yet configured — leave as draft
-        except PinbotError as e:
+        except WhatsAppProviderError as e:
             logger.warning('Template submit failed: %s', e)
             instance.status = 'draft'
             instance.rejection_reason = str(e)[:500]

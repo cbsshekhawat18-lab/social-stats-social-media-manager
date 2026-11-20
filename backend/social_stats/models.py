@@ -146,6 +146,7 @@ class Client(models.Model):
     bot_max_msgs_per_minute    = models.IntegerField(default=20)     # per-contact rate limit
     bot_max_msgs_per_conv      = models.IntegerField(default=200)    # break runaway loops
     bot_spam_threshold         = models.IntegerField(default=5)      # auto-end at this score
+    bot_abandon_after_minutes  = models.IntegerField(default=1440)   # idle active conversations → 'abandoned'
 
     # ── — GDPR/DPDP "right to restrict processing" toggle ────────────
     # When True: batch sync fan-outs skip this client, AI calls fail with a
@@ -1468,13 +1469,67 @@ WA_DIRECTION_CHOICES = [
 ]
 
 
+def _new_webhook_key() -> str:
+    import secrets
+    return secrets.token_urlsafe(18)
+
+
+def _new_webhook_token() -> str:
+    import secrets
+    return secrets.token_urlsafe(32)
+
+
+def _encrypt_wa_secret(value: str) -> bytes:
+    """Encrypt a WhatsApp credential. Uses WHATSAPP_ENCRYPTION_KEY when it is
+    set (existing installs); otherwise the app-wide FIELD_ENCRYPTION_KEYS, so
+    a self-hoster doesn't need a second key just for WhatsApp."""
+    from django.conf import settings
+    key = getattr(settings, 'WHATSAPP_ENCRYPTION_KEY', '')
+    if key:
+        from cryptography.fernet import Fernet
+        return Fernet(key.encode() if isinstance(key, str) else key).encrypt(value.encode())
+    from .crypto import encrypt_value
+    return encrypt_value(value).encode()
+
+
+def _decrypt_wa_secret(blob) -> str:
+    if not blob:
+        return ''
+    from django.conf import settings
+    raw = bytes(blob)
+    from .crypto import ENCRYPTED_PREFIX, decrypt_value
+    try:
+        if raw.startswith(ENCRYPTED_PREFIX.encode()):
+            return decrypt_value(raw.decode())
+        key = getattr(settings, 'WHATSAPP_ENCRYPTION_KEY', '')
+        if not key:
+            return ''
+        from cryptography.fernet import Fernet
+        return Fernet(key.encode() if isinstance(key, str) else key).decrypt(raw).decode()
+    except Exception:
+        return ''
+
+
 class WhatsAppAccount(models.Model):
-    """Pinbot WABA (WhatsApp Business Account) configured per Client."""
+    """A workspace's WhatsApp Business account at the provider it chose
+    (Meta Cloud API directly, Pinbot, or another Cloud-API-compatible
+    provider — see whatsapp_providers.py), with its own credentials."""
     client            = models.OneToOneField(Client, on_delete=models.CASCADE, related_name='whatsapp_account')
+    provider          = models.CharField(max_length=30, default='pinbot')   # key of whatsapp_providers.PROVIDERS
+    # Only for provider='custom': where and how to send the API key.
+    api_base_url      = models.URLField(max_length=300, blank=True)
+    auth_header       = models.CharField(max_length=100, blank=True)
+    auth_scheme       = models.CharField(max_length=30, blank=True)
     waba_id           = models.CharField(max_length=100)
     phone_number_id   = models.CharField(max_length=100)
     phone_number      = models.CharField(max_length=30, blank=True)
     api_key_encrypted = models.BinaryField(blank=True, null=True)
+    # Meta App Secret — verifies X-Hub-Signature-256 on webhook deliveries.
+    app_secret_encrypted = models.BinaryField(blank=True, null=True)
+    # This account's own webhook: /api/whatsapp/webhook/<webhook_key>/, checked
+    # against webhook_verify_token (handshake + X-Webhook-Secret header).
+    webhook_key          = models.CharField(max_length=64, unique=True, default=_new_webhook_key)
+    webhook_verify_token = models.CharField(max_length=64, default=_new_webhook_token)
     display_name      = models.CharField(max_length=200, blank=True)
     is_active         = models.BooleanField(default=True)
     quality_rating    = models.CharField(max_length=10, choices=WA_QUALITY_CHOICES, default='UNKNOWN')
@@ -1489,34 +1544,26 @@ class WhatsAppAccount(models.Model):
     def __str__(self):
         return f"{self.client.company} — WhatsApp ({self.phone_number or self.phone_number_id})"
 
-    # ── api_key encryption (Fernet via settings.WHATSAPP_ENCRYPTION_KEY) ──
+    # ── Credentials (encrypted at rest; never serialised) ──
     @property
     def api_key(self):
-        if not self.api_key_encrypted:
-            return ''
-        from cryptography.fernet import Fernet
-        from django.conf import settings
-        key = settings.WHATSAPP_ENCRYPTION_KEY
-        if not key:
-            return ''
-        f = Fernet(key.encode() if isinstance(key, str) else key)
-        try:
-            return f.decrypt(bytes(self.api_key_encrypted)).decode()
-        except Exception:
-            return ''
+        return _decrypt_wa_secret(self.api_key_encrypted)
 
     @api_key.setter
     def api_key(self, value):
-        if not value:
-            self.api_key_encrypted = b''
-            return
-        from cryptography.fernet import Fernet
-        from django.conf import settings
-        key = settings.WHATSAPP_ENCRYPTION_KEY
-        if not key:
-            raise ValueError('WHATSAPP_ENCRYPTION_KEY is not configured')
-        f = Fernet(key.encode() if isinstance(key, str) else key)
-        self.api_key_encrypted = f.encrypt(value.encode())
+        self.api_key_encrypted = _encrypt_wa_secret(value) if value else b''
+
+    @property
+    def app_secret(self):
+        return _decrypt_wa_secret(self.app_secret_encrypted)
+
+    @app_secret.setter
+    def app_secret(self, value):
+        self.app_secret_encrypted = _encrypt_wa_secret(value) if value else b''
+
+    def rotate_webhook_token(self):
+        self.webhook_verify_token = _new_webhook_token()
+        self.save(update_fields=['webhook_verify_token', 'updated_at'])
 
 
 class WhatsAppContact(models.Model):
@@ -1657,6 +1704,15 @@ class WhatsAppMessage(models.Model):
             models.Index(fields=['client', '-created_at']),
             models.Index(fields=['campaign', 'status']),
             models.Index(fields=['contact', '-created_at']),
+        ]
+        constraints = [
+            # A WhatsApp message id is delivered at most once per direction —
+            # webhook retries must not create (or re-run the bot on) a copy.
+            models.UniqueConstraint(
+                fields=['client', 'pinbot_message_id', 'direction'],
+                condition=~models.Q(pinbot_message_id=''),
+                name='uniq_wa_message_id_per_client_direction',
+            ),
         ]
 
     def __str__(self):
@@ -2472,11 +2528,13 @@ from .marketplace_models import (  # noqa: E402,F401
 from .bot_models import (  # noqa: E402,F401
     NODE_TYPES,
     BotFlow,
+    BotFlowVersion,
     BotConversation,
     BotConversationStep,
     Lead,
     LeadActivity,
     BotFlowTemplate,
+    BotKnowledgeDoc,
     CTWACampaign,
 )
 

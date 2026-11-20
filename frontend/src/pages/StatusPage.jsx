@@ -97,7 +97,7 @@ const FALLBACK_SERVICES = [
   { id: 'meta',     name: 'Meta integration (Facebook + Instagram)' },
   { id: 'google',   name: 'Google integration (YouTube + GMB)' },
   { id: 'linkedin', name: 'LinkedIn integration' },
-  { id: 'pinbot',   name: 'WhatsApp (Pinbot.ai)' },
+  { id: 'whatsapp', name: 'WhatsApp messaging' },
   { id: 'ai',       name: 'Social Stats' },
 ];
 

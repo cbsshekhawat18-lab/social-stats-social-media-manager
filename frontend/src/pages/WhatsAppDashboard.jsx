@@ -65,7 +65,7 @@ export default function WhatsAppDashboard() {
   if (!account && !loading) {
     return (
       <div>
-        <PageHeader title="WhatsApp" subtitle="Pinbot Cloud API integration" />
+        <PageHeader title="WhatsApp" subtitle="WhatsApp Business messaging" />
         <EmptyState root={root} />
       </div>
     );
@@ -218,7 +218,7 @@ function EmptyState({ root }) {
         </div>
         <h3 style={{ margin: '0 0 8px', fontSize: 18, color: COLORS.text }}>Connect your WhatsApp Business account</h3>
         <p style={{ margin: '0 0 16px', color: COLORS.muted, fontSize: 13 }}>
-          You'll need a Pinbot Partners apikey, your WABA ID, and the phone number ID.
+          Use Meta's WhatsApp Cloud API directly, Pinbot, or any Cloud API compatible provider. You'll need its API key, your WABA ID, and the phone number ID.
         </p>
         <Link to={`${root}/whatsapp/settings`} style={btnPrimary}>
           Set up WhatsApp <ArrowRight size={14} />

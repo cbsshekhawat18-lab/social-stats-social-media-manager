@@ -12,8 +12,8 @@ from __future__ import annotations
 from rest_framework import serializers
 
 from .models import (
-    BotConversation, BotConversationStep, BotFlow, BotFlowTemplate,
-    CTWACampaign, Lead, LeadActivity,
+    BotConversation, BotConversationStep, BotFlow, BotFlowTemplate, BotFlowVersion,
+    BotKnowledgeDoc, CTWACampaign, Lead, LeadActivity,
 )
 
 
@@ -60,6 +60,53 @@ class BotFlowDetailSerializer(serializers.ModelSerializer):
         ]
 
 
+class BotFlowVersionSerializer(serializers.ModelSerializer):
+    """Version history row — metadata only (the graph can be large)."""
+    published_by_email = serializers.CharField(source='published_by.email', read_only=True, default='')
+    node_count = serializers.SerializerMethodField()
+    is_published = serializers.SerializerMethodField()
+    conversations = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BotFlowVersion
+        fields = ['id', 'version', 'published_at', 'published_by', 'published_by_email',
+                  'note', 'node_count', 'is_published', 'conversations']
+
+    def get_node_count(self, obj):
+        return len(obj.nodes or [])
+
+    def get_is_published(self, obj):
+        flow = self.context.get('flow')
+        return bool(flow and flow.is_active and flow.published_version == obj.version)
+
+    def get_conversations(self, obj):
+        return obj.conversations.count()
+
+
+class BotKnowledgeDocSerializer(serializers.ModelSerializer):
+    MAX_CONTENT = 100_000
+
+    class Meta:
+        model = BotKnowledgeDoc
+        fields = ['id', 'client', 'title', 'content', 'created_at', 'updated_at']
+        read_only_fields = ['client', 'created_at', 'updated_at']
+
+    def validate_title(self, value):
+        value = (value or '').strip()
+        if not value:
+            raise serializers.ValidationError('Give the document a title.')
+        return value
+
+    def validate_content(self, value):
+        value = (value or '').strip()
+        if not value:
+            raise serializers.ValidationError('The document is empty.')
+        if len(value) > self.MAX_CONTENT:
+            raise serializers.ValidationError(
+                f'Keep a document under {self.MAX_CONTENT:,} characters — split long material into several.')
+        return value
+
+
 class BotFlowTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = BotFlowTemplate
@@ -87,7 +134,7 @@ class BotConversationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = BotConversation
         fields = [
-            'id', 'flow', 'flow_name', 'contact', 'contact_name', 'contact_phone',
+            'id', 'flow', 'flow_name', 'flow_version', 'contact', 'contact_name', 'contact_phone',
             'triggered_via', 'status',
             'lead_captured', 'lead', 'ai_takeover_active',
             'started_at', 'last_activity_at', 'ended_at',

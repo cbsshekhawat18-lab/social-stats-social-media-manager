@@ -15,13 +15,18 @@ from ..templates import render
 
 def handle_condition(executor, node):
     """Branches via outgoing edges. The 'true' branch picks an edge whose
-    `sourceHandle` is `'true'`; otherwise `'false'`. If neither side has a
-    matching edge, advance via the first available edge.
+    `sourceHandle` is `'true'`; otherwise `'false'`. When the chosen side has
+    no edge, the user's last answer matched nothing the author planned for:
+    see BotExecutor.handle_no_match (no_match edge → AI fallback → legacy).
     """
     cfg = (node.get('data') or {}).get('condition') or node.get('data') or {}
     result = bool(evaluate(cfg, executor.variables))
     branch = 'true' if result else 'false'
     executor.log_step(node, direction='system', payload={'result': result, 'branch': branch})
+    if not executor.has_branch(node['id'], branch) and any(
+        e.get('sourceHandle') for e in executor.outgoing_edges(node['id'])
+    ):
+        return executor.handle_no_match(node, executor.variables.get('_last_user_text', ''))
     return executor.advance_to_next(node['id'], branch=branch)
 
 
@@ -32,7 +37,7 @@ def handle_random_split(executor, node):
     """
     import random
 
-    edges_out = [e for e in (executor.flow.edges or []) if e.get('source') == node['id']]
+    edges_out = executor.outgoing_edges(node['id'])
     if not edges_out:
         executor.log_step(node, direction='system', payload={'note': 'no outgoing edges'})
         return executor.end_conversation('completed')
@@ -52,7 +57,9 @@ def handle_random_split(executor, node):
     executor.log_step(node, direction='system', payload={
         'branch': branch, 'weights': weights, 'chosen_target': chosen.get('target'),
     })
-    return executor.advance_to_next(node['id'], branch=branch)
+    # Go to the chosen edge's target directly: unlabelled edges have no
+    # sourceHandle to branch on (they all used to resolve to the first edge).
+    return executor.step_to(chosen.get('target'))
 
 
 def handle_jump_to_flow(executor, node):
@@ -81,16 +88,22 @@ def handle_jump_to_flow(executor, node):
         inherited_vars.pop(k, None)
 
     # End current conversation
+    executor.log_step(node, direction='system', payload={'note': 'jump_to_flow', 'target_flow_id': target.id})
     executor.end_conversation('completed')
 
-    # Start the new one immediately (no inbound message — synthetic trigger)
-    starting = target.starting_node_id or _find_start(target)
+    # Start the new one immediately (no inbound message — synthetic trigger),
+    # pinned to the target's published version like any other start.
+    from ..runner import published_version_of
+    version = published_version_of(target)
+    graph = version or target
+    starting = graph.starting_node_id or _find_start(graph)
     if not starting:
         return executor.conversation
 
     new_conv = BotConversation.objects.create(
         client_id=executor.client.id,
         flow=target,
+        flow_version=version,
         contact=executor.contact,
         triggered_via='manual',
         trigger_metadata={'jumped_from_conversation_id': executor.conversation.id},

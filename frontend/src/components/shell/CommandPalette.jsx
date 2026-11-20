@@ -365,7 +365,7 @@ function buildPages(basePath) {
     { id: 'messaging-campaigns', label: 'Campaigns',       hint: 'Broadcast outreach',    icon: Send,            path: `${basePath}/messaging/campaigns` },
     { id: 'messaging-templates', label: 'Templates',       hint: 'Approved templates',    icon: FileType,        path: `${basePath}/messaging/templates` },
     { id: 'messaging-contacts',  label: 'Contacts',        hint: 'Audience',              icon: Users2,          path: `${basePath}/messaging/contacts` },
-    { id: 'messaging-account',   label: 'Pinbot account',  hint: 'WhatsApp setup',        icon: Settings,        path: `${basePath}/messaging/account` },
+    { id: 'messaging-account',   label: 'WhatsApp account', hint: 'Provider setup',        icon: Settings,        path: `${basePath}/messaging/account` },
   ];
 }
 

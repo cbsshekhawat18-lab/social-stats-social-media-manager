@@ -27,7 +27,7 @@ import {
   HelpCircle, Mail, Phone, Hash, MapPin, Paperclip,
   GitBranch, Shuffle, Variable, ArrowRightCircle, Clock,
   Tag, UserCheck, Globe, AtSign, Database,
-  Bot, UserPlus, FlagTriangleRight,
+  Bot, UserPlus, FlagTriangleRight, ListPlus, Share2, ScanText, Split,
 } from 'lucide-react';
 
 export const NODE_CATALOG = {
@@ -174,6 +174,20 @@ export const NODE_CATALOG = {
     defaultData: { to: '', subject: 'New lead', body: '' },
     waits: false, terminal: false,
   },
+  assign_segment: {
+    label: 'Add to List', icon: ListPlus, category: 'Action', color: '#10b981',
+    defaultData: { list_name: '', create_if_missing: true, remove: false },
+    waits: false, terminal: false,
+  },
+  crm_push: {
+    label: 'Push to CRM', icon: Share2, category: 'Action', color: '#10b981',
+    defaultData: {
+      url: 'https://', method: 'POST', headers: {},
+      field_map: { name: '{{name}}', phone: '{{phone}}', email: '{{email}}' },
+      include_source: true,
+    },
+    waits: false, terminal: false,
+  },
 
   // ── Smart ─────────────────────────────────────────────
   ai_chat: {
@@ -185,6 +199,27 @@ export const NODE_CATALOG = {
     },
     waits: true, terminal: false,
   },
+  ai_extract: {
+    label: 'AI Extract', icon: ScanText, category: 'Smart', color: '#ec4899',
+    defaultData: {
+      fields: [
+        { name: 'name', description: "The customer's name", type: 'string', required: true },
+        { name: 'budget', description: 'Budget in rupees', type: 'number', required: false },
+      ],
+    },
+    waits: false, terminal: false, namedOutputsOnly: true,
+  },
+  ai_intent: {
+    label: 'AI Intent', icon: Split, category: 'Smart', color: '#ec4899',
+    defaultData: {
+      intents: [
+        { key: 'pricing', description: 'Asks about price, cost or offers' },
+        { key: 'support', description: 'Has a problem or complaint' },
+      ],
+      store_var: 'intent',
+    },
+    waits: false, terminal: false, namedOutputsOnly: true,
+  },
   human_handoff: {
     label: 'Human Handoff', icon: UserPlus, category: 'Smart', color: '#ec4899',
     defaultData: { message: 'Connecting you to a teammate…' },
@@ -193,6 +228,41 @@ export const NODE_CATALOG = {
 };
 
 export const CATEGORIES = ['Flow', 'Send', 'Ask', 'Logic', 'Action', 'Smart'];
+
+// Node types that halt and take the user's next message as their answer.
+export const ANSWER_TYPES = [
+  'ask_question', 'ask_email', 'ask_phone', 'ask_number', 'ask_location', 'ask_attachment',
+  'message_buttons', 'message_list',
+];
+
+// Node types that send a free-form WhatsApp message, which Meta only delivers
+// within 24 hours of the contact's last message. They accept a fallback template.
+export const FREEFORM_TYPES = [
+  'message_text', 'message_image', 'message_video', 'message_document',
+  'message_buttons', 'message_list', 'message_cta',
+  'ask_question', 'ask_email', 'ask_phone', 'ask_number', 'ask_location', 'ask_attachment',
+  'ai_chat',
+];
+
+// Extra named outputs per node type (besides per-button / per-row handles and
+// the plain output). Mirrors the engine's sourceHandle names.
+export function extraOutputs(type, data = {}) {
+  if (type === 'ai_extract') {
+    return [{ id: 'missing', label: 'missing' }, { id: 'complete', label: 'complete' }];
+  }
+  if (type === 'ai_intent') {
+    const keys = (data.intents || []).map((i) => (i.key || '').trim()).filter((k) => k && k !== 'other');
+    return [{ id: 'other', label: 'other' }, ...keys.reverse().map((k) => ({ id: k, label: k }))];
+  }
+  const timeout = Number(data.timeout_minutes) > 0 ? [{ id: 'timeout', label: 'timeout' }] : [];
+  if (type === 'message_buttons' || type === 'message_list') {
+    return [...timeout, { id: 'no_match', label: 'no match' }, { id: 'invalid', label: 'gave up' }];
+  }
+  if (type === 'condition') return [{ id: 'no_match', label: 'no match' }];
+  if (type.startsWith('ask_')) return [...timeout, { id: 'invalid', label: 'invalid' }];
+  if (type === 'webhook' || type === 'crm_push') return [{ id: 'failure', label: 'failure' }];
+  return [];
+}
 
 export function getNodeMeta(type) {
   return NODE_CATALOG[type] || { label: type, icon: Sparkles, category: 'Flow', color: 'var(--text-tertiary)', defaultData: {} };

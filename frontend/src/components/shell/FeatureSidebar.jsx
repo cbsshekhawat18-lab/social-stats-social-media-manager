@@ -19,6 +19,7 @@ import {
   Bell, ShieldCheck, ClipboardCheck,
   Mic, Sparkles,
   Bot, MessageSquare, Megaphone, UserPlus,
+  BookOpen,
 } from 'lucide-react';
 
 import PermissionGate from '../ui/PermissionGate';
@@ -465,6 +466,7 @@ const NAV_SETS = {
             badgeKey: 'new_leads' },
           { label: 'CTWA Campaigns', icon: Megaphone,     path: '/admin/ctwa',          permission: 'ctwa.view' },
           { label: 'Templates',     icon: Sparkles,       path: '/admin/bot-templates', permission: 'bot.view' },
+          { label: 'Knowledge base', icon: BookOpen,      path: '/admin/bot-knowledge', permission: 'bot.view' },
           { label: 'Bot Safety',    icon: ShieldCheck,    path: '/admin/bot-settings', permission: 'bot.view' },
         ],
       },

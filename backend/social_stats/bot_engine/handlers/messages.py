@@ -6,7 +6,11 @@
 #  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
 #  Released under the MIT License — see LICENSE. Keep this notice.
 # ============================================================================
-"""Send-message handlers: text / image / buttons."""
+"""Send-message handlers: text / media / template / buttons / list / CTA.
+
+Free-form sends go through `executor.send_freeform`, which enforces the
+24-hour customer-service window (templates are exempt).
+"""
 from __future__ import annotations
 
 from ..templates import render
@@ -14,8 +18,7 @@ from ..templates import render
 
 def handle_text(executor, node):
     text = render((node.get('data') or {}).get('text', ''), executor.variables)
-    if text:
-        executor.pinbot.send_text(executor.contact.phone, text)
+    if text and executor.send_freeform(node, 'send_text', executor.contact.phone, text):
         executor.log_step(node, direction='bot_to_user', payload={'text': text})
     return executor.advance_to_next(node['id'])
 
@@ -28,11 +31,9 @@ def handle_image(executor, node):
     if not (link or media_id):
         executor.log_step(node, direction='system', payload={'error': 'no image url or media_id'})
         return executor.advance_to_next(node['id'])
-    executor.pinbot.send_image(
-        executor.contact.phone,
-        link=link or None, media_id=media_id or None, caption=caption,
-    )
-    executor.log_step(node, direction='bot_to_user', payload={'link': link, 'caption': caption})
+    if executor.send_freeform(node, 'send_image', executor.contact.phone,
+                              link=link or None, media_id=media_id or None, caption=caption):
+        executor.log_step(node, direction='bot_to_user', payload={'link': link, 'caption': caption})
     return executor.advance_to_next(node['id'])
 
 
@@ -48,29 +49,55 @@ def handle_buttons(executor, node):
         executor.log_step(node, direction='system', payload={'error': 'buttons node missing body or buttons'})
         return executor.advance_to_next(node['id'])
 
-    btn_objs = [{'id': b.get('id') or f'btn_{i}', 'title': (b.get('title') or '')[:20]}
-                for i, b in enumerate(buttons)]
-    executor.pinbot.send_interactive_buttons(executor.contact.phone, body, btn_objs)
-    executor.log_step(node, direction='bot_to_user', payload={'body': body, 'buttons': btn_objs})
+    btn_objs = _button_objects(buttons)
+    if executor.send_freeform(node, 'send_interactive_buttons', executor.contact.phone, body, btn_objs):
+        executor.log_step(node, direction='bot_to_user', payload={'body': body, 'buttons': btn_objs})
 
     # Wait for the user's button reply — `_waiting_for_node` will resume here.
     return executor.wait_for_user(node['id'])
 
 
+def _button_objects(buttons):
+    return [{'id': b.get('id') or f'btn_{i}', 'title': (b.get('title') or '')[:20]}
+            for i, b in enumerate(buttons)]
+
+
+def _match_option(options, user_text: str):
+    """Typed text that equals an option's title (case-insensitive) or id
+    counts as picking it — people often type the answer instead of tapping."""
+    needle = (user_text or '').strip().lower()
+    if not needle:
+        return None
+    for opt in options:
+        if needle in ((opt.get('title') or '').strip().lower(), (opt.get('id') or '').strip().lower()):
+            return opt
+    return None
+
+
 def reply_buttons(executor, node, user_text: str, kind: str, raw_payload: dict):
     """Resume after the user picks a button. Branch via the button id matching
-    a `sourceHandle` on an outgoing edge."""
+    a `sourceHandle` on an outgoing edge. Anything else is a no-match."""
+    data = node.get('data') or {}
     interactive = (raw_payload.get('interactive') or {})
     button_reply = interactive.get('button_reply') or {}
     button_id = button_reply.get('id', '')
+    title = button_reply.get('title') or ''
+    if not button_id:
+        picked = _match_option(_button_objects((data.get('buttons') or [])[:3]), user_text)
+        if picked:
+            button_id, title = picked['id'], picked['title']
+
+    if not button_id:
+        # Free text (or anything else) that isn't one of the options.
+        return executor.handle_no_match(node, user_text)
 
     # Persist the picked button for downstream conditions
-    store_var = (node.get('data') or {}).get('store_var')
+    store_var = data.get('store_var')
     if store_var:
-        executor.set_variable(store_var, button_reply.get('title') or button_id)
+        executor.set_variable(store_var, title or button_id)
 
     # Branch — sourceHandle on an outgoing edge equals the button id
-    return executor.advance_to_next(node['id'], branch=button_id or None)
+    return executor.advance_to_next(node['id'], branch=button_id)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -81,8 +108,9 @@ def handle_video(executor, node):
     if not (link or media_id):
         executor.log_step(node, direction='system', payload={'error': 'no video url or media_id'})
         return executor.advance_to_next(node['id'])
-    executor.pinbot.send_video(executor.contact.phone, link=link or None, media_id=media_id or None, caption=caption)
-    executor.log_step(node, direction='bot_to_user', payload={'link': link, 'caption': caption})
+    if executor.send_freeform(node, 'send_video', executor.contact.phone,
+                              link=link or None, media_id=media_id or None, caption=caption):
+        executor.log_step(node, direction='bot_to_user', payload={'link': link, 'caption': caption})
     return executor.advance_to_next(node['id'])
 
 
@@ -94,14 +122,12 @@ def handle_document(executor, node):
     if not (link or media_id):
         executor.log_step(node, direction='system', payload={'error': 'no document url or media_id'})
         return executor.advance_to_next(node['id'])
-    executor.pinbot.send_document(
-        executor.contact.phone,
-        link=link or None, media_id=media_id or None,
-        caption=caption, filename=filename,
-    )
-    executor.log_step(node, direction='bot_to_user', payload={
-        'link': link, 'caption': caption, 'filename': filename,
-    })
+    if executor.send_freeform(node, 'send_document', executor.contact.phone,
+                              link=link or None, media_id=media_id or None,
+                              caption=caption, filename=filename):
+        executor.log_step(node, direction='bot_to_user', payload={
+            'link': link, 'caption': caption, 'filename': filename,
+        })
     return executor.advance_to_next(node['id'])
 
 
@@ -164,27 +190,39 @@ def handle_list(executor, node):
 
     header = render(data.get('header', ''), executor.variables) or None
     footer = render(data.get('footer', ''), executor.variables) or None
-    executor.pinbot.send_interactive_list(
-        executor.contact.phone, body, button_label, sections,
-        header=header, footer=footer,
-    )
-    executor.log_step(node, direction='bot_to_user', payload={
-        'body': body, 'button_label': button_label, 'sections': sections,
-    })
+    if executor.send_freeform(node, 'send_interactive_list',
+                              executor.contact.phone, body, button_label, sections,
+                              header=header, footer=footer):
+        executor.log_step(node, direction='bot_to_user', payload={
+            'body': body, 'button_label': button_label, 'sections': sections,
+        })
     return executor.wait_for_user(node['id'])
 
 
+def _list_rows(data):
+    return [r for s in (data.get('sections') or []) for r in (s.get('rows') or [])]
+
+
 def reply_list(executor, node, user_text: str, kind: str, raw_payload: dict):
+    data = node.get('data') or {}
     interactive = raw_payload.get('interactive') or {}
     list_reply = interactive.get('list_reply') or {}
     row_id = list_reply.get('id', '')
     title  = list_reply.get('title', '') or row_id
+    if not row_id:
+        picked = _match_option(_list_rows(data), user_text)
+        if picked:
+            row_id, title = picked.get('id', ''), picked.get('title') or picked.get('id', '')
 
-    store_var = (node.get('data') or {}).get('store_var')
+    if not row_id:
+        # Free text (or anything else) that isn't one of the options.
+        return executor.handle_no_match(node, user_text)
+
+    store_var = data.get('store_var')
     if store_var:
         executor.set_variable(store_var, title)
 
-    return executor.advance_to_next(node['id'], branch=row_id or None)
+    return executor.advance_to_next(node['id'], branch=row_id)
 
 
 def handle_cta(executor, node):
@@ -208,7 +246,7 @@ def handle_cta(executor, node):
             )
         except TypeError:
             # Some Pinbot versions take a single payload dict — fall back to send_text
-            executor.pinbot.send_text(executor.contact.phone, f'{body_text}\n{url}')
+            executor.send_freeform(node, 'send_text', executor.contact.phone, f'{body_text}\n{url}')
         executor.log_step(node, direction='bot_to_user', payload={
             'template_name': template_name, 'url': url, 'button_text': button_text,
         })
@@ -216,6 +254,6 @@ def handle_cta(executor, node):
         body = render(data.get('body', ''), executor.variables) or ''
         url  = render(data.get('url', ''),  executor.variables) or ''
         text = f'{body}\n{url}' if url else body
-        executor.pinbot.send_text(executor.contact.phone, text, preview_url=True)
-        executor.log_step(node, direction='bot_to_user', payload={'body': body, 'url': url})
+        if executor.send_freeform(node, 'send_text', executor.contact.phone, text, preview_url=True):
+            executor.log_step(node, direction='bot_to_user', payload={'body': body, 'url': url})
     return executor.advance_to_next(node['id'])

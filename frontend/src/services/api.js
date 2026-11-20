@@ -143,7 +143,9 @@ export const botAPI = {
   publish:     (id)             => api.post  (`/bot-flows/${id}/publish/`, {}),
   unpublish:   (id)             => api.post  (`/bot-flows/${id}/unpublish/`, {}),
   test:        (id, phone)      => api.post  (`/bot-flows/${id}/test/`, { phone }),
-  analytics:   (id)             => api.get   (`/bot-flows/${id}/analytics/`),
+  analytics:   (id, params)     => api.get   (`/bot-flows/${id}/analytics/`, { params }),
+  versions:    (id)             => api.get   (`/bot-flows/${id}/versions/`),
+  rollback:    (id, version)    => api.post  (`/bot-flows/${id}/rollback/`, { version }),
   generateWithAI: (payload, params) =>
     api.post('/bot-flows/generate-with-ai/', payload, { params }),
 };
@@ -165,6 +167,14 @@ export const botConversationAPI = {
 
 export const aiPersonaAPI = {
   build: (payload) => api.post('/ai/persona-builder/', payload),
+};
+
+export const botKnowledgeAPI = {
+  list:   (params)    => api.get   ('/bot-knowledge/', { params }),
+  create: (data, params) => api.post('/bot-knowledge/', data, { params }),
+  update: (id, data)  => api.put   (`/bot-knowledge/${id}/`, data),
+  delete: (id)        => api.delete(`/bot-knowledge/${id}/`),
+  search: (query, params) => api.post('/bot-knowledge/search/', { query }, { params }),
 };
 
 export const botSettingsAPI = {
@@ -705,8 +715,9 @@ export const inboxAPI = {
   stats:         ()         => api.get('/inbox/stats/'),
 };
 
-// ── WhatsApp (Pinbot) ──────────────────────────────────
+// ── WhatsApp (any connected provider) ──────────────────
 export const whatsappAPI = {
+  providers: () => api.get('/whatsapp/providers/'),
   account: {
     list:           (params)     => api.get('/whatsapp/accounts/', { params }),
     get:            (id)         => api.get(`/whatsapp/accounts/${id}/`),
@@ -715,6 +726,7 @@ export const whatsappAPI = {
     delete:         (id)         => api.delete(`/whatsapp/accounts/${id}/`),
     testConnection: (id)         => api.post(`/whatsapp/accounts/${id}/test_connection/`),
     syncStatus:     (id)         => api.post(`/whatsapp/accounts/${id}/sync_status/`),
+    rotateWebhookToken: (id)     => api.post(`/whatsapp/accounts/${id}/rotate_webhook_token/`),
   },
   contacts: {
     list:        (params)   => api.get('/whatsapp/contacts/', { params }),

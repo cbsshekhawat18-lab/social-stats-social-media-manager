@@ -1,5 +1,9 @@
 -r requirements.txt
 
+# ── Tests (pytest runs the same Django TestCase suite as `manage.py test`) ────
+pytest==9.2.0
+pytest-django==4.14.0
+
 # ── Static analysis ──────────────────────────────────────────────────────────
 bandit[toml]==1.9.4        # Python static security scanner
 ruff==0.17.4                # Fast linter (replaces flake8 + pyflakes)

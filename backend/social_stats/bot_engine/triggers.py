@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import re
 
-from ..models import BotConversation, BotFlow
+from ..models import BotConversation, BotFlow, CTWACampaign
 
 
 def _text(payload: dict) -> str:
@@ -43,13 +43,27 @@ def _try_ctwa(client_id: int, payload: dict) -> tuple[BotFlow | None, dict]:
     for flow in flows:
         cfg = flow.trigger_config or {}
         if ad_id in (cfg.get('ad_ids') or []):
-            return (flow, {
+            meta = {
                 'ad_id':       ad_id,
-                'campaign_id': referral.get('source_url', '') or cfg.get('campaign_id', ''),
-                'ctwa_clid':   payload.get('ctwa_clid', ''),
+                'ad_name':     referral.get('headline', ''),
+                'campaign_id': cfg.get('campaign_id', '') or (cfg.get('campaign_ids') or [''])[0],
+                'source_url':  referral.get('source_url', ''),
+                'ctwa_clid':   referral.get('ctwa_clid', '') or payload.get('ctwa_clid', ''),
                 'headline':    referral.get('headline', ''),
                 'body':        referral.get('body', ''),
-            })
+            }
+            # Tie the conversation to the CTWA campaign that owns this ad, so
+            # its conversation / lead counters and cost-per-lead are right.
+            campaign = next((c for c in CTWACampaign.objects.filter(
+                client_id=client_id, flow=flow, is_active=True,
+            ) if ad_id in [str(a) for a in (c.ad_ids or [])]), None)
+            if campaign:
+                meta.update({
+                    'ctwa_campaign_id': campaign.id,
+                    'campaign_id':      campaign.campaign_id,
+                    'campaign_name':    campaign.campaign_name or campaign.name,
+                })
+            return (flow, meta)
     return (None, {})
 
 
@@ -118,9 +132,11 @@ def _try_keyword(client_id: int, payload: dict) -> tuple[BotFlow | None, dict]:
 
 
 def _try_first_message(client_id: int, contact_id: int) -> tuple[BotFlow | None, dict]:
+    # A conversation that only recorded an out-of-hours notice doesn't count:
+    # the contact still gets the first-message flow when the business is open.
     is_first = not BotConversation.objects.filter(
         client_id=client_id, contact_id=contact_id,
-    ).exists()
+    ).exclude(trigger_metadata__has_key='out_of_hours').exists()   # has_key: a missing key must not exclude the row
     if not is_first:
         return (None, {})
     flow = BotFlow.objects.filter(
@@ -129,6 +145,18 @@ def _try_first_message(client_id: int, contact_id: int) -> tuple[BotFlow | None,
     if flow:
         return (flow, {'reason': 'first_message_ever'})
     return (None, {})
+
+
+def match_entry_trigger(client_id: int, payload: dict) -> tuple[BotFlow | None, str, dict]:
+    """CTWA ad click or referral link only — the explicit "start this flow"
+    signals that may replace a conversation that is already running."""
+    flow, meta = _try_ctwa(client_id, payload)
+    if flow:
+        return (flow, 'ctwa_ad', meta)
+    flow, meta = _try_referral_link(client_id, payload)
+    if flow:
+        return (flow, 'referral_link', meta)
+    return (None, '', {})
 
 
 def match_trigger(client_id: int, contact_id: int, payload: dict) -> tuple[BotFlow | None, str, dict]:

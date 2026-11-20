@@ -54,46 +54,56 @@ def handle_wait_delay(executor, node):
 
     # Schedule resume
     resume_bot_conversation.apply_async(
-        args=[executor.conversation.id],
+        args=[executor.conversation.id, node['id']],
         countdown=seconds,
     )
     return executor.conversation
 
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=30)
-def resume_bot_conversation(self, conversation_id: int):
+def resume_bot_conversation(self, conversation_id: int, expected_node_id: str = '', pinbot=None):
     """Celery task — fired after a wait_delay countdown. Re-instantiates the
     executor and advances from the wait node.
 
     Safe-guards:
       - If the conversation is no longer 'active' OR the user already advanced
         past the wait node, this is a no-op.
-      - If the wait was a long delay (>24h), the next message must use a
-        template — flows of that depth should have been authored with a
-        message_template node directly after the wait.
+      - If the wait was a long delay (>24h), the next message must be a
+        template (message_template, or a node with `fallback_template`).
     """
+    from django.db import transaction
+
     from ...models import BotConversation
     from ..executor import BotExecutor
 
-    conv = (
-        BotConversation.objects
-        .select_related('flow', 'client', 'contact')
-        .filter(pk=conversation_id, status='active')
-        .first()
-    )
-    if not conv:
-        return
-    variables = conv.variables or {}
-    if not variables.get('_waiting_for_resume'):
-        # User replied or another worker already advanced past the wait
-        return
-    wait_node_id = variables.get('_resume_node_id') or conv.current_node_id
+    # Lock the row: an inbound message for the same contact may be running
+    # the engine on this conversation right now.
+    with transaction.atomic():
+        conv = (
+            BotConversation.objects.select_for_update()
+            .filter(pk=conversation_id, status='active')
+            .first()
+        )
+        if not conv:
+            return
+        variables = conv.variables or {}
+        if not variables.get('_waiting_for_resume'):
+            # Another worker already advanced past the wait
+            return
+        if expected_node_id and variables.get('_resume_node_id') != expected_node_id:
+            # A stale timer from an earlier wait node in the same conversation
+            return
+        wait_node_id = variables.get('_resume_node_id') or conv.current_node_id
 
-    # Pop the resume markers
-    cleaned = dict(variables)
-    cleaned.pop('_waiting_for_resume', None)
-    cleaned.pop('_resume_node_id', None)
-    conv.variables = cleaned
-    conv.save(update_fields=['variables'])
+        # Pop the resume markers
+        cleaned = dict(variables)
+        cleaned.pop('_waiting_for_resume', None)
+        cleaned.pop('_resume_node_id', None)
+        conv.variables = cleaned
+        conv.save(update_fields=['variables'])
 
-    BotExecutor(conv).advance_to_next(wait_node_id)
+        # The nodes after the wait send through executor.send_freeform, so the
+        # 24-hour rule applies here exactly as it does on a live reply: past
+        # the window a node needs `fallback_template` (or be a template node),
+        # otherwise the conversation ends as failed with outside_24h_window.
+        BotExecutor(conv, pinbot=pinbot).advance_to_next(wait_node_id)

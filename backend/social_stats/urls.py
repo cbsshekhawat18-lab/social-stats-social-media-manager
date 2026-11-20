@@ -190,11 +190,12 @@ from .whatsapp_views import (
     WhatsAppAccountViewSet, WhatsAppContactViewSet, WhatsAppContactListViewSet,
     WhatsAppTemplateViewSet, WhatsAppCampaignViewSet, WhatsAppMessageViewSet,
     WhatsAppDashboardView, WhatsAppInboxView, WhatsAppInboxThreadView, WhatsAppSendDirectView,
+    WhatsAppProviderListView,
 )
-from .whatsapp_webhook_views import pinbot_webhook
+from .whatsapp_webhook_views import pinbot_webhook, whatsapp_account_webhook
 from .bot_views import (
     BotFlowViewSet, BotTemplateViewSet, BotConversationViewSet, CTWACampaignViewSet,
-    bot_settings,
+    BotKnowledgeDocViewSet, bot_settings,
 )
 from .bot_ai_views import (
     generate_flow_with_ai as bot_generate_flow_with_ai,
@@ -259,6 +260,7 @@ router.register(r'bot-flows',         BotFlowViewSet,         basename='bot-flow
 router.register(r'bot-templates',     BotTemplateViewSet,     basename='bot-template')
 router.register(r'bot-conversations', BotConversationViewSet, basename='bot-conversation')
 router.register(r'ctwa-campaigns',    CTWACampaignViewSet,    basename='ctwa-campaign')
+router.register(r'bot-knowledge',     BotKnowledgeDocViewSet, basename='bot-knowledge')
 router.register(r'leads',             LeadViewSet,            basename='lead')
 
 urlpatterns = [
@@ -557,7 +559,9 @@ urlpatterns = [
     path('whatsapp/inbox/',         WhatsAppInboxView.as_view(),        name='wa_inbox'),
     path('whatsapp/inbox/thread/',  WhatsAppInboxThreadView.as_view(),  name='wa_inbox_thread'),
     path('whatsapp/send/',          WhatsAppSendDirectView.as_view(),   name='wa_send_direct'),
+    path('whatsapp/providers/',     WhatsAppProviderListView.as_view(), name='wa_providers'),
     path('whatsapp/webhook/',       pinbot_webhook,                     name='wa_webhook'),
+    path('whatsapp/webhook/<str:webhook_key>/', whatsapp_account_webhook, name='wa_account_webhook'),
 
     # Ads waitlist (stub for upcoming Ads module)
     path('notify-ads/',             notify_ads,                         name='notify_ads'),

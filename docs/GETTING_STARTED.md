@@ -144,6 +144,6 @@ days of sample analytics.
 
 - [Configuration reference](CONFIGURATION.md) — every `.env` variable explained
 - [Connect social accounts](CONNECT_ACCOUNTS.md) — Meta, Google, LinkedIn
-- [Connect WhatsApp](CONNECT_WHATSAPP.md) — Pinbot / WABA setup
+- [Connect WhatsApp](CONNECT_WHATSAPP.md) — connect your own provider (Meta Cloud API, Pinbot, others)
 - [User Guide](USER_GUIDE.md) — how to use each module
 - [FAQ & Troubleshooting](FAQ_TROUBLESHOOTING.md) — if something doesn't work

@@ -47,7 +47,12 @@ approved. See [GOING_LIVE.md](GOING_LIVE.md).
   `WHATSAPP_WEBHOOK_SECRET`. The `?secret=` query parameter is no longer
   accepted — send the header.
 - Make sure `WHATSAPP_WEBHOOK_SECRET` is **set** (an empty value rejects all
-  calls) and matches what you configured in Pinbot. See
+  calls) and matches what you configured with your provider.
+- The above is the shared `/api/whatsapp/webhook/` URL. A workspace's own URL
+  (`/api/whatsapp/webhook/<key>/`, shown in WhatsApp → Settings) returns `403`
+  unless the delivery carries `X-Webhook-Secret: <verify token>` or, when an App
+  Secret is saved (Meta Cloud API), a valid `X-Hub-Signature-256`. `404` means
+  the key in the URL is wrong or the account is inactive. See
   [CONNECT_WHATSAPP.md](CONNECT_WHATSAPP.md).
 
 ### Background tasks / scheduling / sync not running

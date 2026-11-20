@@ -161,7 +161,7 @@ function FeatureBlocks() {
     { icon: TrendingUp,  title: 'Unified analytics',     body: 'One dashboard across Facebook, Instagram, YouTube, LinkedIn, GMB. Cross-client benchmarking. White-label exports.' },
     { icon: Inbox,       title: 'Unified inbox',         body: 'DMs, comments, and reviews on one screen. AI-suggested replies tuned to each client\'s brand voice. Approval rules where the client wants them.' },
     { icon: Wand2,       title: 'Composer + scheduler',  body: 'Draft once, post everywhere. Per-platform overrides. AI image alt-text, hashtag research, optimal-time recommendations.' },
-    { icon: Users2,      title: 'WhatsApp campaigns',    body: 'Pinbot-powered campaigns with consented contacts, templates, scheduling, and full delivery analytics.' },
+    { icon: Users2,      title: 'WhatsApp campaigns',    body: 'Campaigns through the WhatsApp provider you choose, with consented contacts, templates, scheduling, and full delivery analytics.' },
     { icon: ShieldCheck, title: 'Trust by design',       body: 'Every action logged. Permissions you and the client both see. End-user-disconnect always works — no lock-in stories.' },
     { icon: Sparkles,    title: 'AI Studio across the board', body: 'Brand voice training, post writer, insight generation, anomaly detection, report narration. The whole AI stack we ship sits inside your dashboard.' },
   ];

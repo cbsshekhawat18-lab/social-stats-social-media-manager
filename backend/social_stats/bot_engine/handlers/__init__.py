@@ -31,6 +31,7 @@ from . import (
  logic,
  timed,
  smart,
+ ai_nodes,
 )
 
 NODE_HANDLERS = {
@@ -67,11 +68,15 @@ NODE_HANDLERS = {
  'tag_contact': actions.handle_tag_contact,
  'send_email': actions.handle_send_email,
  'webhook': actions.handle_webhook,
+ 'assign_segment': actions.handle_assign_segment,
+ 'crm_push': actions.handle_crm_push,
  # Timed
  'wait_delay': timed.handle_wait_delay,
  # Smart
  'human_handoff': smart.handle_human_handoff,
  'ai_chat': smart.handle_ai_chat,
+ 'ai_extract': ai_nodes.handle_ai_extract,
+ 'ai_intent': ai_nodes.handle_ai_intent,
 }
 
 REPLY_HANDLERS = {

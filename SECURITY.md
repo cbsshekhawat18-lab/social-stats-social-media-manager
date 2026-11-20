@@ -23,7 +23,7 @@ We respond to every report within **2 business days** with a triage acknowledgem
 
 | In scope | Out of scope |
 |---|---|
-| The code in this repository (backend API + frontend) | Third-party services the code integrates with (Anthropic, Pinbot, the social platforms) |
+| The code in this repository (backend API + frontend) | Third-party services the code integrates with (Anthropic, WhatsApp providers, the social platforms) |
 | OAuth flows + token handling | DoS / volumetric attacks against someone's self-hosted instance |
 | Tenant-isolation bugs (IDOR, SSRF) | Individual self-hosted deployments (report those to their operator) |
 | Auth, MFA, session and webhook handling | Self-XSS / clickjacking on logged-out marketing pages |

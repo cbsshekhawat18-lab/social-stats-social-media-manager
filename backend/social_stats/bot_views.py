@@ -38,16 +38,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .bot_serializers import (
-    BotFlowListSerializer, BotFlowDetailSerializer,
+    BotFlowListSerializer, BotFlowDetailSerializer, BotFlowVersionSerializer,
+    BotKnowledgeDocSerializer,
     BotFlowTemplateSerializer,
     BotConversationListSerializer, BotConversationDetailSerializer,
     CTWACampaignSerializer,
 )
 from .models import (
-    BotConversation, BotFlow, BotFlowTemplate,
-    CTWACampaign, NODE_TYPES,
+    BotConversation, BotFlow, BotFlowTemplate, BotFlowVersion, BotKnowledgeDoc,
+    CTWACampaign,
 )
 from .whatsapp_views import TenantScopedMixin
+from .bot_engine import analytics as bot_analytics
 
 
 logger = logging.getLogger(__name__)
@@ -137,11 +139,65 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
 
         result = _validate_flow(flow)
         if not result['ok']:
-            return Response({'error': 'flow validation failed', 'issues': result['issues']}, status=400)
-        flow.is_active = True
-        flow.published_version = flow.version
-        flow.last_published_at = timezone.now()
-        flow.save(update_fields=['is_active', 'published_version', 'last_published_at'])
+            return Response({'error': 'flow validation failed', 'issues': result['issues'],
+                             'errors': result['errors']}, status=400)
+        snapshot_flow(flow, user=request.user)
+        data = BotFlowDetailSerializer(flow).data
+        data['warnings'] = [i for i in result['errors'] if i['level'] == 'warning']
+        return Response(data)
+
+    @action(detail=True, methods=['get'])
+    def versions(self, request, pk=None):
+        """Published snapshots of this flow, newest first."""
+        flow = self.get_object()
+        rows = flow.versions.select_related('published_by').order_by('-version')
+        return Response({
+            'published_version': flow.published_version,
+            'results': BotFlowVersionSerializer(rows, many=True, context={'flow': flow}).data,
+        })
+
+    @action(detail=True, methods=['post'])
+    def rollback(self, request, pk=None):
+        """Restore the graph of an earlier published version.
+
+        Body: {version: <int>}. The draft graph is replaced by that snapshot;
+        if the flow is live, new conversations use it from now on.
+        Conversations already running stay on the version they started with.
+        """
+        flow = self.get_object()
+        try:
+            number = int(request.data.get('version'))
+        except (TypeError, ValueError):
+            return Response({'error': 'version (integer) is required'}, status=400)
+        target = flow.versions.filter(version=number).first()
+        if not target:
+            return Response({'error': f'version {number} not found for this flow'}, status=404)
+
+        from .marketplace_permissions import (
+            check_action, deny_response, approval_pending_response,
+        )
+        verdict, ctx = check_action(
+            request, flow.client, 'manage_bots',
+            action_type='publish_bot',
+            payload={'flow_id': flow.id, 'flow_name': flow.name, 'rollback_to_version': number},
+            target_object_type='BotFlow',
+            target_object_id=flow.id,
+            preview=f'Roll back bot flow "{flow.name}" to v{number}',
+        )
+        if verdict == 'denied':
+            return deny_response(ctx['reason'])
+        if verdict == 'approval_required':
+            return approval_pending_response(ctx['approval'])
+
+        flow.nodes = copy.deepcopy(target.nodes or [])
+        flow.edges = copy.deepcopy(target.edges or [])
+        flow.starting_node_id = target.starting_node_id
+        update = ['nodes', 'edges', 'starting_node_id', 'updated_at']
+        if flow.is_active:
+            flow.published_version = target.version
+            flow.last_published_at = timezone.now()
+            update += ['published_version', 'last_published_at']
+        flow.save(update_fields=update)
         return Response(BotFlowDetailSerializer(flow).data)
 
     @action(detail=True, methods=['post'])
@@ -193,6 +249,8 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
             client=flow.client, contact=contact, flow=flow, status='active',
         ).update(status='exited', ended_at=timezone.now())
 
+        # Test runs use the draft graph (no pinned version), so unpublished
+        # edits can be tried before going live.
         conv = BotConversation.objects.create(
             client=flow.client, flow=flow, contact=contact,
             triggered_via='manual',
@@ -203,12 +261,33 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
         BotFlow.objects.filter(pk=flow.pk).update(total_triggered=F('total_triggered') + 1)
         from .bot_engine.executor import BotExecutor
         BotExecutor(conv).execute_node(starting)
-        return Response({'conversation_id': conv.id, 'status': 'started'})
+        conv.refresh_from_db()
+        out = {'conversation_id': conv.id, 'status': 'started', 'conversation_status': conv.status}
+        if conv.status == 'failed':
+            err = conv.steps.filter(node_type='_error').order_by('-created_at').first()
+            out['error'] = (err.payload or {}).get('error', '') if err else ''
+            if out['error'] == 'outside_24h_window':
+                out['hint'] = ('WhatsApp only delivers free-form messages within 24 hours of the '
+                               "contact's last message. Send any message from the test phone to "
+                               'your WhatsApp number, then run the test again.')
+        return Response(out)
 
     @action(detail=True, methods=['get'])
     def analytics(self, request, pk=None):
-        """Funnel + per-node drop-off for this flow."""
+        """Funnel + per-node drop-off for this flow.
+
+        `node_funnel` (entered / exited / waiting / dropped off per node, from
+        the step audit trail) and `ctwa_funnel` (ad → conversation → lead →
+        converted, with cost per lead) accept `?days=N`; the older keys are
+        all-time, as before.
+        """
         flow = self.get_object()
+        days = None
+        if request.query_params.get('days'):
+            try:
+                days = max(1, min(int(request.query_params['days']), 365))
+            except (TypeError, ValueError):
+                days = None
         convs = BotConversation.objects.filter(flow=flow)
         total = convs.count()
         completed = convs.filter(status='completed').count()
@@ -241,6 +320,9 @@ class BotFlowViewSet(TenantScopedMixin, viewsets.ModelViewSet):
             'lead_capture_rate':  round(leads / total * 100, 1)     if total else 0,
             'top_drop_off_nodes': drop_off.most_common(10),
             'success_funnel':     success_funnel.most_common(20),
+            'days':               days,
+            'node_funnel':        bot_analytics.node_funnel(flow, days),
+            'ctwa_funnel':        bot_analytics.ctwa_funnel(flow, days),
         })
 
 
@@ -441,68 +523,88 @@ class CTWACampaignViewSet(TenantScopedMixin, viewsets.ModelViewSet):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# BotKnowledgeDocViewSet — knowledge base for ai_chat nodes
+# ─────────────────────────────────────────────────────────────────────────────
+class BotKnowledgeDocViewSet(TenantScopedMixin, viewsets.ModelViewSet):
+    """CRUD for the workspace's knowledge documents (/api/bot-knowledge/),
+    plus `search` to preview what an AI chat node would be given."""
+    queryset = BotKnowledgeDoc.objects.all()
+    serializer_class = BotKnowledgeDocSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = (self.request.query_params.get('q') or '').strip()
+        if q:
+            qs = qs.filter(Q(title__icontains=q) | Q(content__icontains=q))
+        return qs.order_by('-updated_at')
+
+    def perform_create(self, serializer):
+        client_id = self._resolved_client_id()
+        if client_id is None:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('No client context for this user.')
+        serializer.save(client_id=client_id, created_by=self.request.user)
+
+    @action(detail=False, methods=['post'])
+    def search(self, request):
+        """Body: {query}. Returns the passages retrieval would hand the AI."""
+        client_id = self._resolved_client_id()
+        if client_id is None:
+            return Response({'error': 'no client context'}, status=403)
+        from .bot_engine.knowledge import retrieve
+        passages = retrieve(client_id, str(request.data.get('query') or '')[:500])
+        return Response({'results': [
+            {'doc_id': p.doc_id, 'title': p.title, 'text': p.text, 'score': p.score} for p in passages
+        ]})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Publishing = snapshotting
+# ─────────────────────────────────────────────────────────────────────────────
+def snapshot_flow(flow: BotFlow, *, user=None, note: str = '') -> BotFlowVersion:
+    """Publish `flow`: freeze its current graph as a BotFlowVersion and point
+    `published_version` at it. Re-publishing an unchanged graph reuses the
+    latest snapshot instead of piling up identical copies."""
+    latest = flow.versions.order_by('-version').first()
+    if latest and (latest.nodes, latest.edges, latest.starting_node_id) == (
+        flow.nodes or [], flow.edges or [], flow.starting_node_id or '',
+    ):
+        version = latest
+    else:
+        number = max((latest.version if latest else 0) + 1, flow.version or 1)
+        version = BotFlowVersion.objects.create(
+            flow=flow, version=number,
+            nodes=copy.deepcopy(flow.nodes or []), edges=copy.deepcopy(flow.edges or []),
+            starting_node_id=flow.starting_node_id or '',
+            published_by=user if getattr(user, 'is_authenticated', False) else None,
+            note=note[:200],
+        )
+    flow.is_active = True
+    flow.version = version.version
+    flow.published_version = version.version
+    flow.last_published_at = timezone.now()
+    flow.save(update_fields=['is_active', 'version', 'published_version', 'last_published_at'])
+    return version
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Flow validator (used by validate + publish)
 # ─────────────────────────────────────────────────────────────────────────────
 def _validate_flow(flow: BotFlow) -> dict:
-    issues: list[str] = []
-    nodes = flow.nodes or []
-    edges = flow.edges or []
-    node_ids = {n.get('id') for n in nodes}
+    """Run bot_engine.flow_validator on the draft graph.
 
-    if not nodes:
-        issues.append('flow has no nodes')
-    starts = [n for n in nodes if n.get('type') == 'start']
-    if len(starts) == 0:
-        issues.append('flow needs a start node')
-    elif len(starts) > 1:
-        issues.append('flow has multiple start nodes (only one allowed)')
-    elif not flow.starting_node_id and starts[0].get('id') != flow.starting_node_id:
-        # Auto-fix: trust the only start node
+    Returns {ok, errors: [{node_id, level, message}], issues: [str], …}.
+    `errors` carries both levels; only level="error" blocks publishing.
+    """
+    from .bot_engine.flow_validator import validate_flow
+
+    # A flow with exactly one Start node doesn't need starting_node_id set by hand.
+    starts = [n for n in (flow.nodes or []) if n.get('type') == 'start']
+    if len(starts) == 1 and flow.starting_node_id != starts[0].get('id'):
         flow.starting_node_id = starts[0].get('id', '')
         flow.save(update_fields=['starting_node_id'])
-
-    # Unknown node types
-    unknown = sorted({n.get('type') for n in nodes if n.get('type') not in NODE_TYPES})
-    if unknown:
-        issues.append(f'unknown node types: {", ".join(unknown)}')
-
-    # Orphan / dangling edges
-    for e in edges:
-        if e.get('source') not in node_ids:
-            issues.append(f'edge {e.get("id")} has missing source')
-        if e.get('target') not in node_ids:
-            issues.append(f'edge {e.get("id")} has missing target')
-
-    # Reachability — every node should be reachable from start (except the start itself)
-    reachable = set()
-    if flow.starting_node_id:
-        stack = [flow.starting_node_id]
-        while stack:
-            cur = stack.pop()
-            if cur in reachable:
-                continue
-            reachable.add(cur)
-            for e in edges:
-                if e.get('source') == cur and e.get('target') in node_ids:
-                    stack.append(e['target'])
-        unreachable = sorted(node_ids - reachable)
-        if unreachable:
-            issues.append(f'unreachable nodes from start: {", ".join(unreachable)}')
-
-    # Required-field checks per node type
-    for n in nodes:
-        t = n.get('type')
-        d = n.get('data') or {}
-        if t == 'message_text' and not d.get('text'):
-            issues.append(f'node {n["id"]} (message_text) missing text')
-        if t == 'message_image' and not (d.get('url') or d.get('link') or d.get('media_id')):
-            issues.append(f'node {n["id"]} (message_image) missing url/media_id')
-        if t == 'message_buttons' and (not d.get('body') or not d.get('buttons')):
-            issues.append(f'node {n["id"]} (message_buttons) missing body or buttons')
-        if t == 'jump_to_flow' and not (d.get('target_flow_id') or d.get('flow_id')):
-            issues.append(f'node {n["id"]} (jump_to_flow) missing target_flow_id')
-
-    return {'ok': not issues, 'issues': issues, 'node_count': len(nodes), 'edge_count': len(edges)}
+    return validate_flow(flow)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -511,6 +613,7 @@ _BOT_SETTING_FIELDS = (
     'bot_max_msgs_per_minute',
     'bot_max_msgs_per_conv',
     'bot_spam_threshold',
+    'bot_abandon_after_minutes',
 )
 
 
@@ -569,6 +672,8 @@ def bot_settings(request):
                     n = max(10, min(n, 10000))
                 elif f == 'bot_spam_threshold':
                     n = max(1, min(n, 50))
+                elif f == 'bot_abandon_after_minutes':
+                    n = max(5, min(n, 43200))   # 5 minutes … 30 days
                 setattr(client, f, n)
             update.append(f)
     if update:

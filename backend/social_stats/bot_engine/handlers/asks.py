@@ -6,7 +6,12 @@
 #  Copyright (c) 2026 Chandrabhan Shekhawat / Gigai Kripa Services.
 #  Released under the MIT License — see LICENSE. Keep this notice.
 # ============================================================================
-"""Ask handlers — send a question, halt, then validate user reply."""
+"""Ask handlers — send a question, halt, then validate user reply.
+
+Invalid answers re-prompt up to `data.max_retries` (default 3) times; after
+that the node takes its `invalid` output (or hands off / fails — see
+BotExecutor.on_retries_exceeded).
+"""
 from __future__ import annotations
 
 from ..templates import render
@@ -16,16 +21,21 @@ from ..validators import is_email, is_phone, normalise_phone
 def _ask(executor, node, *, prompt_key='question', default_prompt='Please reply.'):
     data = node.get('data') or {}
     text = render(data.get(prompt_key) or data.get('text') or default_prompt, executor.variables)
-    executor.pinbot.send_text(executor.contact.phone, text)
-    executor.log_step(node, direction='bot_to_user', payload={'text': text})
+    if executor.send_freeform(node, 'send_text', executor.contact.phone, text):
+        executor.log_step(node, direction='bot_to_user', payload={'text': text})
     store_var = data.get('store_var') or data.get('variable') or None
     return executor.wait_for_user(node['id'], store_var=store_var)
 
 
 def _reprompt(executor, node, message: str):
-    executor.pinbot.send_text(executor.contact.phone, message)
-    executor.log_step(node, direction='bot_to_user', payload={'text': message, 're_prompt': True})
-    # Stay on this node — leave _waiting_for / _waiting_for_node intact
+    if executor.register_retry(node):
+        return executor.on_retries_exceeded(node)
+    if executor.send_freeform(node, 'send_text', executor.contact.phone, message):
+        executor.log_step(node, direction='bot_to_user', payload={'text': message, 're_prompt': True})
+    # Stay on this node — leave _waiting_for / _waiting_for_node intact, give
+    # the customer a fresh answer timer, and persist the retry counter.
+    executor.schedule_timeout(node)
+    executor.save()
     return executor.conversation
 
 
@@ -113,15 +123,16 @@ def ask_location(executor, node):
     data = node.get('data') or {}
     body = (data.get('question') or 'Please share your location.').strip()
     body = body  # already plain text
-    sender = executor.pinbot
+    method = 'send_location_request' if hasattr(executor.pinbot, 'send_location_request') else 'send_text'
     try:
-        if hasattr(sender, 'send_location_request'):
-            sender.send_location_request(executor.contact.phone, body)
-        else:
-            sender.send_text(executor.contact.phone, body)
-    except Exception:
-        sender.send_text(executor.contact.phone, body)
-    executor.log_step(node, direction='bot_to_user', payload={'text': body, 'expects': 'location'})
+        sent = executor.send_freeform(node, method, executor.contact.phone, body)
+    except Exception as e:  # noqa: BLE001 — older Pinbot builds lack location requests
+        from ..executor import BotExecutorError
+        if isinstance(e, BotExecutorError):
+            raise
+        sent = executor.send_freeform(node, 'send_text', executor.contact.phone, body)
+    if sent:
+        executor.log_step(node, direction='bot_to_user', payload={'text': body, 'expects': 'location'})
     return executor.wait_for_user(node['id'], store_var=data.get('store_var') or 'location')
 
 
@@ -155,8 +166,8 @@ def ask_attachment(executor, node):
     """Ask for an image or document upload."""
     data = node.get('data') or {}
     body = (data.get('question') or 'Please upload the file.').strip()
-    executor.pinbot.send_text(executor.contact.phone, body)
-    executor.log_step(node, direction='bot_to_user', payload={'text': body, 'expects': 'attachment'})
+    if executor.send_freeform(node, 'send_text', executor.contact.phone, body):
+        executor.log_step(node, direction='bot_to_user', payload={'text': body, 'expects': 'attachment'})
     return executor.wait_for_user(node['id'], store_var=data.get('store_var') or 'attachment')
 
 

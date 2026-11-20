@@ -1,5 +1,63 @@
 # Changelog
 
+## [Unreleased]
+
+WhatsApp bot builder: engine fixes, flow versions, validation, AI nodes and
+analytics. See `docs/CONNECT_WHATSAPP.md` → *Bots & Click-to-WhatsApp*.
+
+### Upgrading
+
+- Run `migrate` (0067–0069): flow versions, `Client.bot_abandon_after_minutes`,
+  the knowledge base, a unique constraint on WhatsApp message ids (later
+  duplicates get their id blanked, rows are kept), and a recount of each
+  flow's completed conversations. Published flows are snapshotted as version 1.
+- **Edits to a live flow now reach customers only after you publish again.**
+  Conversations run on the version that was live when they started.
+- **Free-form messages are no longer attempted outside WhatsApp's 24-hour
+  window.** Give nodes that run after a long wait a fallback template, or use a
+  Send Template node; otherwise the conversation ends as failed.
+- Publishing is blocked by validation errors that were previously allowed
+  (e.g. more than 3 buttons, an unreachable node, a condition with one output).
+  Flows that are already live keep running.
+- Restart Celery workers and beat: new tasks, and the bot engine's tasks are
+  now registered at worker start (`CELERY_IMPORTS`).
+
+### Added
+
+- Flow versions: snapshot on publish, version history and restore in the
+  editor; `GET /api/bot-flows/{id}/versions/`, `POST …/rollback/`.
+- Flow validator with node-level errors and warnings, shown in an editor
+  panel with the affected nodes outlined.
+- AI: knowledge base (documents, API, page) for AI Chat; **AI Extract** and
+  **AI Intent** nodes; replies in the customer's language (English / Hindi /
+  Hinglish); AI chat sends real conversation turns.
+- **Add to List** and **Push to CRM** nodes.
+- `no match`, `invalid` and `timeout` outputs; AI fallback for unexpected
+  answers; retry limits; answer timeouts with a one-time reminder; fallback
+  templates.
+- Business hours are enforced; idle conversations are marked abandoned
+  (`bot_abandon_after_minutes`, beat task every 15 minutes).
+- Analytics: per-node funnel and ad → conversation → lead → converted with
+  cost per lead.
+- `pytest` + `pytest-django` (dev) — `cd backend && pytest`.
+
+### Fixed
+
+- A flow's completed count was stuck at 1.
+- Duplicate webhook deliveries ran the bot twice; two messages arriving
+  together could walk the same conversation concurrently.
+- A reply during a Wait made the next node run twice.
+- Random Split with unlabelled connections always took the first one.
+- Handoff picked an agent at random and accepted users from other workspaces.
+- Wait / webhook tasks were not registered in a freshly started worker.
+- CTWA leads carried the ad's URL instead of the campaign id, so campaign
+  lead and conversation counters never moved.
+
+### Removed
+
+- The `rate_limit` node type (it never had a handler; per-contact rate limits
+  are in Bot Safety).
+
 ## [2.0.0] - 2026-11-13
 
 A security-hardening and platform-upgrade release. **It changes how the app is
